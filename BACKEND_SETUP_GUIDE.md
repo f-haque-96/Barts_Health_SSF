@@ -978,11 +978,11 @@ I will create/update these files for you:
 
 ### Phase 1: SharePoint Setup
 - [x] SharePoint site created
-- [-] SupplierSubmissions list created with all columns
-- [ ] PBPReviews list created
-- [ ] Documents list created
-- [ ] AuditLog list created
-- [ ] SupplierDocuments library created with folders
+- [x] SupplierSubmissions list created with all columns
+- [x] PBPReviews list created
+- [x] Documents list created
+- [x] AuditLog list created
+- [x] SupplierDocuments library created with folders
 
 ### Phase 2: Power Automate Flows
 - [ ] Flow 1: Submit PBP Questionnaire - Created and tested
