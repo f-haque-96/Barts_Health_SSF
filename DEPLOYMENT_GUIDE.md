@@ -1,7 +1,7 @@
 # NHS Supplier Setup Form - Complete Deployment Guide
 
-**Version:** 2.0
-**Last Updated:** January 2026
+**Version:** 2.1
+**Last Updated:** 26 January 2026
 **SharePoint Site:** https://nhs.sharepoint.com/sites/R1H_FIN_Legacy_Procurement/
 
 ---
@@ -9,6 +9,9 @@
 ## Table of Contents
 
 1. [System Overview](#1-system-overview)
+   - [Rejection Notification System](#rejection-notification-system)
+   - [Fuzzy Matching & Duplicate Detection](#fuzzy-matching--duplicate-detection)
+   - [Conflict of Interest Flagging](#conflict-of-interest-flagging)
 2. [Prerequisites](#2-prerequisites)
 3. [SharePoint Setup](#3-sharepoint-setup)
 4. [Power Automate Flows](#4-power-automate-flows)
@@ -34,6 +37,9 @@ This is an NHS Supplier Setup Form application that:
 - Routes requests through approval workflows (PBP Panel, Procurement, OPW/IR35)
 - Stores data in SharePoint Lists
 - Sends automated notifications via Power Automate
+- **Automatically notifies requesters of rejections with detailed reasons**
+- **Fuzzy matching to detect duplicate suppliers and flag for review**
+- **Conflict of interest detection and flagging**
 - Integrates with Alemba (ticketing) and VerseOne (V1) - **TBC**
 - Generates PDF documentation
 
@@ -75,6 +81,86 @@ Supplier Created in System
 **External Systems:**
 - **Alemba:** TBC - Awaiting API access
 - **VerseOne (V1):** TBC - Awaiting API access
+
+### Rejection Notification System
+
+When a submission is rejected at any stage, the system automatically:
+
+1. **Notifies the Requester** via email with:
+   - Submission ID and supplier name
+   - Who rejected it and from which department (PBP/Procurement)
+   - Date of rejection
+   - **Full rejection reason** explaining why it was rejected
+   - Next steps to resolve the issue
+
+2. **Notifies the Admin Team** with:
+   - Alert about the rejection
+   - Full audit trail details
+
+3. **Creates an Audit Entry** containing:
+   - Timestamp and submission details
+   - Rejection reason
+   - Flag status (REQUESTER_FLAGGED)
+   - Notification confirmation
+
+**Rejection Flow:**
+```
+Reviewer Clicks "Reject"
+        |
+        v
+Enters Rejection Reason (Required)
+        |
+        v
+Signs Decision
+        |
+        v
+System Automatically:
+  - Sends email to requester with reason
+  - Sends alert to admin team
+  - Creates audit trail entry
+  - Updates submission status
+```
+
+### Fuzzy Matching & Duplicate Detection
+
+The system includes fuzzy matching to detect potential duplicate suppliers:
+
+**How It Works:**
+1. When a submission is approved at PBP stage, the system checks the supplier name against existing suppliers
+2. Uses Levenshtein distance algorithm to calculate similarity scores
+3. Flags potential duplicates based on thresholds:
+   - **95%+ similarity:** EXACT_MATCH - Likely duplicate
+   - **85-94% similarity:** HIGH_SIMILARITY - Needs review
+   - **75-84% similarity:** POTENTIAL_MATCH - Worth checking
+
+**When Flagged:**
+- Admin team receives notification with all potential matches
+- PBP team receives notification for high-similarity matches (85%+)
+- Reviewers see warning before approving
+
+**Normalization Applied:**
+- Removes common suffixes (Ltd, Limited, PLC, LLP, etc.)
+- Converts to lowercase
+- Removes special characters
+- Normalizes whitespace
+
+**Example:**
+- "Acme Solutions Ltd" and "ACME SOLUTIONS LIMITED" = 100% match
+- "Smith Consulting" and "Smiths Consultancy" = ~85% match
+
+### Conflict of Interest Flagging
+
+When a requester declares a connection to the supplier (Section 2):
+
+1. **Automatic Alert** sent to:
+   - Admin team
+   - PBP Panel
+
+2. **Alert Contains:**
+   - Requester name and email
+   - Supplier name
+   - Declared connection details
+   - Request for additional scrutiny
 
 ---
 
@@ -316,7 +402,69 @@ Your organisation's DLP policy restricts using `shared_office365` with `httpRequ
 2. Update item: Set `CurrentStage` to `SupplierDetails`
 
 **If Status = PBPRejected:**
-1. Send email to requester (rejection notification with reason)
+1. Send email to requester (rejection notification with detailed reason)
+2. Send alert email to Admin team
+
+### Flow 2b: Rejection Notification Email (IMPORTANT)
+
+**Purpose:** Ensure all rejections notify the requester with full details and reasons
+
+**This flow is triggered automatically when status changes to PBPRejected or ProcurementRejected**
+
+**Email Template for Rejection:**
+
+```html
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <div style="background-color: #da291c; color: white; padding: 20px; text-align: center;">
+    <h1 style="margin: 0;">Supplier Setup Request Rejected</h1>
+  </div>
+
+  <div style="padding: 20px; background-color: #f5f5f5;">
+    <p>Dear @{triggerOutputs()?['body/RequesterName']},</p>
+
+    <p>Your supplier setup request has been <strong style="color: #da291c;">rejected</strong>.</p>
+
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+      <tr>
+        <td style="padding: 10px; border: 1px solid #ddd; background: #fff;"><strong>Submission ID:</strong></td>
+        <td style="padding: 10px; border: 1px solid #ddd; background: #fff;">@{triggerOutputs()?['body/SubmissionID']}</td>
+      </tr>
+      <tr>
+        <td style="padding: 10px; border: 1px solid #ddd; background: #fff;"><strong>Supplier Name:</strong></td>
+        <td style="padding: 10px; border: 1px solid #ddd; background: #fff;">@{triggerOutputs()?['body/CompanyName']}</td>
+      </tr>
+      <tr>
+        <td style="padding: 10px; border: 1px solid #ddd; background: #fff;"><strong>Rejected By:</strong></td>
+        <td style="padding: 10px; border: 1px solid #ddd; background: #fff;">@{triggerOutputs()?['body/PBPApprover']} (PBP Panel)</td>
+      </tr>
+      <tr>
+        <td style="padding: 10px; border: 1px solid #ddd; background: #fff;"><strong>Date:</strong></td>
+        <td style="padding: 10px; border: 1px solid #ddd; background: #fff;">@{formatDateTime(triggerOutputs()?['body/PBPApprovalDate'], 'dd MMMM yyyy')}</td>
+      </tr>
+    </table>
+
+    <div style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+      <h3 style="margin-top: 0; color: #856404;">Reason for Rejection:</h3>
+      <p style="margin-bottom: 0;">@{triggerOutputs()?['body/PBPComments']}</p>
+    </div>
+
+    <h3>Next Steps:</h3>
+    <p>Please review the feedback above and address the issues identified. You may submit a new request once the concerns have been resolved.</p>
+
+    <p>If you have questions, please contact the reviewing team.</p>
+
+    <p style="color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 15px;">
+      This is an automated notification from the NHS Supplier Setup System.<br>
+      Barts Health NHS Trust
+    </p>
+  </div>
+</div>
+```
+
+**Key Points:**
+- **Rejection reason is REQUIRED** - The system enforces this in the React app
+- Email clearly shows WHO rejected, WHEN, and WHY
+- Requester knows exactly what to fix before resubmitting
 
 ### Flow 3: Process Full Submission (To Procurement)
 

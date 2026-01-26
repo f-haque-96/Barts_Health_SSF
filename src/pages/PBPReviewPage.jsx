@@ -13,6 +13,7 @@ import { Button, NoticeBox, ApprovalStamp, Textarea, FileUpload, CheckIcon, XIco
 import { formatDate, formatCurrency } from '../utils/helpers';
 import { formatYesNo, formatFieldValue, capitalizeWords } from '../utils/formatters';
 import PBPApprovalPDF from '../components/pdf/PBPApprovalPDF';
+import { sendRejectionNotification, sendApprovalNotification, checkAndFlagDuplicates, sendConflictOfInterestAlert } from '../services/notificationService';
 
 // ===== Exchange Thread Component =====
 // Displays the conversation history between PBP and Requester
@@ -638,32 +639,85 @@ const PBPReviewPage = () => {
       // Save back to localStorage
       localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
 
-      // Add audit trail entry for rejection
+      // Handle rejection notification and audit trail
       if (action === 'reject') {
-        const requesterName = `${submission?.formData?.section1?.firstName || submission?.formData?.firstName || ''} ${submission?.formData?.section1?.lastName || submission?.formData?.lastName || ''}`.trim();
-        const requesterEmail = submission?.formData?.section1?.nhsEmail || submission?.formData?.nhsEmail || submission?.submittedBy || 'Unknown';
-        const supplierName = submission?.questionnaireData?.supplierName ||
+        const reqName = `${submission?.formData?.section1?.firstName || submission?.formData?.firstName || ''} ${submission?.formData?.section1?.lastName || submission?.formData?.lastName || ''}`.trim();
+        const reqEmail = submission?.formData?.section1?.nhsEmail || submission?.formData?.nhsEmail || submission?.submittedBy || 'Unknown';
+        const suppName = submission?.questionnaireData?.supplierName ||
                            submission?.formData?.section4?.companyName ||
                            'Not recorded at questionnaire stage';
 
+        // Send rejection notification to requester
+        sendRejectionNotification({
+          submissionId: submissionId,
+          requesterEmail: reqEmail,
+          requesterName: reqName,
+          supplierName: suppName,
+          rejectedBy: reviewerName,
+          rejectedByRole: 'PBP',
+          rejectionReason: comments,
+          rejectionDate: timestamp,
+        });
+
+        // Add audit trail entry
         const auditEntry = {
           submissionId: submissionId,
           timestamp: timestamp,
           action: 'PBP_REJECTED',
           user: reviewerName,
-          details: `Submission rejected by PBP. Supplier: ${supplierName} | Requester: ${requesterName} (${requesterEmail})`,
+          details: `Submission rejected by PBP. Supplier: ${suppName} | Requester: ${reqName} (${reqEmail})`,
           flag: 'REQUESTER_FLAGGED',
-          requesterEmail: requesterEmail,
-          requesterName: requesterName,
-          supplierName: supplierName,
-          rejectionReason: comments
+          requesterEmail: reqEmail,
+          requesterName: reqName,
+          supplierName: suppName,
+          rejectionReason: comments,
+          notificationSent: true
         };
 
         const auditTrail = JSON.parse(localStorage.getItem('auditTrail') || '[]');
         auditTrail.push(auditEntry);
         localStorage.setItem('auditTrail', JSON.stringify(auditTrail));
 
-        console.log('AUDIT: Requester flagged for rejection:', auditEntry);
+        console.log('AUDIT: Requester flagged for rejection and notified:', auditEntry);
+      }
+
+      // Handle approval notification
+      if (action === 'approve') {
+        const reqName = `${submission?.formData?.section1?.firstName || submission?.formData?.firstName || ''} ${submission?.formData?.section1?.lastName || submission?.formData?.lastName || ''}`.trim();
+        const reqEmail = submission?.formData?.section1?.nhsEmail || submission?.formData?.nhsEmail || submission?.submittedBy || 'Unknown';
+        const suppName = submission?.questionnaireData?.supplierName ||
+                           submission?.formData?.section4?.companyName ||
+                           'Not recorded at questionnaire stage';
+
+        // Send approval notification to requester
+        sendApprovalNotification({
+          submissionId: submissionId,
+          requesterEmail: reqEmail,
+          requesterName: reqName,
+          supplierName: suppName,
+          approvedBy: reviewerName,
+          approvedByRole: 'PBP',
+          approvalComments: comments,
+          nextSteps: 'Please complete the full supplier details form (Sections 3-7). Once submitted, Procurement will review your request.',
+        });
+
+        // Check for duplicate suppliers and flag if needed
+        const existingSuppliers = JSON.parse(localStorage.getItem('all_submissions') || '[]')
+          .filter(s => s.submissionId !== submissionId)
+          .map(s => ({
+            name: s.supplierName || s.companyName,
+            submissionId: s.submissionId,
+          }));
+
+        const duplicateCheck = checkAndFlagDuplicates({ submissionId, companyName: suppName }, existingSuppliers);
+        if (duplicateCheck.flagged) {
+          console.log('DUPLICATE FLAG: Potential duplicate suppliers detected:', duplicateCheck.matches);
+        }
+      }
+
+      // Check for conflict of interest and flag
+      if (submission?.formData?.supplierConnection === 'yes' && submission?.formData?.connectionDetails) {
+        sendConflictOfInterestAlert(submission);
       }
 
       // Update submissions list

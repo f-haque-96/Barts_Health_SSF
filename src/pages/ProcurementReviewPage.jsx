@@ -10,6 +10,7 @@ import { Button, NoticeBox, ApprovalStamp, Textarea, SignatureSection, CheckIcon
 import { formatDate, formatCurrency } from '../utils/helpers';
 import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
+import { sendRejectionNotification, sendApprovalNotification, notifyDepartment } from '../services/notificationService';
 
 const ReviewItem = ({ label, value, raw = false }) => {
   if (!value && value !== 0) return null;
@@ -219,12 +220,80 @@ const ProcurementReviewPage = () => {
         localStorage.setItem('all_submissions', JSON.stringify(submissions));
       }
 
+      // Get requester details for notifications
+      const reqName = `${formData?.firstName || ''} ${formData?.lastName || ''}`.trim();
+      const reqEmail = formData?.nhsEmail || submission?.submittedBy || 'Unknown';
+      const suppName = formData?.companyName || 'Unknown Supplier';
+
+      // Send rejection notification if rejected
+      if (action === 'rejected') {
+        sendRejectionNotification({
+          submissionId: submissionId,
+          requesterEmail: reqEmail,
+          requesterName: reqName,
+          supplierName: suppName,
+          rejectedBy: signatureName,
+          rejectedByRole: 'Procurement',
+          rejectionReason: comments,
+          rejectionDate: new Date().toISOString(),
+        });
+
+        // Add audit entry
+        const auditEntry = {
+          submissionId,
+          timestamp: new Date().toISOString(),
+          action: 'PROCUREMENT_REJECTED',
+          user: signatureName,
+          details: `Procurement rejected: ${suppName} | Requester: ${reqName} (${reqEmail})`,
+          flag: 'REQUESTER_FLAGGED',
+          requesterEmail: reqEmail,
+          rejectionReason: comments,
+          notificationSent: true
+        };
+        const auditTrail = JSON.parse(localStorage.getItem('auditTrail') || '[]');
+        auditTrail.push(auditEntry);
+        localStorage.setItem('auditTrail', JSON.stringify(auditTrail));
+      }
+
+      // Send approval notification and route to next stage
+      if (action === 'approved') {
+        sendApprovalNotification({
+          submissionId: submissionId,
+          requesterEmail: reqEmail,
+          requesterName: reqName,
+          supplierName: suppName,
+          approvedBy: signatureName,
+          approvedByRole: 'Procurement',
+          approvalComments: comments,
+          nextSteps: supplierClassification === 'opw_ir35'
+            ? 'Your request requires an IR35/OPW assessment. The OPW Panel will review and make a determination.'
+            : 'Your request will proceed to AP Control for final vendor setup.',
+        });
+
+        // Notify next department based on classification
+        if (supplierClassification === 'opw_ir35') {
+          notifyDepartment('opw', {
+            type: 'OPW_REVIEW_REQUEST',
+            submissionId,
+            subject: `OPW/IR35 Review Required - ${suppName} (Alemba: ${alembaReference})`,
+            body: `A supplier setup request requires OPW/IR35 determination.\n\nSupplier: ${suppName}\nAlemba Reference: ${alembaReference}\nRequester: ${reqName}\n\nPlease review and make an IR35 determination.`,
+          });
+        } else {
+          notifyDepartment('ap', {
+            type: 'AP_REVIEW_REQUEST',
+            submissionId,
+            subject: `AP Control Review Required - ${suppName} (Alemba: ${alembaReference})`,
+            body: `A supplier setup request is ready for AP Control verification.\n\nSupplier: ${suppName}\nAlemba Reference: ${alembaReference}\nRequester: ${reqName}\n\nPlease complete vendor setup verification.`,
+          });
+        }
+      }
+
       setSubmission(updatedSubmission);
       setApprovalAction(null);
       setComments('');
 
       const actionText = action === 'approved' ? 'approved' : 'rejected';
-      alert(`Submission ${actionText} successfully!`);
+      alert(`Submission ${actionText} successfully!${action === 'rejected' ? '\n\nThe requester has been notified of the rejection.' : ''}`);
     } catch (error) {
       console.error('Error updating submission:', error);
       alert('Failed to update submission. Please try again.');

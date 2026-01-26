@@ -10,6 +10,7 @@ import { Button, NoticeBox, ApprovalStamp, Textarea, RadioGroup, SignatureSectio
 import { formatDate } from '../utils/helpers';
 import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
+import { sendApprovalNotification, notifyDepartment } from '../services/notificationService';
 
 const ReviewItem = ({ label, value, raw = false }) => {
   if (!value && value !== 0) return null;

@@ -372,3 +372,178 @@ export const formatSwiftBic = (value) => {
   // Remove spaces and convert to uppercase, limit to 11 characters
   return value.replace(/\s/g, '').toUpperCase().slice(0, 11);
 };
+
+/**
+ * =============================================================================
+ * FUZZY MATCHING UTILITIES
+ * Used to detect potential duplicate suppliers and flag for review
+ * =============================================================================
+ */
+
+/**
+ * Calculate Levenshtein distance between two strings
+ * This measures how many single-character edits are needed to transform one string into another
+ * @param {string} str1 - First string
+ * @param {string} str2 - Second string
+ * @returns {number} - Edit distance
+ */
+export const levenshteinDistance = (str1, str2) => {
+  const s1 = str1.toLowerCase().trim();
+  const s2 = str2.toLowerCase().trim();
+
+  if (s1 === s2) return 0;
+  if (s1.length === 0) return s2.length;
+  if (s2.length === 0) return s1.length;
+
+  const matrix = [];
+
+  // Initialize matrix
+  for (let i = 0; i <= s2.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= s1.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  // Fill matrix
+  for (let i = 1; i <= s2.length; i++) {
+    for (let j = 1; j <= s1.length; j++) {
+      if (s2.charAt(i - 1) === s1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
+    }
+  }
+
+  return matrix[s2.length][s1.length];
+};
+
+/**
+ * Calculate similarity score between two strings (0-100)
+ * Higher score = more similar
+ * @param {string} str1 - First string
+ * @param {string} str2 - Second string
+ * @returns {number} - Similarity percentage (0-100)
+ */
+export const calculateSimilarity = (str1, str2) => {
+  if (!str1 || !str2) return 0;
+
+  const s1 = str1.toLowerCase().trim();
+  const s2 = str2.toLowerCase().trim();
+
+  if (s1 === s2) return 100;
+
+  const maxLength = Math.max(s1.length, s2.length);
+  if (maxLength === 0) return 100;
+
+  const distance = levenshteinDistance(s1, s2);
+  return Math.round((1 - distance / maxLength) * 100);
+};
+
+/**
+ * Normalize company name for comparison
+ * Removes common suffixes and standardizes format
+ * @param {string} name - Company name
+ * @returns {string} - Normalized name
+ */
+export const normalizeCompanyName = (name) => {
+  if (!name) return '';
+
+  return name
+    .toLowerCase()
+    .trim()
+    // Remove common company suffixes
+    .replace(/\b(ltd|limited|plc|llp|inc|incorporated|corp|corporation|uk|group)\b/gi, '')
+    // Remove special characters
+    .replace(/[^a-z0-9\s]/g, '')
+    // Normalize whitespace
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+/**
+ * Check if two company names are potentially the same
+ * Uses fuzzy matching with a threshold
+ * @param {string} name1 - First company name
+ * @param {string} name2 - Second company name
+ * @param {number} threshold - Similarity threshold (default 80%)
+ * @returns {object} - { isMatch: boolean, similarity: number, normalized: { name1, name2 } }
+ */
+export const fuzzyMatchCompanyNames = (name1, name2, threshold = 80) => {
+  const norm1 = normalizeCompanyName(name1);
+  const norm2 = normalizeCompanyName(name2);
+
+  const similarity = calculateSimilarity(norm1, norm2);
+
+  return {
+    isMatch: similarity >= threshold,
+    similarity,
+    normalized: { name1: norm1, name2: norm2 },
+    original: { name1, name2 }
+  };
+};
+
+/**
+ * Find potential duplicate suppliers from a list
+ * @param {string} newSupplierName - Name of new supplier being added
+ * @param {Array} existingSuppliers - Array of existing supplier objects with 'name' property
+ * @param {number} threshold - Similarity threshold (default 75%)
+ * @returns {Array} - Array of potential matches with similarity scores
+ */
+export const findPotentialDuplicates = (newSupplierName, existingSuppliers, threshold = 75) => {
+  if (!newSupplierName || !existingSuppliers || existingSuppliers.length === 0) {
+    return [];
+  }
+
+  const potentialMatches = [];
+
+  for (const supplier of existingSuppliers) {
+    const supplierName = supplier.name || supplier.companyName || supplier.supplierName;
+    if (!supplierName) continue;
+
+    const result = fuzzyMatchCompanyNames(newSupplierName, supplierName, threshold);
+
+    if (result.isMatch) {
+      potentialMatches.push({
+        ...result,
+        existingSupplier: supplier,
+        flagReason: result.similarity >= 95
+          ? 'EXACT_MATCH'
+          : result.similarity >= 85
+            ? 'HIGH_SIMILARITY'
+            : 'POTENTIAL_MATCH'
+      });
+    }
+  }
+
+  // Sort by similarity (highest first)
+  return potentialMatches.sort((a, b) => b.similarity - a.similarity);
+};
+
+/**
+ * Check supplier against blocklist/watchlist
+ * @param {string} supplierName - Supplier name to check
+ * @param {Array} watchlist - Array of names to watch for
+ * @returns {object} - { flagged: boolean, matches: Array }
+ */
+export const checkSupplierWatchlist = (supplierName, watchlist = []) => {
+  if (!supplierName || !watchlist.length) {
+    return { flagged: false, matches: [] };
+  }
+
+  const matches = findPotentialDuplicates(supplierName,
+    watchlist.map(name => ({ name })),
+    70 // Lower threshold for watchlist
+  );
+
+  return {
+    flagged: matches.length > 0,
+    matches,
+    highestSimilarity: matches.length > 0 ? matches[0].similarity : 0
+  };
+};

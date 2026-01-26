@@ -10,6 +10,7 @@ import { Button, NoticeBox, Checkbox, Textarea, SignatureSection, Input, CheckIc
 import { formatDate, formatCurrency } from '../utils/helpers';
 import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
+import { sendApprovalNotification, notifyDepartment } from '../services/notificationService';
 
 const ReviewItem = ({ label, value, highlight, raw = false, badge }) => {
   if (!value && value !== 0) return null;
