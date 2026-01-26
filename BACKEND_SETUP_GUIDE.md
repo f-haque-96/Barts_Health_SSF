@@ -977,8 +977,8 @@ I will create/update these files for you:
 ## 8. Testing Checklist
 
 ### Phase 1: SharePoint Setup
-- [ ] SharePoint site created
-- [ ] SupplierSubmissions list created with all columns
+- [x] SharePoint site created
+- [-] SupplierSubmissions list created with all columns
 - [ ] PBPReviews list created
 - [ ] Documents list created
 - [ ] AuditLog list created
