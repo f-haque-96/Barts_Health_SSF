@@ -65,34 +65,126 @@ export const createNotificationRecord = (notification) => {
 };
 
 /**
+ * Alemba closure reason mappings
+ * Maps our internal outcomes to Alemba's dropdown values
+ */
+export const ALEMBA_CLOSURE_REASONS = {
+  // For successful supplier creation
+  SUPPLIER_CREATED: 'New supplier created',
+  // For rejected requests or OPW determinations
+  QUERY_RESOLVED: 'Query resolved',
+};
+
+/**
+ * Generate Alemba resolution summary based on outcome
+ * @param {object} params - Outcome details
+ * @returns {string} - Resolution summary text
+ */
+export const generateAlembaResolutionSummary = ({
+  outcome, // 'approved', 'rejected', 'opw_inside', 'opw_outside'
+  supplierName,
+  vendorNumber,
+  rejectionReason,
+  rejectedBy,
+  rejectedAtStage,
+  ir35Status,
+}) => {
+  switch (outcome) {
+    case 'approved':
+      return vendorNumber
+        ? `New supplier created. ${supplierName} - Vendor ${vendorNumber}`
+        : `New supplier created. ${supplierName}`;
+
+    case 'rejected':
+      return `Rejected request - ${rejectionReason || 'See comments'}. Rejected by ${rejectedBy} at ${rejectedAtStage} stage. Guidance sent to requester.`;
+
+    case 'opw_inside':
+      return `OPW/IR35 Determination: Inside IR35. ${supplierName}. Processed via OPW route.`;
+
+    case 'opw_outside':
+      return `OPW/IR35 Determination: Outside IR35. ${supplierName}. Processed via OPW route.`;
+
+    default:
+      return `Request processed. ${supplierName || 'See details in system.'}`;
+  }
+};
+
+/**
  * Close/Cancel an Alemba ticket
- * In production, this would call the Alemba API
- * For now, it creates a record for Power Automate to process
+ * Includes all mandatory Alemba fields for ticket closure
+ * In production, this would call the Alemba API or be processed by Power Automate
+ *
+ * ALEMBA MANDATORY FIELDS:
+ * - Type: "New supplier request"
+ * - Reason: "New supplier created" | "Query resolved" (dropdown)
+ * - Call Status: "Closed"
+ * - Resolution Summary: Free text description
+ * - Email User: true/false
+ *
  * @param {object} params - Alemba ticket details
  * @returns {object} - Alemba action record
  */
 export const closeAlembaTicket = ({
   alembaReference,
   submissionId,
-  closureReason,
+  outcome, // 'approved', 'rejected', 'opw_inside', 'opw_outside'
+  supplierName,
+  vendorNumber = null,
+  rejectionReason = null,
+  rejectedBy = null,
+  rejectedAtStage = null,
   closedBy,
-  status = 'Cancelled',
+  emailUser = true,
 }) => {
   if (!alembaReference) {
     console.log('No Alemba reference provided, skipping ticket closure');
     return null;
   }
 
+  // Determine Alemba reason based on outcome
+  const alembaReason = outcome === 'approved'
+    ? ALEMBA_CLOSURE_REASONS.SUPPLIER_CREATED
+    : ALEMBA_CLOSURE_REASONS.QUERY_RESOLVED;
+
+  // Generate resolution summary
+  const resolutionSummary = generateAlembaResolutionSummary({
+    outcome,
+    supplierName,
+    vendorNumber,
+    rejectionReason,
+    rejectedBy,
+    rejectedAtStage,
+  });
+
+  // Build Alemba API payload with all mandatory fields
   const alembaAction = {
     id: `ALEMBA-${Date.now()}`,
     action: 'CLOSE_TICKET',
     alembaReference,
     submissionId,
-    status, // 'Cancelled', 'Rejected', 'Closed'
-    closureReason,
-    closedBy,
     timestamp: new Date().toISOString(),
     processed: false,
+
+    // ===== ALEMBA MANDATORY FIELDS =====
+    // All dropdowns must match exact Alemba values
+    alembaFields: {
+      type: 'New supplier request',                    // Dropdown: "New supplier request"
+      reason: alembaReason,                            // Dropdown: "New supplier created" | "Query resolved"
+      callStatus: 'Closed',                            // Dropdown: "Closed"
+      resolutionSummary: resolutionSummary,            // Free text
+      emailUser: emailUser,                            // Checkbox: true/false
+    },
+
+    // Additional context for audit/debugging
+    context: {
+      outcome,
+      supplierName,
+      vendorNumber,
+      rejectionReason,
+      rejectedBy,
+      rejectedAtStage,
+      closedBy,
+    },
   };
 
   // Store for Power Automate to process (calls Alemba API)
@@ -101,6 +193,8 @@ export const closeAlembaTicket = ({
   localStorage.setItem('alembaActionQueue', JSON.stringify(alembaQueue));
 
   console.log('Alemba ticket closure queued:', alembaAction);
+  console.log('Alemba fields to submit:', alembaAction.alembaFields);
+
   return alembaAction;
 };
 
@@ -113,6 +207,50 @@ export const getAlembaTicketUrl = (alembaReference) => {
   // In production, this would be the actual Alemba URL format
   // Format may vary based on your Alemba configuration
   return `https://alemba.nhs.net/calls/${alembaReference}`;
+};
+
+/**
+ * Close Alemba ticket on successful supplier creation
+ * Called when AP Control completes the vendor setup
+ * @param {object} params - Completion details
+ */
+export const closeAlembaOnCompletion = ({
+  alembaReference,
+  submissionId,
+  supplierName,
+  vendorNumber,
+  completedBy,
+}) => {
+  return closeAlembaTicket({
+    alembaReference,
+    submissionId,
+    outcome: 'approved',
+    supplierName,
+    vendorNumber,
+    closedBy: completedBy,
+    emailUser: true,
+  });
+};
+
+/**
+ * Close Alemba ticket for OPW/IR35 determination
+ * @param {object} params - OPW outcome details
+ */
+export const closeAlembaOnOPW = ({
+  alembaReference,
+  submissionId,
+  supplierName,
+  ir35Status, // 'inside' or 'outside'
+  completedBy,
+}) => {
+  return closeAlembaTicket({
+    alembaReference,
+    submissionId,
+    outcome: ir35Status === 'inside' ? 'opw_inside' : 'opw_outside',
+    supplierName,
+    closedBy: completedBy,
+    emailUser: true,
+  });
 };
 
 /**
@@ -132,14 +270,18 @@ export const sendRejectionNotification = ({
   rejectionDate,
   alembaReference = null,
 }) => {
-  // If there's an Alemba reference, close/cancel the ticket
+  // If there's an Alemba reference, close/cancel the ticket with all mandatory fields
   if (alembaReference) {
     closeAlembaTicket({
       alembaReference,
       submissionId,
-      closureReason: `Rejected by ${rejectedByRole}: ${rejectionReason}`,
+      outcome: 'rejected',
+      supplierName,
+      rejectionReason,
+      rejectedBy,
+      rejectedAtStage: rejectedByRole,
       closedBy: rejectedBy,
-      status: 'Rejected',
+      emailUser: true,
     });
   }
 

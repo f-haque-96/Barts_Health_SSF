@@ -139,6 +139,49 @@ The Alemba call (3000545) has been closed with reason: Rejected.
 You can view the ticket details at: https://alemba.nhs.net/calls/3000545
 ```
 
+### Alemba API Integration - Mandatory Fields
+
+When closing an Alemba ticket via API, the following **mandatory fields** must be provided:
+
+| Field | Type | Values | Description |
+|-------|------|--------|-------------|
+| Type | Dropdown | `New supplier request` | Select from dropdown |
+| Reason | Dropdown | `New supplier created` or `Query resolved` | Based on outcome |
+| Call Status | Dropdown | `Closed` | Final status |
+| Resolution Summary | Text | Dynamic | Generated based on outcome |
+| Email User | Checkbox | `true` | Notify the user |
+
+**Reason Field Mapping:**
+
+| Outcome | Alemba Reason Value |
+|---------|---------------------|
+| Supplier successfully created | `New supplier created` |
+| Request rejected | `Query resolved` |
+| OPW/IR35 determination complete | `Query resolved` |
+
+**Resolution Summary Examples:**
+
+| Scenario | Resolution Summary |
+|----------|-------------------|
+| **Approved** | `New supplier created. Acme Ltd - Vendor 1234` |
+| **Rejected** | `Rejected request - No approval email attached. Rejected by John Smith at Procurement stage. Guidance sent to requester.` |
+| **OPW Inside IR35** | `OPW/IR35 Determination: Inside IR35. Acme Consulting. Processed via OPW route.` |
+| **OPW Outside IR35** | `OPW/IR35 Determination: Outside IR35. Acme Consulting. Processed via OPW route.` |
+
+**API Payload Structure:**
+```json
+{
+  "alembaReference": "3000545",
+  "alembaFields": {
+    "type": "New supplier request",
+    "reason": "Query resolved",
+    "callStatus": "Closed",
+    "resolutionSummary": "Rejected request - Missing documentation. Rejected by Jane Doe at Procurement stage. Guidance sent to requester.",
+    "emailUser": true
+  }
+}
+```
+
 ### Fuzzy Matching & Duplicate Detection
 
 The system includes fuzzy matching to detect potential duplicate suppliers:
