@@ -1,0 +1,99 @@
+.help-button-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+}
+
+.help-button {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #005EB8;
+  color: white;
+  border: none;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 94, 184, 0.3);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.help-button:hover {
+  background: #003d7a;
+  transform: scale(1.05);
+}
+
+.help-button.open {
+  background: #dc2626;
+}
+
+.help-menu {
+  position: absolute;
+  bottom: 70px;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  min-width: 220px;
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.help-menu h4 {
+  margin: 0 0 12px 0;
+  color: #005EB8;
+  font-size: 1rem;
+}
+
+.help-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  color: #1f2937;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.help-link:hover {
+  background: #f0f7ff;
+}
+
+.help-icon {
+  font-size: 1.1rem;
+}
+
+/* Mobile positioning */
+@media (max-width: 768px) {
+  .help-button-container {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .help-button {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+
+  .help-menu {
+    right: -8px;
+    min-width: 200px;
+  }
+}
