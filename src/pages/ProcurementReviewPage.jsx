@@ -227,6 +227,9 @@ const ProcurementReviewPage = () => {
 
       // Send rejection notification if rejected
       if (action === 'rejected') {
+        // Get existing Alemba reference if any (from previous approval attempts or resubmissions)
+        const existingAlembaRef = currentSubmission.alembaReference || currentSubmission.displayReference || null;
+
         sendRejectionNotification({
           submissionId: submissionId,
           requesterEmail: reqEmail,
@@ -236,6 +239,7 @@ const ProcurementReviewPage = () => {
           rejectedByRole: 'Procurement',
           rejectionReason: comments,
           rejectionDate: new Date().toISOString(),
+          alembaReference: existingAlembaRef, // Include Alemba ref if exists - ticket will be closed
         });
 
         // Add audit entry
@@ -248,11 +252,18 @@ const ProcurementReviewPage = () => {
           flag: 'REQUESTER_FLAGGED',
           requesterEmail: reqEmail,
           rejectionReason: comments,
-          notificationSent: true
+          notificationSent: true,
+          alembaReference: existingAlembaRef,
+          alembaTicketClosed: !!existingAlembaRef,
         };
         const auditTrail = JSON.parse(localStorage.getItem('auditTrail') || '[]');
         auditTrail.push(auditEntry);
         localStorage.setItem('auditTrail', JSON.stringify(auditTrail));
+
+        // Log Alemba ticket closure if applicable
+        if (existingAlembaRef) {
+          console.log(`ALEMBA: Ticket ${existingAlembaRef} closed due to Procurement rejection`);
+        }
       }
 
       // Send approval notification and route to next stage

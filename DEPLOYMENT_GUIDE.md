@@ -91,17 +91,27 @@ When a submission is rejected at any stage, the system automatically:
    - Who rejected it and from which department (PBP/Procurement)
    - Date of rejection
    - **Full rejection reason** explaining why it was rejected
+   - **Alemba ticket reference and link** (if an Alemba call exists)
+   - Notification that Alemba ticket has been closed
    - Next steps to resolve the issue
 
-2. **Notifies the Admin Team** with:
+2. **Closes Alemba Ticket** (if applicable):
+   - Automatically closes/cancels the Alemba call
+   - Sets status to "Rejected"
+   - Records closure reason matching the rejection reason
+   - Includes link to Alemba ticket in requester email
+
+3. **Notifies the Admin Team** with:
    - Alert about the rejection
    - Full audit trail details
+   - Alemba ticket reference and closure status
 
-3. **Creates an Audit Entry** containing:
+4. **Creates an Audit Entry** containing:
    - Timestamp and submission details
    - Rejection reason
    - Flag status (REQUESTER_FLAGGED)
    - Notification confirmation
+   - Alemba ticket reference and closure status
 
 **Rejection Flow:**
 ```
@@ -115,10 +125,18 @@ Signs Decision
         |
         v
 System Automatically:
-  - Sends email to requester with reason
+  - Closes Alemba ticket (if exists) with rejection reason
+  - Sends email to requester with reason + Alemba link
   - Sends alert to admin team
   - Creates audit trail entry
   - Updates submission status
+```
+
+**Alemba Ticket in Rejection Email:**
+```
+ALEMBA TICKET STATUS:
+The Alemba call (3000545) has been closed with reason: Rejected.
+You can view the ticket details at: https://alemba.nhs.net/calls/3000545
 ```
 
 ### Fuzzy Matching & Duplicate Detection

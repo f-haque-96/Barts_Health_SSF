@@ -65,8 +65,60 @@ export const createNotificationRecord = (notification) => {
 };
 
 /**
+ * Close/Cancel an Alemba ticket
+ * In production, this would call the Alemba API
+ * For now, it creates a record for Power Automate to process
+ * @param {object} params - Alemba ticket details
+ * @returns {object} - Alemba action record
+ */
+export const closeAlembaTicket = ({
+  alembaReference,
+  submissionId,
+  closureReason,
+  closedBy,
+  status = 'Cancelled',
+}) => {
+  if (!alembaReference) {
+    console.log('No Alemba reference provided, skipping ticket closure');
+    return null;
+  }
+
+  const alembaAction = {
+    id: `ALEMBA-${Date.now()}`,
+    action: 'CLOSE_TICKET',
+    alembaReference,
+    submissionId,
+    status, // 'Cancelled', 'Rejected', 'Closed'
+    closureReason,
+    closedBy,
+    timestamp: new Date().toISOString(),
+    processed: false,
+  };
+
+  // Store for Power Automate to process (calls Alemba API)
+  const alembaQueue = JSON.parse(localStorage.getItem('alembaActionQueue') || '[]');
+  alembaQueue.push(alembaAction);
+  localStorage.setItem('alembaActionQueue', JSON.stringify(alembaQueue));
+
+  console.log('Alemba ticket closure queued:', alembaAction);
+  return alembaAction;
+};
+
+/**
+ * Generate Alemba ticket URL
+ * @param {string} alembaReference - Alemba call reference number
+ * @returns {string} - URL to the Alemba ticket
+ */
+export const getAlembaTicketUrl = (alembaReference) => {
+  // In production, this would be the actual Alemba URL format
+  // Format may vary based on your Alemba configuration
+  return `https://alemba.nhs.net/calls/${alembaReference}`;
+};
+
+/**
  * Send rejection notification to requester
  * This creates a notification record that Power Automate will process
+ * Also handles Alemba ticket closure if applicable
  * @param {object} params - Rejection parameters
  */
 export const sendRejectionNotification = ({
@@ -78,8 +130,24 @@ export const sendRejectionNotification = ({
   rejectedByRole,
   rejectionReason,
   rejectionDate,
+  alembaReference = null,
 }) => {
-  const subject = `Supplier Setup Request Rejected - ${supplierName || submissionId}`;
+  // If there's an Alemba reference, close/cancel the ticket
+  if (alembaReference) {
+    closeAlembaTicket({
+      alembaReference,
+      submissionId,
+      closureReason: `Rejected by ${rejectedByRole}: ${rejectionReason}`,
+      closedBy: rejectedBy,
+      status: 'Rejected',
+    });
+  }
+
+  const alembaUrl = alembaReference ? getAlembaTicketUrl(alembaReference) : null;
+
+  const subject = alembaReference
+    ? `Supplier Setup Request Rejected - ${supplierName || submissionId} (Alemba: ${alembaReference})`
+    : `Supplier Setup Request Rejected - ${supplierName || submissionId}`;
 
   const body = `
 Dear ${requesterName || 'Requester'},
@@ -95,10 +163,16 @@ SUBMISSION DETAILS:
     month: 'long',
     year: 'numeric',
   })}
+${alembaReference ? `- Alemba Reference: ${alembaReference}` : ''}
+${alembaUrl ? `- Alemba Ticket: ${alembaUrl}` : ''}
 
 REJECTION REASON:
 ${rejectionReason || 'No reason provided'}
-
+${alembaReference ? `
+ALEMBA TICKET STATUS:
+The Alemba call (${alembaReference}) has been closed with reason: Rejected.
+You can view the ticket details at: ${alembaUrl}
+` : ''}
 NEXT STEPS:
 Please review the feedback above and address the issues identified. You may submit a new request once the concerns have been resolved.
 
@@ -121,6 +195,9 @@ This is an automated notification from the NHS Supplier Setup System.
       rejectedByRole,
       rejectionReason,
       rejectionDate: rejectionDate || new Date().toISOString(),
+      alembaReference,
+      alembaUrl,
+      alembaTicketClosed: !!alembaReference,
     },
   });
 
@@ -128,8 +205,13 @@ This is an automated notification from the NHS Supplier Setup System.
   notifyDepartment('admin', {
     type: 'REJECTION_ALERT',
     submissionId,
-    subject: `[REJECTION] ${rejectedByRole} rejected: ${supplierName || submissionId}`,
-    body: `Submission ${submissionId} was rejected by ${rejectedBy} (${rejectedByRole}).\n\nReason: ${rejectionReason}`,
+    subject: `[REJECTION] ${rejectedByRole} rejected: ${supplierName || submissionId}${alembaReference ? ` (Alemba: ${alembaReference})` : ''}`,
+    body: `Submission ${submissionId} was rejected by ${rejectedBy} (${rejectedByRole}).
+
+Reason: ${rejectionReason}
+${alembaReference ? `
+Alemba Ticket: ${alembaReference} - CLOSED (Rejected)
+Alemba URL: ${alembaUrl}` : ''}`,
   });
 
   return notification;
