@@ -484,24 +484,15 @@ const OPWReviewPage = () => {
           </div>
         </div>
 
-        {/* Determination Badge & Actions */}
+        {/* Approval Stamp & Actions */}
         <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-12)', alignItems: 'flex-end' }}>
           {opwReview && (
-            <div style={{
-              padding: 'var(--space-16)',
-              borderRadius: 'var(--radius-base)',
-              border: `3px solid ${opwReview.ir35Status === 'outside' ? 'var(--color-success)' : 'var(--color-danger)'}`,
-              backgroundColor: opwReview.ir35Status === 'outside' ? '#d1fae5' : '#fee2e2',
-              textAlign: 'center',
-              minWidth: '180px',
-            }}>
-              <div style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--space-4)' }}>
-                IR35 Status
-              </div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: opwReview.ir35Status === 'outside' ? '#065f46' : '#991b1b' }}>
-                {opwReview.ir35Status === 'outside' ? 'OUTSIDE IR35' : 'INSIDE IR35'}
-              </div>
-            </div>
+            <ApprovalStamp
+              status={opwReview.decision === 'rejected' ? 'rejected' : opwReview.ir35Status === 'outside' || opwReview.ir35Status === 'inside' ? 'approved' : 'pending'}
+              date={opwReview.date || opwReview.reviewedAt}
+              approver={opwReview.signature || opwReview.reviewedBy}
+              size="large"
+            />
           )}
           {/* Download PDF button - always available */}
           <PDFDownloadLink
@@ -528,16 +519,33 @@ const OPWReviewPage = () => {
       {/* OPW Review Status */}
       {opwReview && (
         <NoticeBox
-          type={opwReview.ir35Status === 'outside' ? 'success' : 'error'}
+          type={opwReview.decision === 'rejected' ? 'error' : opwReview.ir35Status === 'outside' ? 'success' : 'error'}
           style={{ marginBottom: 'var(--space-24)' }}
         >
-          <strong>IR35 Determination: {opwReview.ir35Status === 'outside' ? 'Outside IR35' : 'Inside IR35'}</strong>
-          <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-            <strong>Rationale:</strong> {opwReview.rationale}
-          </p>
-          <p style={{ marginTop: 'var(--space-8)', marginBottom: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-            Reviewed by {opwReview.reviewedBy} on {formatDate(opwReview.reviewedAt)}
-          </p>
+          {opwReview.decision === 'rejected' ? (
+            <>
+              <strong>OPW Panel Decision: Rejected</strong>
+              <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+                <strong>Rejected by:</strong> {opwReview.signature || opwReview.reviewedBy}
+              </p>
+              <p style={{ marginTop: 'var(--space-4)', marginBottom: 0 }}>
+                <strong>Date:</strong> {formatDate(opwReview.date || opwReview.reviewedAt)}
+              </p>
+              <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+                <strong>Rejection Reason:</strong> {opwReview.rejectionReason}
+              </p>
+            </>
+          ) : (
+            <>
+              <strong>IR35 Determination: {opwReview.ir35Status === 'outside' ? 'Outside IR35' : 'Inside IR35'}</strong>
+              <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+                <strong>Rationale:</strong> {opwReview.rationale}
+              </p>
+              <p style={{ marginTop: 'var(--space-8)', marginBottom: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                Reviewed by {opwReview.signature || opwReview.reviewedBy} on {formatDate(opwReview.date || opwReview.reviewedAt)}
+              </p>
+            </>
+          )}
         </NoticeBox>
       )}
 

@@ -588,24 +588,15 @@ const APControlReviewPage = () => {
           </div>
         </div>
 
-        {/* Verification Status Badge & Actions */}
+        {/* Approval Stamp & Actions */}
         <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-12)', alignItems: 'flex-end' }}>
           {apReview && (
-            <div style={{
-              padding: 'var(--space-16)',
-              borderRadius: 'var(--radius-base)',
-              border: '3px solid var(--color-success)',
-              backgroundColor: '#d1fae5',
-              textAlign: 'center',
-              minWidth: '180px',
-            }}>
-              <div style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--space-4)' }}>
-                AP Status
-              </div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#065f46' }}>
-                <CheckIcon size={14} style={{ marginRight: '4px' }} /> VERIFIED
-              </div>
-            </div>
+            <ApprovalStamp
+              status={apReview.decision === 'rejected' ? 'rejected' : apReview.decision === 'approved' || apReview.status === 'verified' ? 'approved' : 'pending'}
+              date={apReview.date || apReview.reviewedAt}
+              approver={apReview.signature || apReview.reviewedBy}
+              size="large"
+            />
           )}
           {/* Download PDF button - only show if AP review not yet complete */}
           {!apReview && (
@@ -625,25 +616,45 @@ const APControlReviewPage = () => {
 
       {/* AP Review Status */}
       {apReview && (
-        <NoticeBox type="success" style={{ marginBottom: 'var(--space-24)' }}>
-          <strong>AP Verification Complete</strong>
-          <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-            Verified by {apReview.reviewedBy} on {formatDate(apReview.reviewedAt)}
-          </p>
-          {apReview.supplierName && (
-            <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-              <strong>Supplier Name:</strong> {apReview.supplierName}
-            </p>
-          )}
-          {apReview.supplierNumber && (
-            <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-              <strong>Supplier Number:</strong> {apReview.supplierNumber}
-            </p>
-          )}
-          {apReview.notes && (
-            <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-              <strong>Notes:</strong> {apReview.notes}
-            </p>
+        <NoticeBox
+          type={apReview.decision === 'rejected' ? 'error' : 'success'}
+          style={{ marginBottom: 'var(--space-24)' }}
+        >
+          {apReview.decision === 'rejected' ? (
+            <>
+              <strong>AP Control Decision: Rejected</strong>
+              <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+                <strong>Rejected by:</strong> {apReview.signature || apReview.reviewedBy}
+              </p>
+              <p style={{ marginTop: 'var(--space-4)', marginBottom: 0 }}>
+                <strong>Date:</strong> {formatDate(apReview.date || apReview.reviewedAt)}
+              </p>
+              <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+                <strong>Rejection Reason:</strong> {apReview.rejectionReason}
+              </p>
+            </>
+          ) : (
+            <>
+              <strong>AP Verification Complete</strong>
+              <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+                Verified by {apReview.signature || apReview.reviewedBy} on {formatDate(apReview.date || apReview.reviewedAt)}
+              </p>
+              {apReview.supplierName && (
+                <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+                  <strong>Supplier Name:</strong> {apReview.supplierName}
+                </p>
+              )}
+              {apReview.supplierNumber && (
+                <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+                  <strong>Supplier Number:</strong> {apReview.supplierNumber}
+                </p>
+              )}
+              {apReview.notes && (
+                <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+                  <strong>Notes:</strong> {apReview.notes}
+                </p>
+              )}
+            </>
           )}
         </NoticeBox>
       )}
