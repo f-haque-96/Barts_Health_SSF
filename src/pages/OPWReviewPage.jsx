@@ -262,6 +262,7 @@ const OPWReviewPage = () => {
           });
         }
 
+        setSubmission(updatedSubmission);
         alert('Supplier request has been rejected. The requester has been notified.');
         setIsSubmitting(false);
         return;
@@ -1004,8 +1005,8 @@ const OPWReviewPage = () => {
         </div>
       )}
 
-      {/* Contract Upload Section - Show after determination is made */}
-      {opwReview && (
+      {/* Contract Upload Section - Show after determination is made (but NOT for rejections) */}
+      {opwReview && opwReview.decision !== 'rejected' && (
         <div style={{
           marginTop: 'var(--space-32)',
           padding: 'var(--space-24)',

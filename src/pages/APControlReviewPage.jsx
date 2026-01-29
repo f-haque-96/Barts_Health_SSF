@@ -489,8 +489,8 @@ const APControlReviewPage = () => {
         });
       }
 
+      setSubmission(updatedSubmission);
       alert('Supplier request has been rejected. The requester has been notified.');
-      // Optionally navigate away or update UI
     } catch (error) {
       console.error('Error rejecting submission:', error);
       alert('Failed to reject submission. Please try again.');
@@ -527,10 +527,11 @@ const APControlReviewPage = () => {
   // Check if any previous stage has rejected the submission - block access if so
   const pbpRejected = submission.pbpReview?.decision === 'rejected';
   const procurementRejected = submission.procurementReview?.decision === 'rejected';
+  const opwRejected = submission.opwReview?.decision === 'rejected';
 
-  if (pbpRejected || procurementRejected) {
-    const rejectedBy = pbpRejected ? 'PBP' : 'Procurement';
-    const rejectionData = pbpRejected ? submission.pbpReview : submission.procurementReview;
+  if (pbpRejected || procurementRejected || opwRejected) {
+    const rejectedBy = pbpRejected ? 'PBP' : procurementRejected ? 'Procurement' : 'OPW Panel';
+    const rejectionData = pbpRejected ? submission.pbpReview : procurementRejected ? submission.procurementReview : submission.opwReview;
 
     return (
       <div style={{ padding: 'var(--space-32)', maxWidth: '800px', margin: '0 auto' }}>
@@ -548,7 +549,7 @@ const APControlReviewPage = () => {
           }}>
             <p style={{ margin: '0 0 var(--space-8) 0' }}><strong>Rejected by:</strong> {rejectionData?.signature || rejectionData?.reviewedBy || `${rejectedBy} Reviewer`}</p>
             <p style={{ margin: '0 0 var(--space-8) 0' }}><strong>Date:</strong> {rejectionData?.date ? formatDate(rejectionData.date) : 'Not recorded'}</p>
-            <p style={{ margin: 0 }}><strong>Reason:</strong> {rejectionData?.finalComments || rejectionData?.comments || submission.approvalComments || 'No reason provided'}</p>
+            <p style={{ margin: 0 }}><strong>Reason:</strong> {rejectionData?.rejectionReason || rejectionData?.finalComments || rejectionData?.comments || submission.approvalComments || 'No reason provided'}</p>
           </div>
           <p style={{ marginTop: 'var(--space-16)', marginBottom: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
             The requester has been notified of this rejection and must address the issues before resubmitting.
