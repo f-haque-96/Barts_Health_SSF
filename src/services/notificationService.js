@@ -60,7 +60,6 @@ export const createNotificationRecord = (notification) => {
   notifications.push(record);
   localStorage.setItem('notificationQueue', JSON.stringify(notifications));
 
-  console.log('Notification created:', record);
   return record;
 };
 
@@ -137,7 +136,6 @@ export const closeAlembaTicket = ({
   emailUser = true,
 }) => {
   if (!alembaReference) {
-    console.log('No Alemba reference provided, skipping ticket closure');
     return null;
   }
 
@@ -191,9 +189,6 @@ export const closeAlembaTicket = ({
   const alembaQueue = JSON.parse(localStorage.getItem('alembaActionQueue') || '[]');
   alembaQueue.push(alembaAction);
   localStorage.setItem('alembaActionQueue', JSON.stringify(alembaQueue));
-
-  console.log('Alemba ticket closure queued:', alembaAction);
-  console.log('Alemba fields to submit:', alembaAction.alembaFields);
 
   return alembaAction;
 };
@@ -368,7 +363,6 @@ export const notifyDepartment = (department, { type, submissionId, subject, body
   const departmentEmail = DEPARTMENT_EMAILS[department];
 
   if (!departmentEmail) {
-    console.warn(`Unknown department: ${department}`);
     return null;
   }
 

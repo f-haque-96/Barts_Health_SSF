@@ -58,9 +58,7 @@ export const getCompanyDetails = async (companyNumber) => {
 
     // Use backend API proxy to avoid CORS issues
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:7071/api';
-    
-    console.log('Verifying CRN via backend:', cleanedNumber);
-    
+
     const response = await fetch(`${API_URL}/VerifyCRN`, {
       method: 'POST',
       headers: {
@@ -96,8 +94,6 @@ export const getCompanyDetails = async (companyNumber) => {
     }
 
     // Backend successfully verified the company
-    console.log('CRN verified successfully:', result.data.companyName);
-
     return {
       success: true,
       data: {

@@ -28,7 +28,6 @@ const useFormStore = create(
           const saved = localStorage.getItem('formUploads');
           if (saved) {
             const parsed = JSON.parse(saved);
-            console.log('Loaded uploads from localStorage:', Object.keys(parsed));
             return parsed;
           }
         } catch (e) {
@@ -253,7 +252,6 @@ const useFormStore = create(
           // Persist to localStorage
           try {
             localStorage.setItem('formUploads', JSON.stringify(newUploads));
-            console.log('Uploads saved to localStorage:', Object.keys(newUploads));
           } catch (e) {
             console.error('Failed to save uploads to localStorage:', e);
           }
@@ -340,8 +338,6 @@ const useFormStore = create(
 
       // ----- Reset & Clear Actions -----
       resetForm: () => {
-        console.log('=== RESETTING FORM ===');
-
         // Clear form data from localStorage
         localStorage.removeItem('formData');
         localStorage.removeItem('formUploads');
@@ -362,8 +358,6 @@ const useFormStore = create(
           }
         }
         keysToRemove.forEach(key => localStorage.removeItem(key));
-
-        console.log('Cleared localStorage keys:', keysToRemove);
 
         // Reset store state
         set({
@@ -520,6 +514,9 @@ const useFormStore = create(
         if (!formData.vatRegistered) return false;
         if (formData.vatRegistered === 'yes' && !formData.vatNumber) return false;
 
+        if (!formData.cisRegistered) return false;
+        if (formData.cisRegistered === 'yes' && !formData.utrNumber) return false;
+
         // All validations passed
         return true;
       },
@@ -562,13 +559,6 @@ const useFormStore = create(
             break;
 
           case 3:
-            console.log('=== SECTION 3 VALIDATION DEBUG ===');
-            console.log('companiesHouseRegistered:', formData.companiesHouseRegistered);
-            console.log('supplierType:', formData.supplierType);
-            console.log('organisationType:', formData.organisationType);
-            console.log('crn:', formData.crn);
-            console.log('charityNumber:', formData.charityNumber);
-
             // Always required
             if (!formData.companiesHouseRegistered) missing.push('Companies House Registration Status');
             if (!formData.supplierType) missing.push('Supplier Type');
@@ -611,13 +601,6 @@ const useFormStore = create(
             // Always required regardless of type
             if (!formData.annualValue) missing.push('Annual Value');
             if (!formData.employeeCount) missing.push('Employee Count');
-
-            console.log('Section 3 missing fields:', missing.filter(f =>
-              ['Companies House Registration Status', 'Supplier Type', 'Annual Value',
-               'Employee Count', 'Company Registration Number',
-               'Charity Number', 'Organisation Type', 'ID Type', 'Passport Photo',
-               'Driving Licence (Front)', 'Driving Licence (Back)', 'Charity Registration Number'].includes(f)
-            ));
             break;
 
           case 4:
@@ -715,9 +698,6 @@ const useFormStore = create(
               missing.push('Passport or Driving Licence (Upload Required for Sole Traders)');
             }
           }
-
-          console.log('Upload validation - Current uploads:', currentUploads);
-          console.log('Upload validation - Missing:', missing.filter(m => m.includes('Upload')));
         }
 
         return missing;

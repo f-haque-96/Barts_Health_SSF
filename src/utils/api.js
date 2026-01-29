@@ -28,7 +28,6 @@ export const isBackendConfigured = () => {
  */
 const apiCall = async (endpoint, data, options = {}) => {
   if (!endpoint) {
-    console.warn('API endpoint not configured, using mock mode');
     return mockApiResponse(options.mockType, data);
   }
 
@@ -62,37 +61,37 @@ const mockApiResponse = (type, data) => {
 
   switch (type) {
     case 'submitPBP':
-      return {
+      return Promise.resolve({
         success: true,
         submissionId,
         message: 'Questionnaire submitted for PBP review (MOCK)',
         mockMode: true,
-      };
+      });
     case 'submitForm':
-      return {
+      return Promise.resolve({
         success: true,
         submissionId: data.submissionId || submissionId,
         message: 'Form submitted successfully (MOCK)',
         mockMode: true,
-      };
+      });
     case 'getSubmission':
-      return {
+      return Promise.resolve({
         success: true,
         submission: JSON.parse(localStorage.getItem(`submission_${data.submissionId}`) || '{}'),
         mockMode: true,
-      };
+      });
     case 'decision':
-      return {
+      return Promise.resolve({
         success: true,
         message: 'Decision recorded (MOCK)',
         mockMode: true,
-      };
+      });
     default:
-      return {
+      return Promise.resolve({
         success: true,
         message: 'Operation completed (MOCK)',
         mockMode: true,
-      };
+      });
   }
 };
 
@@ -347,7 +346,6 @@ export const uploadDocument = async (submissionId, file, documentType) => {
 
   if (!endpoint) {
     // Mock mode - return fake URL
-    console.warn('Document upload not configured, using mock');
     return {
       success: true,
       documentUrl: `mock://documents/${submissionId}/${file.name}`,
@@ -391,7 +389,6 @@ export const uploadDocument = async (submissionId, file, documentType) => {
 export const getAlembaTicketStatus = async (ticketId) => {
   // This would typically be called through a Power Automate flow
   // that has the Alemba credentials
-  console.log('Alemba ticket status check:', ticketId);
   return { status: 'Open', ticketId };
 };
 

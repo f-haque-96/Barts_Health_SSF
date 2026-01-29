@@ -160,9 +160,6 @@ const QuestionnaireModal = ({ isOpen, onClose, onComplete, type = 'clinical', se
         uploadedFiles: questionnaireUploads,
       });
 
-      console.log('=== QUESTIONNAIRE SUBMIT ===');
-      console.log('Questionnaire Uploads:', questionnaireUploads);
-
       // Create a submission for PBP review - includes Section 2 data
       const questionnaireSubmission = {
         submissionId: questionnaireId,
@@ -188,8 +185,6 @@ const QuestionnaireModal = ({ isOpen, onClose, onComplete, type = 'clinical', se
         submittedBy: formData.nhsEmail || 'Unknown',
         isQuestionnaire: true,
       };
-
-      console.log('Full questionnaire submission:', questionnaireSubmission);
 
       // Save to localStorage for PBP review
       localStorage.setItem(`submission_${questionnaireId}`, JSON.stringify(questionnaireSubmission));

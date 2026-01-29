@@ -10,7 +10,7 @@ import { Button, NoticeBox, ApprovalStamp, Textarea, RadioGroup, SignatureSectio
 import { formatDate } from '../utils/helpers';
 import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
-import { sendApprovalNotification, notifyDepartment } from '../services/notificationService';
+import { sendApprovalNotification, notifyDepartment, sendRejectionNotification } from '../services/notificationService';
 
 const ReviewItem = ({ label, value, raw = false }) => {
   if (!value && value !== 0) return null;
@@ -60,11 +60,10 @@ const OPWReviewPage = () => {
   const [contractFile, setContractFile] = useState(null);
   const [contractUploadedBy, setContractUploadedBy] = useState('');
   const [isSavingContract, setIsSavingContract] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
 
   // Handle document preview
   const handlePreviewDocument = (file) => {
-    console.log('Preview file:', file); // Debug log
-
     if (!file) {
       alert('No document available to preview');
       return;
@@ -166,10 +165,6 @@ const OPWReviewPage = () => {
   }, [submissionId]);
 
   const handleSubmitDetermination = async () => {
-    console.log('=== IR35 DETERMINATION SAVE ===');
-    console.log('Selected IR35 Status:', ir35Determination);
-    console.log('ir35Status value type:', typeof ir35Determination);
-
     if (!signatureName.trim()) {
       alert('Please provide your digital signature (full name)');
       return;
@@ -185,7 +180,23 @@ const OPWReviewPage = () => {
       return;
     }
 
-    if (!rationale.trim()) {
+    // Validation for rejection
+    if (ir35Determination === 'rejected') {
+      if (!rejectionReason.trim()) {
+        alert('Please provide a rejection reason');
+        return;
+      }
+
+      const confirmReject = window.confirm(
+        'Are you sure you want to reject this supplier request?\n\n' +
+        'This action will notify the requester and close the request.'
+      );
+
+      if (!confirmReject) return;
+    }
+
+    // Validation for inside/outside determinations
+    if ((ir35Determination === 'inside' || ir35Determination === 'outside') && !rationale.trim()) {
       alert('Please provide a rationale for your determination');
       return;
     }
@@ -196,7 +207,67 @@ const OPWReviewPage = () => {
       // Load fresh from localStorage to get any updates
       const currentSubmission = JSON.parse(localStorage.getItem(`submission_${submissionId}`)) || submission;
 
-      // Build OPW review data
+      // Handle rejection case
+      if (ir35Determination === 'rejected') {
+        // Build OPW rejection data
+        const opwReviewData = {
+          decision: 'rejected',
+          rejectionReason,
+          signature: signatureName,
+          date: signatureDate,
+          reviewedBy: 'OPW Panel Member',
+          reviewedAt: new Date().toISOString(),
+        };
+
+        // Update submission with rejection
+        const updatedSubmission = {
+          ...currentSubmission,
+          opwReview: opwReviewData,
+          status: 'Rejected_OPW',
+          currentStage: 'Rejected',
+        };
+
+        // Save to localStorage
+        localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
+
+        // Update submissions list
+        const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+        const index = submissions.findIndex(s => s.submissionId === submissionId);
+        if (index !== -1) {
+          submissions[index].status = 'rejected';
+          submissions[index].rejectedBy = 'OPW Panel';
+          localStorage.setItem('all_submissions', JSON.stringify(submissions));
+        }
+
+        // Send rejection notification
+        const supplierName = currentSubmission?.formData?.companyName ||
+          currentSubmission?.formData?.section4?.companyName ||
+          'Unknown Supplier';
+        const requesterEmail = currentSubmission?.formData?.nhsEmail ||
+          currentSubmission?.formData?.section1?.nhsEmail;
+        const requesterName = `${currentSubmission?.formData?.firstName || currentSubmission?.formData?.section1?.firstName || ''} ${currentSubmission?.formData?.lastName || currentSubmission?.formData?.section1?.lastName || ''}`.trim();
+        const alembaReference = currentSubmission?.alembaReference;
+
+        if (requesterEmail) {
+          sendRejectionNotification({
+            submissionId,
+            requesterEmail,
+            requesterName,
+            supplierName,
+            rejectedBy: signatureName,
+            rejectedByRole: 'OPW Panel',
+            rejectionReason,
+            rejectionDate: new Date().toISOString(),
+            alembaReference,
+          });
+        }
+
+        alert('Supplier request has been rejected. The requester has been notified.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Build OPW review data for inside/outside determinations
       const opwReviewData = {
         ir35Status: ir35Determination,
         rationale,
@@ -234,15 +305,6 @@ const OPWReviewPage = () => {
           : currentSubmission.currentStage,
       };
 
-      console.log('Saving OPW Review Data:', updatedSubmission.opwReview);
-      console.log('ir35Status in saved data:', updatedSubmission.opwReview.ir35Status);
-      console.log('OPW Review - Saving submission:', updatedSubmission);
-      console.log('Has pbpReview:', !!updatedSubmission.pbpReview);
-      console.log('Has procurementReview:', !!updatedSubmission.procurementReview);
-      console.log('PBP Review preserved:', updatedSubmission.pbpReview);
-      console.log('Procurement Review preserved:', updatedSubmission.procurementReview);
-      console.log('OPW Review:', updatedSubmission.opwReview);
-
       // Save back to localStorage
       localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
 
@@ -276,7 +338,6 @@ const OPWReviewPage = () => {
   const handleContractUpload = async (fileData) => {
     // FileUpload component passes an object with {name, size, type, file, base64}
     if (fileData) {
-      console.log('Contract file uploaded:', fileData.name, 'Has base64:', !!fileData.base64);
       setContractFile(fileData);
     }
   };
@@ -310,15 +371,6 @@ const OPWReviewPage = () => {
           submittedAt: new Date().toISOString(),
         },
       };
-
-      console.log('Contract Upload - Saving submission:', updatedSubmission);
-      console.log('Has pbpReview:', !!updatedSubmission.pbpReview);
-      console.log('Has procurementReview:', !!updatedSubmission.procurementReview);
-      console.log('Has opwReview:', !!updatedSubmission.opwReview);
-      console.log('PBP Review preserved:', updatedSubmission.pbpReview);
-      console.log('Procurement Review preserved:', updatedSubmission.procurementReview);
-      console.log('OPW Review preserved:', updatedSubmission.opwReview);
-      console.log('Contract Drafter:', updatedSubmission.contractDrafter);
 
       // Save back to localStorage
       localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
@@ -601,6 +653,21 @@ const OPWReviewPage = () => {
         <ReviewItem label="Contact Phone" value={formData.contactPhone} />
       </ReviewCard>
 
+      {/* Section 6: Financial Information */}
+      <ReviewCard title="Section 6: Financial & Accounts">
+        <ReviewItem label="Overseas Supplier" value={formData.overseasSupplier} />
+        {formData.iban && <ReviewItem label="IBAN" value={formData.iban} />}
+        <ReviewItem label="Accounts Address Same" value={formData.accountsAddressSame} />
+        <ReviewItem label="GHX/DUNS Known" value={formData.ghxDunsKnown} />
+        {formData.ghxDunsNumber && <ReviewItem label="GHX/DUNS Number" value={formData.ghxDunsNumber} />}
+        <ReviewItem label="CIS Registered" value={formData.cisRegistered} />
+        {formData.utrNumber && <ReviewItem label="UTR Number" value={formData.utrNumber} />}
+        <ReviewItem label="VAT Registered" value={formData.vatRegistered} />
+        {formData.vatNumber && <ReviewItem label="VAT Number" value={formData.vatNumber} />}
+        <ReviewItem label="Public Liability Insurance" value={formData.publicLiability} />
+        {formData.plCoverage && <ReviewItem label="Coverage" value={`£${formData.plCoverage?.toLocaleString()}`} />}
+      </ReviewCard>
+
       {/* Uploaded Documents */}
       {submission.uploadedFiles && Object.keys(submission.uploadedFiles).length > 0 && (
         <ReviewCard title="Uploaded Documents">
@@ -815,6 +882,11 @@ const OPWReviewPage = () => {
                   label: 'Inside IR35',
                   description: 'Worker operates like an employee - subject to control, no business risk, single client relationship'
                 },
+                {
+                  value: 'rejected',
+                  label: 'Reject Request',
+                  description: 'Insufficient evidence, non-compliance, or other issues prevent approval'
+                },
               ]}
               value={ir35Determination}
               onChange={setIr35Determination}
@@ -847,17 +919,46 @@ const OPWReviewPage = () => {
             </div>
           )}
 
-          <Textarea
-            label="Rationale for Determination (Required)"
-            value={rationale}
-            onChange={(e) => setRationale(e.target.value)}
-            rows={6}
-            placeholder="Provide a detailed rationale for your IR35 determination, referencing the CEST form and evidence provided. Explain key factors considered such as control, substitution rights, mutuality of obligation, and financial risk..."
-            required
-            maxLength={1000}
-            showCharCount
-            style={{ marginBottom: 'var(--space-16)' }}
-          />
+          {/* Rejection Reason Box - Only shown when Reject is selected */}
+          {ir35Determination === 'rejected' && (
+            <div style={{
+              marginBottom: 'var(--space-16)',
+              padding: 'var(--space-16)',
+              border: '2px solid var(--color-danger)',
+              borderRadius: 'var(--radius-base)',
+              backgroundColor: '#fff5f5'
+            }}>
+              <h4 style={{ margin: '0 0 var(--space-12) 0', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CircleXIcon size={20} />
+                Rejection Reason Required
+              </h4>
+              <Textarea
+                label="Rejection Reason"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={5}
+                placeholder="Explain why this supplier request is being rejected by the OPW Panel (e.g., insufficient IR35 evidence, invalid CEST form, non-compliance with OPW policies, missing required documentation)..."
+                required
+                maxLength={1000}
+                showCharCount
+              />
+            </div>
+          )}
+
+          {/* Rationale - Only shown for Inside/Outside IR35 determinations */}
+          {(ir35Determination === 'inside' || ir35Determination === 'outside') && (
+            <Textarea
+              label="Rationale for Determination (Required)"
+              value={rationale}
+              onChange={(e) => setRationale(e.target.value)}
+              rows={6}
+              placeholder="Provide a detailed rationale for your IR35 determination, referencing the CEST form and evidence provided. Explain key factors considered such as control, substitution rights, mutuality of obligation, and financial risk..."
+              required
+              maxLength={1000}
+              showCharCount
+              style={{ marginBottom: 'var(--space-16)' }}
+            />
+          )}
 
           <SignatureSection
             signatureName={signatureName}
@@ -870,11 +971,20 @@ const OPWReviewPage = () => {
 
           <div style={{ display: 'flex', gap: 'var(--space-12)', marginTop: 'var(--space-16)' }}>
             <Button
-              variant="primary"
+              variant={ir35Determination === 'rejected' ? 'danger' : 'primary'}
               onClick={handleSubmitDetermination}
-              disabled={isSubmitting || !ir35Determination || !rationale.trim()}
+              disabled={
+                isSubmitting ||
+                !ir35Determination ||
+                (ir35Determination === 'rejected' && !rejectionReason.trim()) ||
+                ((ir35Determination === 'inside' || ir35Determination === 'outside') && !rationale.trim())
+              }
             >
-              {isSubmitting ? 'Submitting...' : 'Submit Determination'}
+              {isSubmitting
+                ? 'Submitting...'
+                : ir35Determination === 'rejected'
+                ? 'Submit Rejection'
+                : 'Submit Determination'}
             </Button>
             <Button
               variant="outline"

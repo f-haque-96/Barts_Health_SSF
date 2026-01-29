@@ -186,12 +186,6 @@ const Section7ReviewSubmit = () => {
     const missing = getMissingFields('all');
     setMissingFields(missing);
     setCanSubmitWithUploads(missing.length === 0);
-
-    console.log('Section 7 Validation:', {
-      missingFields: missing,
-      canSubmit: missing.length === 0,
-      uploads: uploadedFiles
-    });
   }, [formData, uploadedFiles, getMissingFields]);
 
   // Also check on component mount
@@ -252,12 +246,6 @@ const Section7ReviewSubmit = () => {
       // Update form store
       setSubmissionId(submissionId);
       setSubmitSuccess(true);
-
-      console.log('✅ Form submitted successfully!', {
-        submissionId,
-        submissionDate,
-        status: 'Stored in localStorage',
-      });
     } catch (error) {
       console.error('❌ Submission error:', error);
       setSubmitError(
@@ -369,8 +357,6 @@ const Section7ReviewSubmit = () => {
       setTestSubmissionId(currentSubmissionId);
       localStorage.setItem('current-test-submission-id', currentSubmissionId);
 
-      console.log('Creating new test submission:', currentSubmissionId);
-
       const newSubmission = {
         id: currentSubmissionId,
         submissionId: currentSubmissionId,
@@ -388,11 +374,8 @@ const Section7ReviewSubmit = () => {
         apReview: null
       };
 
-      console.log('Saving submission with uploads:', newSubmission.uploadedFiles);
       localStorage.setItem(`submission_${currentSubmissionId}`, JSON.stringify(newSubmission));
     } else {
-      console.log('Reusing existing test submission:', currentSubmissionId);
-
       // Load existing submission and update form data (but preserve reviews)
       const existing = localStorage.getItem(`submission_${currentSubmissionId}`);
       if (existing) {
@@ -409,12 +392,6 @@ const Section7ReviewSubmit = () => {
           apReview: parsed.apReview
         };
         localStorage.setItem(`submission_${currentSubmissionId}`, JSON.stringify(updated));
-        console.log('Updated submission, preserved reviews:', {
-          pbpReview: !!updated.pbpReview,
-          procurementReview: !!updated.procurementReview,
-          opwReview: !!updated.opwReview,
-          contractDrafter: !!updated.contractDrafter
-        });
       }
     }
 
@@ -571,6 +548,10 @@ const Section7ReviewSubmit = () => {
         <ReviewItem label="Overseas Supplier" value={formData.overseasSupplier} />
         {formData.iban && <ReviewItem label="IBAN" value={formData.iban} />}
         <ReviewItem label="Accounts Address Same" value={formData.accountsAddressSame} />
+        <ReviewItem label="GHX/DUNS Known" value={formData.ghxDunsKnown} />
+        {formData.ghxDunsNumber && <ReviewItem label="GHX/DUNS Number" value={formData.ghxDunsNumber} />}
+        <ReviewItem label="CIS Registered" value={formData.cisRegistered} />
+        {formData.utrNumber && <ReviewItem label="UTR Number" value={formData.utrNumber} />}
         <ReviewItem label="VAT Registered" value={formData.vatRegistered} />
         {formData.vatNumber && <ReviewItem label="VAT Number" value={formData.vatNumber} />}
         <ReviewItem label="Public Liability Insurance" value={formData.publicLiability} />

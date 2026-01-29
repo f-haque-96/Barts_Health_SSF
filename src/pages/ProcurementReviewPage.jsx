@@ -62,8 +62,6 @@ const ProcurementReviewPage = () => {
 
   // Handle document preview
   const handlePreviewDocument = (file) => {
-    console.log('Preview file:', file); // Debug log
-
     if (!file) {
       alert('No document available to preview');
       return;
@@ -204,11 +202,6 @@ const ProcurementReviewPage = () => {
         },
       };
 
-      console.log('Procurement Review - Saving submission:', updatedSubmission);
-      console.log('Has pbpReview:', !!updatedSubmission.pbpReview);
-      console.log('PBP Review preserved:', updatedSubmission.pbpReview);
-      console.log('Procurement Review:', updatedSubmission.procurementReview);
-
       // Save back to localStorage
       localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
 
@@ -259,11 +252,6 @@ const ProcurementReviewPage = () => {
         const auditTrail = JSON.parse(localStorage.getItem('auditTrail') || '[]');
         auditTrail.push(auditEntry);
         localStorage.setItem('auditTrail', JSON.stringify(auditTrail));
-
-        // Log Alemba ticket closure if applicable
-        if (existingAlembaRef) {
-          console.log(`ALEMBA: Ticket ${existingAlembaRef} closed due to Procurement rejection`);
-        }
       }
 
       // Send approval notification and route to next stage
@@ -574,6 +562,10 @@ const ProcurementReviewPage = () => {
         <ReviewItem label="Overseas Supplier" value={formData.overseasSupplier} />
         {formData.iban && <ReviewItem label="IBAN" value={formData.iban} />}
         <ReviewItem label="Accounts Address Same" value={formData.accountsAddressSame} />
+        <ReviewItem label="GHX/DUNS Known" value={formData.ghxDunsKnown} />
+        {formData.ghxDunsNumber && <ReviewItem label="GHX/DUNS Number" value={formData.ghxDunsNumber} />}
+        <ReviewItem label="CIS Registered" value={formData.cisRegistered} />
+        {formData.utrNumber && <ReviewItem label="UTR Number" value={formData.utrNumber} />}
         <ReviewItem label="VAT Registered" value={formData.vatRegistered} />
         {formData.vatNumber && <ReviewItem label="VAT Number" value={formData.vatNumber} />}
         <ReviewItem label="Public Liability Insurance" value={formData.publicLiability} />

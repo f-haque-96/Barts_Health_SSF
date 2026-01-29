@@ -10,7 +10,7 @@ import { Button, NoticeBox, Checkbox, Textarea, SignatureSection, Input, CheckIc
 import { formatDate, formatCurrency } from '../utils/helpers';
 import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
-import { sendApprovalNotification, notifyDepartment } from '../services/notificationService';
+import { sendApprovalNotification, notifyDepartment, closeAlembaOnCompletion, sendRejectionNotification } from '../services/notificationService';
 
 const ReviewItem = ({ label, value, highlight, raw = false, badge }) => {
   if (!value && value !== 0) return null;
@@ -130,6 +130,7 @@ const APControlReviewPage = () => {
   const [supplierName, setSupplierName] = useState('');
   const [supplierNumber, setSupplierNumber] = useState('');
   const [additionalInfo, setAdditionalInfo] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
 
   // Function to get full submission with ALL authorisations for PDF
   const getFullSubmissionForPDF = () => {
@@ -145,12 +146,6 @@ const APControlReviewPage = () => {
     }
 
     const currentSubmission = storedSubmission ? JSON.parse(storedSubmission) : submission;
-
-    console.log('=== GET FULL SUBMISSION DEBUG ===');
-    console.log('Submission ID:', submissionId);
-    console.log('Found in localStorage:', !!storedSubmission);
-    console.log('Current submission:', currentSubmission);
-    console.log('Local submission state:', submission);
 
     // Ensure formData structure exists with proper fallbacks
     const formData = currentSubmission?.formData || {};
@@ -212,16 +207,11 @@ const APControlReviewPage = () => {
       uploadedFiles: currentSubmission?.uploadedFiles || currentSubmission?.uploads || {},
     };
 
-    console.log('Full submission for PDF:', fullSubmission);
-    console.log('formData.section4.companyName:', fullSubmission.formData.section4.companyName);
-
     return fullSubmission;
   };
 
   // Handle document preview
   const handlePreviewDocument = (file) => {
-    console.log('Preview file:', file); // Debug log
-
     if (!file) {
       alert('No document available to preview');
       return;
@@ -309,25 +299,6 @@ const APControlReviewPage = () => {
         const parsed = JSON.parse(submissionData);
         setSubmission(parsed);
 
-        console.log('=== AP CONTROL - PREVIOUS AUTH DEBUG ===');
-        console.log('Full submission:', parsed);
-        console.log('Procurement Review:', parsed.procurementReview);
-        if (parsed.procurementReview) {
-          console.log('Procurement signature:', parsed.procurementReview.signature);
-          console.log('Procurement signatureName:', parsed.procurementReview.signatureName);
-          console.log('Procurement date:', parsed.procurementReview.date);
-          console.log('Procurement signatureDate:', parsed.procurementReview.signatureDate);
-        }
-        console.log('OPW Review:', parsed.opwReview);
-        if (parsed.opwReview) {
-          console.log('OPW signature:', parsed.opwReview.signature);
-          console.log('OPW signatureName:', parsed.opwReview.signatureName);
-          console.log('OPW date:', parsed.opwReview.date);
-          console.log('OPW signatureDate:', parsed.opwReview.signatureDate);
-        }
-        console.log('PBP Review:', parsed.pbpReview);
-        console.log('Contract Drafter:', parsed.contractDrafter);
-
         // Pre-fill supplier name from form data
         if (parsed.formData?.companyName) {
           setSupplierName(parsed.formData.companyName);
@@ -400,17 +371,6 @@ const APControlReviewPage = () => {
         },
       };
 
-      console.log('=== AP CONTROL FINAL SUBMISSION ===');
-      console.log('Has pbpReview:', !!updatedSubmission.pbpReview);
-      console.log('Has procurementReview:', !!updatedSubmission.procurementReview);
-      console.log('Has opwReview:', !!updatedSubmission.opwReview);
-      console.log('Has contractDrafter:', !!updatedSubmission.contractDrafter);
-      console.log('pbpReview:', updatedSubmission.pbpReview);
-      console.log('procurementReview:', updatedSubmission.procurementReview);
-      console.log('opwReview:', updatedSubmission.opwReview);
-      console.log('contractDrafter:', updatedSubmission.contractDrafter);
-      console.log('apReview:', updatedSubmission.apReview);
-
       // Save back to localStorage
       localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
 
@@ -436,6 +396,104 @@ const APControlReviewPage = () => {
     } catch (error) {
       console.error('Error updating submission:', error);
       alert('Failed to update submission. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectionReason.trim()) {
+      alert('Please provide a reason for rejection');
+      return;
+    }
+
+    if (!signatureName.trim()) {
+      alert('Please provide your digital signature (full name)');
+      return;
+    }
+
+    const confirmReject = window.confirm(
+      'Are you sure you want to reject this supplier request?\n\n' +
+      'This action will notify the requester and close the request.'
+    );
+
+    if (!confirmReject) return;
+
+    setIsSubmitting(true);
+
+    try {
+      // Load fresh from localStorage
+      const currentSubmission = JSON.parse(localStorage.getItem(`submission_${submissionId}`)) || submission;
+
+      // Build AP rejection data
+      const apReviewData = {
+        decision: 'rejected',
+        rejectionReason,
+        signature: signatureName,
+        date: signatureDate,
+        reviewedBy: 'AP Control Team',
+        reviewedAt: new Date().toISOString(),
+      };
+
+      // Update submission with rejection
+      const updatedSubmission = {
+        ...currentSubmission,
+        apReview: apReviewData,
+        status: 'Rejected_AP',
+        currentStage: 'Rejected',
+      };
+
+      // Save to localStorage
+      localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
+
+      // Update submissions list
+      const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+      const index = submissions.findIndex(s => s.submissionId === submissionId);
+      if (index !== -1) {
+        submissions[index].status = 'rejected';
+        submissions[index].rejectedBy = 'AP Control';
+        localStorage.setItem('all_submissions', JSON.stringify(submissions));
+      }
+
+      // Send rejection notification
+      const supplierName = currentSubmission?.formData?.companyName ||
+        currentSubmission?.formData?.section4?.companyName ||
+        'Unknown Supplier';
+      const requesterEmail = currentSubmission?.formData?.nhsEmail ||
+        currentSubmission?.formData?.section1?.nhsEmail;
+      const requesterName = `${currentSubmission?.formData?.firstName || currentSubmission?.formData?.section1?.firstName || ''} ${currentSubmission?.formData?.lastName || currentSubmission?.formData?.section1?.lastName || ''}`.trim();
+      const alembaReference = currentSubmission?.alembaReference;
+
+      if (requesterEmail) {
+        sendRejectionNotification({
+          submissionId,
+          requesterEmail,
+          requesterName,
+          supplierName,
+          rejectedBy: signatureName,
+          rejectedByRole: 'AP Control',
+          rejectionReason,
+          rejectionDate: new Date().toISOString(),
+          alembaReference,
+        });
+      }
+
+      // Close Alemba ticket if exists
+      if (alembaReference) {
+        closeAlembaOnCompletion({
+          alembaReference,
+          submissionId,
+          supplierName,
+          vendorNumber: null,
+          completedBy: signatureName,
+        });
+      }
+
+      alert('Supplier request has been rejected. The requester has been notified.');
+      // Optionally navigate away or update UI
+    } catch (error) {
+      console.error('Error rejecting submission:', error);
+      alert('Failed to reject submission. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -1414,6 +1472,38 @@ const APControlReviewPage = () => {
               setSignatureDate(date);
             }}
           />
+
+          {/* Rejection Section */}
+          <div style={{
+            marginTop: 'var(--space-24)',
+            padding: 'var(--space-16)',
+            border: '2px solid var(--color-danger)',
+            borderRadius: 'var(--radius-base)',
+            backgroundColor: '#fff5f5'
+          }}>
+            <h4 style={{ margin: '0 0 var(--space-12) 0', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CircleXIcon size={20} />
+              Reject This Request
+            </h4>
+            <p style={{ margin: '0 0 var(--space-12) 0', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+              If bank details cannot be verified or there are compliance issues, reject the supplier request below.
+            </p>
+            <Textarea
+              label="Rejection Reason"
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              rows={4}
+              placeholder="Explain why this supplier request is being rejected (e.g., bank details do not match, invalid account number, VAT number mismatch, failed compliance checks)..."
+              style={{ marginBottom: 'var(--space-12)' }}
+            />
+            <Button
+              variant="danger"
+              onClick={handleReject}
+              disabled={isSubmitting || !rejectionReason.trim() || !signatureName.trim()}
+            >
+              {isSubmitting ? 'Rejecting...' : 'Reject Request'}
+            </Button>
+          </div>
 
           <div style={{ display: 'flex', gap: 'var(--space-12)', marginTop: 'var(--space-16)' }}>
             <Button

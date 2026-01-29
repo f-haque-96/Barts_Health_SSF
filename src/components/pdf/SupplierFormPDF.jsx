@@ -432,12 +432,6 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submissionDate
   const firstName = normalizedData.section1?.firstName || normalizedData.firstName || '';
   const lastName = normalizedData.section1?.lastName || normalizedData.lastName || '';
 
-  console.log('=== PDF GENERATION DEBUG ===');
-  console.log('Submission:', submission);
-  console.log('FormData:', formData);
-  console.log('Normalized Data:', normalizedData);
-  console.log('Company Name:', companyName);
-
   const generateDate = new Date().toLocaleDateString('en-GB', {
     day: '2-digit',
     month: 'long',

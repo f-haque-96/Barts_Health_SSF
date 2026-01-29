@@ -33,12 +33,6 @@ const ProgressIndicator = () => {
 
   // Force update when section or data changes
   useEffect(() => {
-    console.log('ProgressIndicator state:', {
-      currentSection,
-      visitedSections,
-      formDataKeys: Object.keys(formData),
-      uploadsKeys: Object.keys(uploadedFiles)
-    });
     forceUpdate({});
   }, [currentSection, formData, uploadedFiles, visitedSections]);
 
@@ -59,17 +53,6 @@ const ProgressIndicator = () => {
       // Show warning if sole trader selected but Q2.2 not answered as "yes"
       return 'warning';
     }
-
-    // Debug logging
-    console.log(`Section ${section}:`, {
-      missing: missing.length,
-      missingFields: missing,
-      visited,
-      currentSection,
-      status: section === currentSection ? 'active' :
-              (missing.length === 0 && visited) ? 'complete' :
-              (visited && missing.length > 0) ? 'incomplete' : 'pending'
-    });
 
     if (visited) {
       // No missing fields = complete

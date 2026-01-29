@@ -371,7 +371,8 @@ const PBPReviewPage = () => {
     if (!file) return;
 
     // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
       alert(`File "${file.name}" is too large. Maximum size is 5MB.`);
       return;
     }
@@ -380,8 +381,14 @@ const PBPReviewPage = () => {
       const base64 = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
+        reader.onload = () => {
+          if (reader.result) {
+            resolve(reader.result);
+          } else {
+            reject(new Error('Failed to read file'));
+          }
+        };
+        reader.onerror = () => reject(new Error('FileReader error'));
       });
 
       setExchangeAttachments(prev => ({
@@ -407,14 +414,12 @@ const PBPReviewPage = () => {
   };
 
   useEffect(() => {
-    console.log('=== PBP PAGE: LOADING SUBMISSION ===');
     // Load submission from localStorage
     const submissionData = localStorage.getItem(`submission_${submissionId}`);
 
     if (submissionData) {
       try {
         const parsed = JSON.parse(submissionData);
-        console.log('Parsed submission:', parsed);
         setSubmission(parsed);
 
         // Load letterhead and procurement approval from multiple locations
@@ -459,9 +464,6 @@ const PBPReviewPage = () => {
           }
         }
 
-        console.log('Letterhead found:', !!letterhead);
-        console.log('Procurement Approval found:', !!procurementApproval);
-
         setAllUploads({
           letterhead,
           procurementApproval
@@ -488,7 +490,6 @@ const PBPReviewPage = () => {
           }
         }
 
-        console.log('Questionnaire Uploads found:', Object.keys(qUploads));
         setQuestionnaireUploads(qUploads);
       } catch (error) {
         console.error('Error parsing submission:', error);
@@ -499,8 +500,6 @@ const PBPReviewPage = () => {
   }, [submissionId]);
 
   const handlePreviewDocument = (file) => {
-    console.log('Preview file:', file); // Debug log
-
     if (!file) {
       alert('No document available to preview');
       return;
@@ -677,8 +676,6 @@ const PBPReviewPage = () => {
         const auditTrail = JSON.parse(localStorage.getItem('auditTrail') || '[]');
         auditTrail.push(auditEntry);
         localStorage.setItem('auditTrail', JSON.stringify(auditTrail));
-
-        console.log('AUDIT: Requester flagged for rejection and notified:', auditEntry);
       }
 
       // Handle approval notification
@@ -709,10 +706,7 @@ const PBPReviewPage = () => {
             submissionId: s.submissionId,
           }));
 
-        const duplicateCheck = checkAndFlagDuplicates({ submissionId, companyName: suppName }, existingSuppliers);
-        if (duplicateCheck.flagged) {
-          console.log('DUPLICATE FLAG: Potential duplicate suppliers detected:', duplicateCheck.matches);
-        }
+        checkAndFlagDuplicates({ submissionId, companyName: suppName }, existingSuppliers);
       }
 
       // Check for conflict of interest and flag
