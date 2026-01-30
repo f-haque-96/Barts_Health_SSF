@@ -1,6 +1,6 @@
-# NHS Supplier Setup Form - Future Roadmap
+# NHS Supplier Setup Form - Project Roadmap
 
-**Version:** 1.0
+**Version:** 2.0
 **Created:** January 2026
 **Author:** Fahimul Haque
 **Organisation:** Barts Health NHS Trust
@@ -9,12 +9,21 @@
 
 ## Purpose of This Document
 
-This document outlines planned features, enhancements, and fixes for the NHS Supplier Setup Form application. It serves as a reference for future development sessions to provide context and technical specifications.
+This document tracks the project phases, current status, deployment timeline, and planned future features for the NHS Supplier Setup Form application.
 
 ---
 
 ## Table of Contents
 
+### Project Status & Timeline
+- [Current Project Status](#current-project-status)
+- [Deployment Phases](#deployment-phases)
+- [Timeline to Launch](#timeline-to-launch)
+- [What Has Been Completed](#what-has-been-completed)
+- [What Is In Progress](#what-is-in-progress)
+- [What Is Blocked](#what-is-blocked)
+
+### Future Features
 1. [Feature: VAT Number Validation (HMRC API)](#1-feature-vat-number-validation-hmrc-api)
 2. [Feature: Confirmation of Payee (CoP)](#2-feature-confirmation-of-payee-cop)
 3. [Feature: Enhanced CRN Verification on AP Page](#3-feature-enhanced-crn-verification-on-ap-page)
@@ -22,6 +31,256 @@ This document outlines planned features, enhancements, and fixes for the NHS Sup
 5. [Feature: Environment Toggle (Dev/Prod Storage)](#5-feature-environment-toggle-devprod-storage)
 6. [Technical Debt & Fixes](#6-technical-debt--fixes)
 7. [Implementation Priority](#7-implementation-priority)
+
+---
+
+# PROJECT STATUS & TIMELINE
+
+---
+
+## Current Project Status
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         PROJECT STATUS OVERVIEW                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   PHASE 1: Development           ████████████████████████████████  100%     │
+│   PHASE 2: Documentation         ████████████████████████████████  100%     │
+│   PHASE 3: Infrastructure        ████████████░░░░░░░░░░░░░░░░░░░░   35%     │
+│   PHASE 4: IT Dependencies       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    0%     │
+│   PHASE 5: Deployment            ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    0%     │
+│   PHASE 6: Testing & Go-Live     ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    0%     │
+│                                                                              │
+│   OVERALL PROGRESS:              ████████████░░░░░░░░░░░░░░░░░░░░   40%     │
+│                                                                              │
+│   CURRENT BLOCKER: Waiting for IT (Azure AD)                                │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Deployment Phases
+
+### Phase 1: Development ✅ COMPLETE
+
+| Task | Status | Notes |
+|------|--------|-------|
+| React frontend (7 form sections) | ✅ Complete | All validation working |
+| Review pages (PBP, Procurement, OPW, Contract, AP) | ✅ Complete | Role-based access |
+| Backend API structure | ✅ Complete | Express.js with RBAC |
+| StorageProvider pattern | ✅ Complete | Dev/Prod toggle works |
+| Document governance (Alemba rules) | ✅ Complete | Sensitive docs protected |
+| SQL schema design | ✅ Complete | 5 tables ready |
+| Production security hardening | ✅ Complete | Test buttons removed |
+
+### Phase 2: Documentation ✅ COMPLETE
+
+| Document | Status | Location |
+|----------|--------|----------|
+| Deployment Guide | ✅ Complete | `docs/DEPLOYMENT.md` |
+| Production Checklist | ✅ Complete | `docs/CHECKLIST.md` |
+| Alemba Integration | ✅ Complete | `docs/ALEMBA.md` |
+| User Guide (SOP) | ✅ Complete | `docs/USER_GUIDE.md` |
+| Future Roadmap | ✅ Complete | `docs/ROADMAP.md` |
+| Consistency Analysis | ✅ Complete | `docs/CONSISTENCY_ANALYSIS.md` |
+| SQL Server Setup Guide | ✅ Complete | `next-steps/01-SQL-SERVER-SETUP.md` |
+| SharePoint Setup Guide | ✅ Complete | `next-steps/02-SHAREPOINT-LIBRARIES-SETUP.md` |
+| Supplier Data Export Guide | ✅ Complete | `next-steps/03-SUPPLIER-DATA-EXPORT.md` |
+| Power Automate Guide | ✅ Complete | `next-steps/04-POWER-AUTOMATE-SETUP.md` |
+
+### Phase 3: Infrastructure 🔄 IN PROGRESS
+
+| Task | Status | Owner | Notes |
+|------|--------|-------|-------|
+| SQL Server database | ⏳ Pending | Fahimul | Follow `01-SQL-SERVER-SETUP.md` |
+| SQL schema execution | ⏳ Pending | Fahimul | Run after database created |
+| SharePoint site | ⏳ Pending | Fahimul | Follow `02-SHAREPOINT-LIBRARIES-SETUP.md` |
+| SupplierDocuments library | ⏳ Pending | Fahimul | 6 folders |
+| SensitiveDocuments library | ⏳ Pending | Fahimul | 4 folders + restricted access |
+| NotificationQueue list | ⏳ Pending | Fahimul | For Power Automate |
+
+### Phase 4: IT Dependencies ⏸️ BLOCKED
+
+| Task | Status | Owner | Notes |
+|------|--------|-------|-------|
+| Azure AD App Registration | ⏸️ Waiting | IT | Email sent to IT |
+| Security Groups creation | ⏸️ Waiting | IT | 6 groups needed |
+| Client ID / Tenant ID | ⏸️ Waiting | IT | Required for auth |
+| Client Secret | ⏸️ Waiting | IT | Required for API |
+| PBP shared mailbox | ⏸️ Waiting | IT | For notifications |
+
+### Phase 5: Deployment ⏸️ BLOCKED (Waiting for Phase 4)
+
+| Task | Status | Dependencies |
+|------|--------|--------------|
+| Configure backend .env | ⏸️ Blocked | Azure AD details |
+| Deploy backend API | ⏸️ Blocked | .env configured |
+| Configure frontend .env | ⏸️ Blocked | Azure AD details |
+| Build frontend for production | ⏸️ Blocked | .env configured |
+| Deploy to VerseOne | ⏸️ Blocked | Build complete |
+| Power Automate flows | ⏸️ Blocked | SharePoint + Backend live |
+
+### Phase 6: Testing & Go-Live ⏸️ BLOCKED
+
+| Task | Status | Dependencies |
+|------|--------|--------------|
+| End-to-end authentication test | ⏸️ Blocked | Deployment complete |
+| Role-based access test | ⏸️ Blocked | AD groups created |
+| Document upload test | ⏸️ Blocked | SharePoint configured |
+| Notification email test | ⏸️ Blocked | Power Automate flows |
+| UAT with business users | ⏸️ Blocked | All above complete |
+| Go-Live | ⏸️ Blocked | UAT sign-off |
+
+---
+
+## Timeline to Launch
+
+### Estimated Timeline (From IT Response)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         DEPLOYMENT TIMELINE                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  TODAY                                                                       │
+│    │                                                                         │
+│    ├── You are here: Waiting for IT + doing infrastructure tasks            │
+│    │                                                                         │
+│  IT RESPONDS (Day 0)                                                         │
+│    │                                                                         │
+│    ├── Day 0-1: Configure backend with Azure AD details                     │
+│    │            Configure frontend environment                               │
+│    │                                                                         │
+│    ├── Day 1-2: Deploy backend API                                          │
+│    │            Deploy frontend to VerseOne                                  │
+│    │                                                                         │
+│    ├── Day 2-3: Create Power Automate flows                                 │
+│    │            Test notifications                                           │
+│    │                                                                         │
+│    ├── Day 3-4: End-to-end testing                                          │
+│    │            Fix any issues found                                         │
+│    │                                                                         │
+│    ├── Day 4-5: UAT with business users                                     │
+│    │            Final adjustments                                            │
+│    │                                                                         │
+│    └── Day 5+:  GO LIVE                                                     │
+│                                                                              │
+│  ESTIMATED: 5-7 working days from IT response                               │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### What You Can Do While Waiting
+
+| Task | Guide | Priority |
+|------|-------|----------|
+| Create SQL Server database | `next-steps/01-SQL-SERVER-SETUP.md` | HIGH |
+| Create SharePoint site & libraries | `next-steps/02-SHAREPOINT-LIBRARIES-SETUP.md` | HIGH |
+| Review Power Automate guide | `next-steps/04-POWER-AUTOMATE-SETUP.md` | MEDIUM |
+| Prepare supplier data export | `next-steps/03-SUPPLIER-DATA-EXPORT.md` | LOW (future) |
+
+---
+
+## What Has Been Completed
+
+### Application Code ✅
+- [x] Complete React frontend with 7 form sections
+- [x] Form validation using Zod schemas
+- [x] Progressive disclosure in Section 2
+- [x] CRN verification with Companies House API
+- [x] File upload with governance rules
+- [x] PBP Review page with approval/rejection/info request
+- [x] Procurement Review page with classification
+- [x] OPW Review page with IR35 determination
+- [x] Contract Drafter page with upload
+- [x] AP Control Review page with verification checks
+- [x] Requester Response page for PBP questions
+- [x] Role-based access control (frontend)
+- [x] StorageProvider pattern (localStorage/API toggle)
+- [x] Production security (test buttons removed)
+
+### Backend API ✅
+- [x] Express.js API structure
+- [x] RBAC middleware
+- [x] Azure AD authentication setup
+- [x] SQL Server connection config
+- [x] SharePoint integration config
+- [x] Audit trail logging
+- [x] API routes for all operations
+
+### Database ✅
+- [x] SQL schema designed
+- [x] Submissions table
+- [x] SubmissionDocuments table
+- [x] AuditTrail table
+- [x] VendorsReference table
+- [x] NotificationQueue table
+- [x] Helper functions and stored procedures
+- [x] Work queue views
+
+### Documentation ✅
+- [x] Deployment guide
+- [x] Production checklist
+- [x] Alemba integration guide
+- [x] User guide (SOP)
+- [x] Roadmap with future features
+- [x] Consistency analysis report
+- [x] Step-by-step setup guides
+
+---
+
+## What Is In Progress
+
+| Task | Status | Next Step |
+|------|--------|-----------|
+| SQL Server setup | 🔄 Ready to start | Follow guide, connect to server |
+| SharePoint setup | 🔄 Ready to start | Follow guide, create site |
+| IT coordination | 🔄 Email sent | Await response |
+
+---
+
+## What Is Blocked
+
+| Blocker | Impact | Resolution |
+|---------|--------|------------|
+| Azure AD from IT | Cannot deploy | Wait for IT response |
+| AD Security Groups | Cannot test roles | Wait for IT to create |
+| PBP mailbox | Cannot configure notifications | Wait for IT |
+
+---
+
+## Key Contacts
+
+| Role | Contact | For |
+|------|---------|-----|
+| IT Service Desk | [Standard IT channel] | Azure AD, Security Groups |
+| SharePoint Admin | [Your SharePoint admin] | Site permissions issues |
+| Database Admin | [Your DBA] | SQL Server access |
+| Project Owner | Fahimul Haque | All project decisions |
+
+---
+
+## Quick Reference: Configuration Files to Update
+
+When IT provides details, update these files:
+
+| Detail | File | Location |
+|--------|------|----------|
+| Client ID | `supplier-form-api/.env` | `AZURE_AD_CLIENT_ID=` |
+| Client ID | `.env.production` | `VITE_AZURE_CLIENT_ID=` |
+| Tenant ID | `supplier-form-api/.env` | `AZURE_AD_TENANT_ID=` |
+| Tenant ID | `.env.production` | `VITE_AZURE_TENANT_ID=` |
+| Client Secret | `supplier-form-api/.env` | `AZURE_AD_CLIENT_SECRET=` |
+| AD Group Names | `src/context/AuthContext.jsx` | `ROLE_GROUPS` object |
+| AD Group Names | `supplier-form-api/src/middleware/rbac.js` | `ROLE_GROUPS` object |
+
+---
+
+# FUTURE FEATURES
+
+The sections below outline planned enhancements for after initial deployment.
 
 ---
 

@@ -22,14 +22,15 @@ export const ROLES = {
 };
 
 // Mapping of roles to AD group names
-// NOTE: Update these to match actual AD group names from IT
+// NOTE: These must match the AD security groups created by IT
+// Update these if IT uses different names - inform developer to sync with backend
 const ROLE_GROUPS = {
-  [ROLES.PBP]: ['PBP-Team', 'Supplier-Form-Admins'],
-  [ROLES.PROCUREMENT]: ['Procurement-Team', 'Supplier-Form-Admins'],
-  [ROLES.OPW]: ['OPW-Panel', 'Supplier-Form-Admins'],
-  [ROLES.CONTRACT]: ['Contract-Drafters', 'Supplier-Form-Admins'],
-  [ROLES.AP_CONTROL]: ['AP-Control-Team', 'Supplier-Form-Admins'],
-  [ROLES.ADMIN]: ['Supplier-Form-Admins']
+  [ROLES.PBP]: ['NHS-SupplierForm-PBP', 'NHS-SupplierForm-Admin'],
+  [ROLES.PROCUREMENT]: ['NHS-SupplierForm-Procurement', 'NHS-SupplierForm-Admin'],
+  [ROLES.OPW]: ['NHS-SupplierForm-OPW', 'NHS-SupplierForm-Admin'],
+  [ROLES.CONTRACT]: ['NHS-SupplierForm-Contract', 'NHS-SupplierForm-Admin'],
+  [ROLES.AP_CONTROL]: ['NHS-SupplierForm-APControl', 'NHS-SupplierForm-Admin'],
+  [ROLES.ADMIN]: ['NHS-SupplierForm-Admin']
 };
 
 // Stage to role mapping for access control

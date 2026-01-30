@@ -8,14 +8,16 @@
 const logger = require('../config/logger');
 const { logAudit } = require('../services/auditService');
 
-// Role to AD group mapping - UPDATE THESE WITH ACTUAL GROUP NAMES
+// Role to AD group mapping - MUST MATCH FRONTEND AuthContext.jsx
+// These are the AD security groups that IT will create
+// If IT uses different names, update BOTH here AND in frontend AuthContext.jsx
 const ROLE_GROUPS = {
-  pbp: ['PBP-Team', 'Supplier-Form-Admins'],
-  procurement: ['Procurement-Team', 'Supplier-Form-Admins'],
-  opw: ['OPW-Panel', 'Supplier-Form-Admins'],
-  contract: ['Contract-Drafters', 'Supplier-Form-Admins'],
-  apControl: ['AP-Control-Team', 'Supplier-Form-Admins'],
-  admin: ['Supplier-Form-Admins']
+  pbp: ['NHS-SupplierForm-PBP', 'NHS-SupplierForm-Admin'],
+  procurement: ['NHS-SupplierForm-Procurement', 'NHS-SupplierForm-Admin'],
+  opw: ['NHS-SupplierForm-OPW', 'NHS-SupplierForm-Admin'],
+  contract: ['NHS-SupplierForm-Contract', 'NHS-SupplierForm-Admin'],
+  apControl: ['NHS-SupplierForm-APControl', 'NHS-SupplierForm-Admin'],
+  admin: ['NHS-SupplierForm-Admin']
 };
 
 /**
