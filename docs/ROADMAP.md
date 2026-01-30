@@ -42,20 +42,20 @@ This document tracks the project phases, current status, deployment timeline, an
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         PROJECT STATUS OVERVIEW                              │
+│                         PROJECT STATUS OVERVIEW                             │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
+│                                                                             │
 │   PHASE 1: Development           ████████████████████████████████  100%     │
 │   PHASE 2: Documentation         ████████████████████████████████  100%     │
-│   PHASE 3: Infrastructure        ████████████░░░░░░░░░░░░░░░░░░░░   35%     │
+│   PHASE 3: Infrastructure        ████████████████░░░░░░░░░░░░░░░░   50%     │
 │   PHASE 4: IT Dependencies       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    0%     │
 │   PHASE 5: Deployment            ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    0%     │
 │   PHASE 6: Testing & Go-Live     ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    0%     │
-│                                                                              │
-│   OVERALL PROGRESS:              ████████████░░░░░░░░░░░░░░░░░░░░   40%     │
-│                                                                              │
+│                                                                             │
+│   OVERALL PROGRESS:              ████████████████░░░░░░░░░░░░░░░░   40%     │
+│                                                                             │
 │   CURRENT BLOCKER: Waiting for IT (Azure AD)                                │
-│                                                                              │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -141,34 +141,34 @@ This document tracks the project phases, current status, deployment timeline, an
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         DEPLOYMENT TIMELINE                                  │
+│                         DEPLOYMENT TIMELINE                                 │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  TODAY                                                                       │
-│    │                                                                         │
+│                                                                             │
+│  TODAY                                                                      │
+│    │                                                                        │
 │    ├── You are here: Waiting for IT + doing infrastructure tasks            │
-│    │                                                                         │
-│  IT RESPONDS (Day 0)                                                         │
-│    │                                                                         │
+│    │                                                                        │
+│  IT RESPONDS (Day 0)                                                        │
+│    │                                                                        │
 │    ├── Day 0-1: Configure backend with Azure AD details                     │
-│    │            Configure frontend environment                               │
-│    │                                                                         │
+│    │            Configure frontend environment                              │
+│    │                                                                        │
 │    ├── Day 1-2: Deploy backend API                                          │
-│    │            Deploy frontend to VerseOne                                  │
-│    │                                                                         │
+│    │            Deploy frontend to VerseOne                                 │
+│    │                                                                        │
 │    ├── Day 2-3: Create Power Automate flows                                 │
-│    │            Test notifications                                           │
-│    │                                                                         │
+│    │            Test notifications                                          │
+│    │                                                                        │
 │    ├── Day 3-4: End-to-end testing                                          │
-│    │            Fix any issues found                                         │
-│    │                                                                         │
+│    │            Fix any issues found                                        │
+│    │                                                                        │
 │    ├── Day 4-5: UAT with business users                                     │
-│    │            Final adjustments                                            │
-│    │                                                                         │
+│    │            Final adjustments                                           │
+│    │                                                                        │
 │    └── Day 5+:  GO LIVE                                                     │
-│                                                                              │
+│                                                                             │
 │  ESTIMATED: 5-7 working days from IT response                               │
-│                                                                              │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
