@@ -63,17 +63,34 @@ Before starting this guide, you must have completed:
 
 ## Email Recipients Reference
 
-| Notification Type | Recipient | Email |
-|-------------------|-----------|-------|
-| PBP Review Needed | PBP Panel | **TBC** (shared mailbox being created) |
-| PBP Approved | Requester | From submission record |
-| PBP Rejected | Requester | From submission record |
-| Procurement Review | Procurement Team | barts.procurement@nhs.net |
-| OPW Review Needed | OPW Panel | Bartshealth.opwpanelbarts@nhs.net |
-| Contract Upload Needed | Contract Team | **TBC** (may share with OPW) |
-| AP Control Review | AP Control | Apcontrol.bartshealth@nhs.net |
-| Supplier Complete | Requester | From submission record |
-| Admin Alerts | Admin | barts.procurement@nhs.net |
+## CRITICAL: Workflow Understanding
+
+**PBP reviews the QUESTIONNAIRE (pre-submission), NOT the full form.**
+
+```
+Q2.7 = "No" → Questionnaire Modal → PBP reviews questionnaire → Approves
+            → Requester gets certificate → Uploads to form → Completes form
+            → Full form submitted → Goes to PROCUREMENT (not PBP)
+```
+
+**Alemba ticket is created when FULL FORM is submitted (goes to Procurement first).**
+
+---
+
+## Email Recipients Reference
+
+| Notification Type | Recipient | Email | When Triggered |
+|-------------------|-----------|-------|----------------|
+| PBP Questionnaire Submitted | PBP Panel | **TBC** | Q2.7="No" + questionnaire submitted |
+| PBP Questionnaire Approved | Requester | From questionnaire | PBP approves questionnaire |
+| PBP Questionnaire Rejected | Requester | From questionnaire | PBP rejects questionnaire |
+| Procurement Review Needed | Procurement Team | barts.procurement@nhs.net | FULL form submitted (Section 7) |
+| OPW Review Needed | OPW Panel | Bartshealth.opwpanelbarts@nhs.net | Procurement routes to OPW |
+| Contract Upload Needed | Contract Team | **TBC** (may share with OPW) | OPW completes |
+| AP Control Review | AP Control | Apcontrol.bartshealth@nhs.net | Ready for final verification |
+| Supplier Complete | Requester | From submission record | AP Control verifies |
+| Supplier Rejected | Requester | From submission record | Any stage rejects |
+| Admin Alerts | Admin | barts.procurement@nhs.net | Errors/issues |
 
 ---
 
@@ -115,18 +132,27 @@ Click **"+ Add column"** for each of these:
 When adding the NotificationType column, enter these choices:
 
 ```
-PBP_REVIEW_NEEDED
-PBP_APPROVED
-PBP_REJECTED
+PBP_QUESTIONNAIRE_SUBMITTED
+PBP_QUESTIONNAIRE_APPROVED
+PBP_QUESTIONNAIRE_REJECTED
 PBP_INFO_REQUESTED
 PROCUREMENT_REVIEW_NEEDED
+PROCUREMENT_APPROVED
+PROCUREMENT_REJECTED
 OPW_REVIEW_NEEDED
+OPW_APPROVED
+OPW_REJECTED
 CONTRACT_UPLOAD_NEEDED
+CONTRACT_UPLOADED
 AP_REVIEW_NEEDED
 SUPPLIER_COMPLETE
+SUPPLIER_REJECTED
 DAILY_REMINDER
 ADMIN_ALERT
 ```
+
+**Note:** PBP notifications are for the QUESTIONNAIRE (pre-form submission), not the full form.
+Procurement is the FIRST stage after full form submission.
 
 ### Step 5: Verify List Created
 
@@ -588,19 +614,32 @@ The backend API will generate these email bodies, but here are the templates for
 
 ## Part F: Notification Types Summary
 
-| NotificationType | Trigger | Recipient | Template |
-|------------------|---------|-----------|----------|
-| `PBP_REVIEW_NEEDED` | New submission | PBP Panel (TBC) | Template 1 |
-| `PBP_APPROVED` | PBP approves | Requester | Template 2 |
-| `PBP_REJECTED` | PBP rejects | Requester | Template 3 |
-| `PBP_INFO_REQUESTED` | PBP requests info | Requester | Custom |
-| `PROCUREMENT_REVIEW_NEEDED` | Full form submitted | barts.procurement@nhs.net | Custom |
-| `OPW_REVIEW_NEEDED` | Procurement routes to OPW | Bartshealth.opwpanelbarts@nhs.net | Custom |
-| `CONTRACT_UPLOAD_NEEDED` | OPW complete | Contract team (TBC) | Custom |
-| `AP_REVIEW_NEEDED` | Ready for AP | Apcontrol.bartshealth@nhs.net | Custom |
-| `SUPPLIER_COMPLETE` | AP completes | Requester | Template 4 |
-| `DAILY_REMINDER` | Scheduled 9am | Based on stage | Reminder |
-| `ADMIN_ALERT` | Errors/issues | barts.procurement@nhs.net | Custom |
+### Pre-Form Submission (Questionnaire to PBP)
+
+| NotificationType | Trigger | Recipient | Notes |
+|------------------|---------|-----------|-------|
+| `PBP_QUESTIONNAIRE_SUBMITTED` | Q2.7="No" + questionnaire submitted | PBP Panel (TBC) | PBP reviews questionnaire ONLY |
+| `PBP_QUESTIONNAIRE_APPROVED` | PBP approves questionnaire | Requester | Certificate issued |
+| `PBP_QUESTIONNAIRE_REJECTED` | PBP rejects questionnaire | Requester | End of process |
+| `PBP_INFO_REQUESTED` | PBP needs more info | Requester | Back-and-forth |
+
+### Post-Form Submission (Full Form Workflow)
+
+| NotificationType | Trigger | Recipient | Notes |
+|------------------|---------|-----------|-------|
+| `PROCUREMENT_REVIEW_NEEDED` | FULL form submitted (Section 7) | barts.procurement@nhs.net | First stage after submission |
+| `PROCUREMENT_APPROVED` | Procurement approves | Next stage team | Routes to OPW or AP |
+| `PROCUREMENT_REJECTED` | Procurement rejects | Requester | End of process |
+| `OPW_REVIEW_NEEDED` | Procurement routes to OPW | Bartshealth.opwpanelbarts@nhs.net | IR35 determination |
+| `OPW_APPROVED` | OPW determines IR35 | Contract team | Inside/Outside IR35 |
+| `OPW_REJECTED` | OPW rejects | Requester | End of process |
+| `CONTRACT_UPLOAD_NEEDED` | OPW complete | Contract team (TBC) | Agreement preparation |
+| `CONTRACT_UPLOADED` | Contract uploaded | AP Control | Ready for final |
+| `AP_REVIEW_NEEDED` | Ready for AP | Apcontrol.bartshealth@nhs.net | Final verification |
+| `SUPPLIER_COMPLETE` | AP verifies | Requester | Vendor number issued |
+| `SUPPLIER_REJECTED` | AP rejects | Requester | End of process |
+| `DAILY_REMINDER` | Scheduled 9am | Based on stage | Pending > 2 days |
+| `ADMIN_ALERT` | Errors/issues | barts.procurement@nhs.net | System errors |
 
 ---
 

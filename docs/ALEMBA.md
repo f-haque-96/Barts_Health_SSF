@@ -3,9 +3,68 @@
 ## Overview
 
 This guide details how to integrate Alemba with the NHS Supplier Setup Form for:
-- **Automatic ticket CREATION** when form is submitted (with all data auto-filled)
+- **Automatic ticket CREATION** when full form is submitted to Procurement
 - **Automatic ticket UPDATES** as workflow progresses through stages
 - **Automatic ticket CLOSURE** when supplier setup is complete
+
+---
+
+## CRITICAL: Workflow Understanding
+
+**PBP reviews the QUESTIONNAIRE, NOT the full form.**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    CORRECT WORKFLOW - READ CAREFULLY                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  STAGE 1: QUESTIONNAIRE (Before Form Submission)                            │
+│  ════════════════════════════════════════════════                           │
+│                                                                              │
+│  Q2.7: Has procurement been engaged?                                        │
+│           │                                                                  │
+│           ├── YES → Upload procurement approval document                    │
+│           │         → Continue filling form → Go to STAGE 2                 │
+│           │                                                                  │
+│           └── NO  → Questionnaire Modal opens (Clinical/Non-Clinical)       │
+│                     → Questionnaire submitted to PBP                        │
+│                     → PBP reviews QUESTIONNAIRE ONLY                        │
+│                     → PBP approves → Certificate issued                     │
+│                     → Requester uploads certificate to Q2.7                 │
+│                     → Continue filling form → Go to STAGE 2                 │
+│                                                                              │
+│  STAGE 2: FULL FORM SUBMISSION (Sections 1-7 Complete)                      │
+│  ═════════════════════════════════════════════════════                      │
+│                                                                              │
+│  Form submitted → ALEMBA TICKET CREATED → Sent to PROCUREMENT               │
+│                   (NOT PBP - PBP already reviewed questionnaire)            │
+│                                                                              │
+│  STAGE 3: PROCUREMENT REVIEW                                                │
+│  ═══════════════════════════                                                │
+│                                                                              │
+│  Procurement reviews full form and classifies:                              │
+│           │                                                                  │
+│           ├── STANDARD → Goes directly to AP Control                        │
+│           │                                                                  │
+│           ├── POTENTIAL OPW → Goes to OPW Panel                             │
+│           │                   → OPW determines Inside/Outside IR35          │
+│           │                   → Goes to Contract Drafter                    │
+│           │                   → Goes to AP Control                          │
+│           │                                                                  │
+│           └── REJECTED → Ticket closed, Requester notified                  │
+│                                                                              │
+│  STAGE 4: AP CONTROL                                                        │
+│  ═══════════════════                                                        │
+│                                                                              │
+│  AP Control verifies supplier details:                                      │
+│           │                                                                  │
+│           ├── VERIFIED → Supplier created, Ticket closed                    │
+│           │              Requester notified (Vendor Number issued)          │
+│           │                                                                  │
+│           └── REJECTED → Ticket closed, Requester notified (with reason)    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -30,7 +89,14 @@ This guide details how to integrate Alemba with the NHS Supplier Setup Form for:
 │                           ALEMBA TICKET LIFECYCLE                               │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                 │
-│  FORM SUBMITTED (after PBP approval)                                           │
+│  ⚠️  NOTE: PBP reviews questionnaire BEFORE form submission.                   │
+│      Alemba ticket is created AFTER full form submission.                       │
+│      First reviewer in Alemba is PROCUREMENT (not PBP).                        │
+│                                                                                 │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  FULL FORM SUBMITTED (Section 7)                                               │
+│  (PBP questionnaire already approved if Q2.7 was "No")                         │
 │         │                                                                       │
 │         ▼                                                                       │
 │  ┌─────────────────────────────────────────────────────────────────────────┐   │
@@ -38,20 +104,22 @@ This guide details how to integrate Alemba with the NHS Supplier Setup Form for:
 │  │                                                                          │   │
 │  │  Title: New Supplier Setup - SUP-2025-00001 - ACME LTD                  │   │
 │  │  Status: Open                                                            │   │
-│  │  Assigned To: Procurement Team                                           │   │
+│  │  Assigned To: PROCUREMENT TEAM (first reviewer)                          │   │
 │  │  Priority: Based on contract value                                       │   │
 │  │                                                                          │   │
 │  │  ALL FORM DATA AUTO-FILLED:                                             │   │
-│  │  • Requester details                                                     │   │
-│  │  • Supplier details                                                      │   │
-│  │  • Financial information                                                 │   │
-│  │  • Service description                                                   │   │
+│  │  • Requester details (Section 1)                                        │   │
+│  │  • Pre-screening summary (Section 2) - including PBP approval           │   │
+│  │  • Supplier classification (Section 3)                                   │   │
+│  │  • Supplier details (Section 4)                                         │   │
+│  │  • Service description (Section 5)                                       │   │
+│  │  • Financial information (Section 6)                                     │   │
 │  │  • Link to review page                                                   │   │
 │  └─────────────────────────────────────────────────────────────────────────┘   │
 │         │                                                                       │
 │         ▼                                                                       │
 │  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │  📝 PROCUREMENT REVIEWS                                                  │   │
+│  │  📝 PROCUREMENT REVIEWS (First Stage in Alemba)                         │   │
 │  │  Comment added: "Under procurement review"                               │   │
 │  │  Status: In Progress                                                     │   │
 │  └─────────────────────────────────────────────────────────────────────────┘   │
@@ -59,12 +127,14 @@ This guide details how to integrate Alemba with the NHS Supplier Setup Form for:
 │         ├──────────────────┬──────────────────┐                                │
 │         ▼                  ▼                  ▼                                │
 │    ┌─────────┐      ┌───────────┐      ┌─────────┐                            │
-│    │STANDARD │      │   OPW     │      │ REJECT  │                            │
+│    │STANDARD │      │POTENTIAL  │      │ REJECT  │                            │
+│    │         │      │   OPW     │      │         │                            │
 │    └────┬────┘      └─────┬─────┘      └────┬────┘                            │
 │         │                 │                  │                                 │
 │         │           ┌─────▼─────┐            │                                 │
 │         │           │ OPW Panel │            │                                 │
 │         │           │  Review   │            │                                 │
+│         │           │(IR35 det.)│            │                                 │
 │         │           └─────┬─────┘            │                                 │
 │         │                 │                  │                                 │
 │         │           ┌─────▼─────┐            │                                 │
@@ -74,13 +144,16 @@ This guide details how to integrate Alemba with the NHS Supplier Setup Form for:
 │         │                 │                  │                                 │
 │         ▼                 ▼                  ▼                                 │
 │  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │  ✅ AP CONTROL COMPLETES SETUP                                          │   │
+│  │  ✅ AP CONTROL VERIFICATION                                             │   │
 │  │                                                                          │   │
-│  │  🎫 TICKET CLOSED AUTOMATICALLY                                         │   │
+│  │  Verifies: Bank details, Company details, VAT (optional), Insurance     │   │
 │  │                                                                          │   │
-│  │  Resolution: "Supplier setup complete. Vendor ID: V12345"               │   │
-│  │  Status: Resolved/Closed                                                 │   │
-│  │  Final comment: All signatures captured, PDF generated                   │   │
+│  │  ├── VERIFIED → Supplier created, Vendor Number assigned                │   │
+│  │  │              🎫 TICKET CLOSED - "Supplier setup complete"            │   │
+│  │  │              Requester notified with Vendor Number                    │   │
+│  │  │                                                                       │   │
+│  │  └── REJECTED → 🎫 TICKET CLOSED - "Rejected by AP Control"            │   │
+│  │                 Requester notified with rejection reason                 │   │
 │  └─────────────────────────────────────────────────────────────────────────┘   │
 │                                                                                 │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -116,7 +189,9 @@ Ask your Alemba admin to create these custom fields for the Supplier Setup servi
 | `cf_requester_email` | Email | For notifications |
 | `cf_requester_department` | Text | Department |
 | `cf_review_page_url` | URL | Link to review page |
-| `cf_workflow_stage` | Dropdown | PBP/Procurement/OPW/Contract/AP |
+| `cf_workflow_stage` | Dropdown | Procurement/OPW/Contract/AP (NOT PBP - PBP is pre-submission) |
+| `cf_pbp_approved` | Yes/No | Whether PBP approved questionnaire |
+| `cf_pbp_approval_date` | Date | When PBP approved |
 
 ---
 
@@ -126,7 +201,7 @@ Ask your Alemba admin to create these custom fields for the Supplier Setup servi
 
 | Document | When Attached | Stage |
 |----------|---------------|-------|
-| **PBP Approval Certificate** | Ticket creation | Form Submission |
+| **PBP Approval Certificate** | Ticket creation | Form Submission (proof of pre-approval) |
 | **Bank Details on Letterhead** | Ticket creation | Form Submission |
 | **CEST Form (IR35 Determination)** | If OPW route | OPW Decision |
 | **Signed Contract/Agreement** | If contract required | Contract Upload |
@@ -140,7 +215,7 @@ Ask your Alemba admin to create these custom fields for the Supplier Setup servi
 | **Driving Licence copy** | Sensitive personal ID - stored in SharePoint only |
 | **Other ID documents** | Data protection compliance |
 
-> **Note:** ID documents for sole traders are stored securely in SharePoint Document Library but are NOT attached to Alemba tickets to comply with data protection requirements. AP Control can access these documents directly via the SharePoint link in the ticket.
+> **Note:** ID documents for sole traders are stored securely in SharePoint SensitiveDocuments library but are NOT attached to Alemba tickets to comply with data protection requirements. AP Control can access these documents directly via the SharePoint link in the ticket.
 
 ---
 
@@ -148,14 +223,16 @@ Ask your Alemba admin to create these custom fields for the Supplier Setup servi
 
 ### When to Create Ticket
 
-**Trigger:** When full form is submitted (after PBP approval in Section 7)
+**Trigger:** When FULL FORM is submitted in Section 7
+
+**Important:** The Alemba ticket is NOT created when the questionnaire is submitted to PBP. PBP questionnaire review happens BEFORE the full form submission and is an internal pre-screening step.
 
 ### Ticket Creation Payload (Full Form Data)
 
 ```json
 {
   "title": "New Supplier Setup - {SubmissionID} - {CompanyName}",
-  "description": "A new supplier setup request has been submitted and requires Procurement review.\n\n---\n\n**REQUESTER INFORMATION**\nName: {RequesterName}\nEmail: {RequesterEmail}\nDepartment: {RequesterDepartment}\nPhone: {RequesterPhone}\n\n---\n\n**SUPPLIER DETAILS**\nCompany Name: {CompanyName}\nTrading Name: {TradingName}\nSupplier Type: {SupplierType}\nCompany Registration Number: {CRN}\nCRN Verified: {CRNVerified}\nCharity Number: {CharityNumber}\n\n**Registered Address:**\n{RegisteredAddress}\n{City}, {Postcode}\n\n**Contact:**\nName: {ContactName}\nEmail: {ContactEmail}\nPhone: {ContactPhone}\nWebsite: {Website}\n\n---\n\n**SERVICE INFORMATION**\nDescription: {ServiceDescription}\nCategory: {ServiceCategory}\nService Types: {ServiceTypes}\n\n---\n\n**FINANCIAL INFORMATION**\nOverseas Supplier: {OverseasSupplier}\nBank Name: {BankName}\nSort Code: {SortCode}\nAccount Number: {AccountNumber}\nIBAN: {IBAN}\nSWIFT Code: {SwiftCode}\nContract Value: £{ContractValue}\nPayment Terms: {PaymentTerms}\n\n---\n\n**PRE-BUY PANEL**\nPBP Approval Date: {PBPApprovalDate}\nApproved By: {PBPApprovedBy}\n\n---\n\n**CONFLICT OF INTEREST**\nDeclared Connection: {SupplierConnection}\nDetails: {ConnectionDetails}\n\n---\n\n**REVIEW THIS SUBMISSION:**\n{ReviewPageURL}\n\n---\n\nSubmission ID: {SubmissionID}\nSubmitted: {SubmittedDate}",
+  "description": "A new supplier setup request has been submitted and requires Procurement review.\n\n---\n\n**PRE-BUY PANEL STATUS**\nPBP Questionnaire Approved: {PBPApproved}\nApproval Date: {PBPApprovalDate}\nApproved By: {PBPApprovedBy}\n\n---\n\n**REQUESTER INFORMATION**\nName: {RequesterName}\nEmail: {RequesterEmail}\nDepartment: {RequesterDepartment}\nPhone: {RequesterPhone}\n\n---\n\n**SUPPLIER DETAILS**\nCompany Name: {CompanyName}\nTrading Name: {TradingName}\nSupplier Type: {SupplierType}\nCompany Registration Number: {CRN}\nCRN Verified: {CRNVerified}\nCharity Number: {CharityNumber}\n\n**Registered Address:**\n{RegisteredAddress}\n{City}, {Postcode}\n\n**Contact:**\nName: {ContactName}\nEmail: {ContactEmail}\nPhone: {ContactPhone}\nWebsite: {Website}\n\n---\n\n**SERVICE INFORMATION**\nDescription: {ServiceDescription}\nCategory: {ServiceCategory}\nService Types: {ServiceTypes}\n\n---\n\n**FINANCIAL INFORMATION**\nOverseas Supplier: {OverseasSupplier}\nBank Name: {BankName}\nSort Code: {SortCode}\nAccount Number: {AccountNumber}\nIBAN: {IBAN}\nSWIFT Code: {SwiftCode}\nContract Value: £{ContractValue}\nPayment Terms: {PaymentTerms}\n\n---\n\n**CONFLICT OF INTEREST**\nDeclared Connection: {SupplierConnection}\nDetails: {ConnectionDetails}\n\n---\n\n**REVIEW THIS SUBMISSION:**\n{ReviewPageURL}\n\n---\n\nSubmission ID: {SubmissionID}\nSubmitted: {SubmittedDate}",
 
   "serviceCatalogItem": "Supplier Setup Request",
   "category": "Procurement",
@@ -177,11 +254,13 @@ Ask your Alemba admin to create these custom fields for the Supplier Setup servi
     "cf_supplier_name": "{CompanyName}",
     "cf_supplier_type": "{SupplierType}",
     "cf_crn": "{CRN}",
-    "cf_contract_value": {ContractValue},
+    "cf_contract_value": "{ContractValue}",
     "cf_requester_email": "{RequesterEmail}",
     "cf_requester_department": "{RequesterDepartment}",
     "cf_review_page_url": "{ReviewPageURL}",
-    "cf_workflow_stage": "Procurement"
+    "cf_workflow_stage": "Procurement",
+    "cf_pbp_approved": "Yes",
+    "cf_pbp_approval_date": "{PBPApprovalDate}"
   },
 
   "attachments": [
@@ -196,7 +275,7 @@ Ask your Alemba admin to create these custom fields for the Supplier Setup servi
     {
       "name": "CEST_Determination_{SubmissionID}.pdf",
       "url": "{CESTFormURL}",
-      "condition": "Only if OPW/Sole Trader"
+      "condition": "Only if sole trader"
     }
   ],
 
@@ -240,7 +319,7 @@ if (ContractValue >= 100000) {
     "cf_workflow_stage": "AP Control"
   },
   "comment": {
-    "text": "✅ PROCUREMENT DECISION: Standard Supplier\n\nApproved by: {ProcurementApprover}\nDate: {DecisionDate}\n\nRouting to AP Control for supplier setup.\n\nAP Control Review Page: {APReviewPageURL}",
+    "text": "✅ PROCUREMENT DECISION: Standard Supplier\n\nApproved by: {ProcurementApprover}\nDate: {DecisionDate}\nAlemba Reference: {AlembaRef}\n\nRouting directly to AP Control for supplier setup.\n\nAP Control Review Page: {APReviewPageURL}",
     "isInternal": false
   }
 }
@@ -256,7 +335,7 @@ if (ContractValue >= 100000) {
     "cf_workflow_stage": "OPW Review"
   },
   "comment": {
-    "text": "⚠️ PROCUREMENT DECISION: Potential Off-Payroll Worker (IR35)\n\nApproved by: {ProcurementApprover}\nDate: {DecisionDate}\nReason: Supplier identified as potential OPW - requires IR35 determination\n\nRouting to OPW Panel for review.\n\nOPW Review Page: {OPWReviewPageURL}",
+    "text": "⚠️ PROCUREMENT DECISION: Potential Off-Payroll Worker (IR35)\n\nApproved by: {ProcurementApprover}\nDate: {DecisionDate}\nAlemba Reference: {AlembaRef}\nReason: Supplier identified as potential OPW - requires IR35 determination\n\nRouting to OPW Panel for IR35 assessment.\n\nOPW Review Page: {OPWReviewPageURL}",
     "isInternal": false
   }
 }
@@ -278,7 +357,7 @@ if (ContractValue >= 100000) {
 }
 ```
 
-#### 4.4 OPW Panel Decision
+#### 4.4 OPW Panel Decision - Inside/Outside IR35
 
 ```json
 {
@@ -288,13 +367,29 @@ if (ContractValue >= 100000) {
     "cf_workflow_stage": "Contract Draft"
   },
   "comment": {
-    "text": "📋 OPW PANEL DECISION: {IR35Decision}\n\nDetermined by: {OPWApprover}\nDate: {DecisionDate}\nIR35 Status: {InsideIR35 ? 'INSIDE IR35' : 'OUTSIDE IR35'}\n\nRouting to Contract Drafter.\n\nContract Draft Page: {ContractDraftPageURL}",
+    "text": "📋 OPW PANEL DECISION: {IR35Decision}\n\nDetermined by: {OPWApprover}\nDate: {DecisionDate}\nIR35 Status: {InsideOrOutsideIR35}\n\nRouting to Contract Drafter for agreement preparation.\n\nContract Draft Page: {ContractDraftPageURL}",
     "isInternal": false
   }
 }
 ```
 
-#### 4.5 Contract Uploaded
+#### 4.5 OPW Panel Decision - Rejected
+
+```json
+{
+  "status": "Rejected",
+  "resolution": "Supplier request rejected by OPW Panel",
+  "customFields": {
+    "cf_workflow_stage": "Rejected"
+  },
+  "comment": {
+    "text": "❌ OPW PANEL DECISION: Rejected\n\nRejected by: {OPWApprover}\nDate: {DecisionDate}\nReason: {RejectionReason}\n\nRequester has been notified via email.",
+    "isInternal": false
+  }
+}
+```
+
+#### 4.6 Contract Uploaded
 
 ```json
 {
@@ -320,14 +415,14 @@ if (ContractValue >= 100000) {
 
 ## 5. Automatic Ticket Closure
 
-### When AP Control Completes Setup
+### When AP Control Completes Setup (Verified)
 
 **Trigger:** When AP Control clicks "Complete Setup" and signs off
 
 ```json
 {
   "status": "Resolved",
-  "resolution": "Supplier successfully created in Oracle/Finance system",
+  "resolution": "Supplier successfully created in finance system",
   "resolutionCode": "Completed",
   "closedDate": "{CompletionDate}",
 
@@ -337,7 +432,7 @@ if (ContractValue >= 100000) {
   },
 
   "comment": {
-    "text": "✅ SUPPLIER SETUP COMPLETE\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n**SUPPLIER CREATED**\nVendor Number: {VendorNumber}\nSupplier Name: {CompanyName}\nSetup Date: {CompletionDate}\n\n**VERIFIED BY AP CONTROL**\nAP Controller: {APApproverName}\nBank Details Verified: ✅\nSignature Captured: ✅\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n**AUTHORISATION TRAIL**\n\n1. PBP Approval: {PBPApprovalDate} by {PBPApprover}\n2. Procurement: {ProcurementDate} by {ProcurementApprover} ({ProcurementDecision})\n{OPWSection}\n{ContractSection}\n3. AP Control: {APApprovalDate} by {APApprover}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nRequester ({RequesterName}) has been notified via email with the completed form PDF attached.\n\nThis ticket is now CLOSED.",
+    "text": "✅ SUPPLIER SETUP COMPLETE\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n**SUPPLIER CREATED**\nVendor Number: {VendorNumber}\nSupplier Name: {CompanyName}\nSetup Date: {CompletionDate}\n\n**VERIFIED BY AP CONTROL**\nAP Controller: {APApproverName}\nBank Details Verified: ✅\nCompany Details Verified: ✅\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n**AUTHORISATION TRAIL**\n\n1. PBP Approval: {PBPApprovalDate} by {PBPApprover} (pre-submission)\n2. Procurement: {ProcurementDate} by {ProcurementApprover} ({ProcurementDecision})\n{OPWSection}\n{ContractSection}\n3. AP Control: {APApprovalDate} by {APApprover}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nRequester ({RequesterName}) has been notified via email.\n\nThis ticket is now CLOSED.",
     "isInternal": false
   },
 
@@ -345,26 +440,28 @@ if (ContractValue >= 100000) {
     {
       "name": "Supplier_Setup_Complete_{SubmissionID}.pdf",
       "url": "{FinalPDFURL}"
-    },
-    {
-      "name": "Bank_Details_Letterhead.pdf",
-      "url": "{LetterheadDocumentURL}"
-    },
-    {
-      "name": "CEST_Determination_{SubmissionID}.pdf",
-      "url": "{CESTFormURL}",
-      "condition": "Only attached if OPW route was taken"
-    },
-    {
-      "name": "Signed_Contract_{SubmissionID}.pdf",
-      "url": "{ContractDocumentURL}",
-      "condition": "Only attached if contract was required"
     }
-  ],
-
-  "excludedDocuments": [
-    "ID documents (passport/driving licence) - excluded for data protection"
   ]
+}
+```
+
+### When AP Control Rejects
+
+```json
+{
+  "status": "Rejected",
+  "resolution": "Supplier request rejected by AP Control",
+  "resolutionCode": "Rejected",
+  "closedDate": "{RejectionDate}",
+
+  "customFields": {
+    "cf_workflow_stage": "Rejected"
+  },
+
+  "comment": {
+    "text": "❌ AP CONTROL DECISION: Rejected\n\nRejected by: {APApprover}\nDate: {RejectionDate}\nReason: {RejectionReason}\n\nRequester has been notified via email with rejection reason.\n\nThis ticket is now CLOSED.",
+    "isInternal": false
+  }
 }
 ```
 
@@ -376,12 +473,13 @@ if (ContractValue >= 100000) {
 
 ```
 Flow Name: NHS-Supplier-CreateAlembaTicket
-Trigger: Called from NHS-Supplier-SubmitFullForm flow
+Trigger: When item created in Submissions list (SharePoint)
+         OR called from form submission API
 ```
 
 **Step-by-Step:**
 
-1. **Receive submission data** (from parent flow)
+1. **Receive submission data** (from SharePoint trigger or API)
 
 2. **Initialize variables:**
    ```
@@ -402,19 +500,7 @@ Trigger: Called from NHS-Supplier-SubmitFullForm flow
      Set varPriority = "Low"
    ```
 
-4. **Compose ticket body:**
-   ```json
-   {
-     "title": "New Supplier Setup - @{variables('SubmissionID')} - @{triggerBody()?['companyName']}",
-     "description": "@{variables('FullDescription')}",
-     "priority": "@{variables('varPriority')}",
-     "assignedTeam": "Procurement Team",
-     "customFields": {
-       "cf_submission_id": "@{variables('SubmissionID')}",
-       ...
-     }
-   }
-   ```
+4. **Compose ticket body** (see Section 3 for full payload)
 
 5. **HTTP Action - Create Ticket:**
    ```
@@ -428,13 +514,9 @@ Trigger: Called from NHS-Supplier-SubmitFullForm flow
 
 6. **Parse JSON response** to extract ticketId
 
-7. **Update SharePoint** with AlembaTicketID:
-   ```
-   Update item: SupplierSubmissions
-   AlembaTicketID: @{body('Parse_JSON')?['ticketId']}
-   ```
+7. **Update SharePoint/SQL** with AlembaTicketID
 
-8. **Return ticketId** to parent flow
+8. **Return ticketId**
 
 ---
 
@@ -446,42 +528,8 @@ Flow Name: NHS-Supplier-UpdateAlembaTicket
 
 **Input parameters:**
 - ticketId (string)
-- updateType (string): "procurement_standard", "procurement_opw", "procurement_reject", "opw_decision", "contract_uploaded"
+- updateType: "procurement_standard", "procurement_opw", "procurement_reject", "opw_inside", "opw_outside", "opw_reject", "contract_uploaded"
 - decisionData (object)
-
-**Steps:**
-
-1. **Switch on updateType:**
-
-   **Case: procurement_standard**
-   ```
-   HTTP PATCH to /requests/{ticketId}
-   Body: { status, assignedTeam, customFields, comment }
-   ```
-
-   **Case: procurement_opw**
-   ```
-   HTTP PATCH to /requests/{ticketId}
-   Body: { status, assignedTeam: "OPW Panel", customFields, comment }
-   ```
-
-   **Case: procurement_reject**
-   ```
-   HTTP PATCH to /requests/{ticketId}
-   Body: { status: "Rejected", resolution, comment }
-   ```
-
-   **Case: opw_decision**
-   ```
-   HTTP PATCH to /requests/{ticketId}
-   Body: { assignedTeam: "Contract Drafting", customFields, comment }
-   ```
-
-   **Case: contract_uploaded**
-   ```
-   HTTP PATCH to /requests/{ticketId}
-   Body: { assignedTeam: "AP Control", customFields, comment, attachments }
-   ```
 
 ---
 
@@ -494,132 +542,87 @@ Flow Name: NHS-Supplier-CloseAlembaTicket
 **Input parameters:**
 - ticketId (string)
 - submissionId (string)
+- closeType: "verified" or "rejected"
 - completionData (object)
-
-**Steps:**
-
-1. **Get full submission data** from SharePoint
-
-2. **Generate final PDF** (or get URL if already generated)
-
-3. **Compose closure body:**
-   ```json
-   {
-     "status": "Resolved",
-     "resolution": "Supplier @{companyName} successfully created. Vendor ID: @{vendorNumber}",
-     "closedDate": "@{utcNow()}",
-     "comment": { ... full authorisation trail ... },
-     "attachments": [{ "name": "...", "url": "..." }]
-   }
-   ```
-
-4. **HTTP PATCH** to close ticket
-
-5. **Update SharePoint** to mark Alemba ticket as closed
 
 ---
 
 ## 7. Complete Flow Examples
 
-### 7.1 Full Submission Flow with Alemba
+### 7.1 Standard Path (No OPW)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  Flow: NHS-Supplier-SubmitFullForm (Updated with Alemba)        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  1. HTTP Trigger receives form data                             │
-│                │                                                │
-│                ▼                                                │
-│  2. Validate PBP approval status                                │
-│                │                                                │
-│                ▼                                                │
-│  3. Update SharePoint (Status = Submitted)                      │
-│                │                                                │
-│                ▼                                                │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  4. HTTP: CREATE ALEMBA TICKET                           │   │
-│  │                                                          │   │
-│  │  POST https://bartshealth.alemba.cloud/api/v1/requests  │   │
-│  │                                                          │   │
-│  │  Body: Full form data (see Section 3)                    │   │
-│  │                                                          │   │
-│  │  Response: { "ticketId": "REQ-12345" }                  │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                │                                                │
-│                ▼                                                │
-│  5. Parse response, extract ticketId                            │
-│                │                                                │
-│                ▼                                                │
-│  6. Update SharePoint with AlembaTicketID                       │
-│                │                                                │
-│                ▼                                                │
-│  7. Create AuditLog entry                                       │
-│                │                                                │
-│                ▼                                                │
-│  8. Send email to Procurement (includes ticket number)          │
-│                │                                                │
-│                ▼                                                │
-│  9. Return response to frontend                                 │
-│     { success: true, submissionId, alembaTicketId }             │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+Requester fills form
+       │
+       ▼
+Q2.7 = "Yes" (Procurement engaged)
+OR
+Q2.7 = "No" → Questionnaire → PBP approves → Certificate uploaded
+       │
+       ▼
+Section 7: Submit Full Form
+       │
+       ▼
+🎫 ALEMBA TICKET CREATED
+   Assigned to: Procurement Team
+       │
+       ▼
+Procurement reviews → STANDARD
+       │
+       ▼
+🎫 TICKET UPDATED
+   Assigned to: AP Control Team
+       │
+       ▼
+AP Control verifies → VERIFIED
+       │
+       ▼
+🎫 TICKET CLOSED
+   Resolution: "Supplier created. Vendor: V12345"
 ```
 
-### 7.2 AP Completion Flow with Ticket Closure
+### 7.2 OPW Path
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  Flow: NHS-Supplier-APComplete (Updated with Alemba Closure)    │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  1. HTTP Trigger receives completion data                       │
-│                │                                                │
-│                ▼                                                │
-│  2. Get submission from SharePoint (includes AlembaTicketID)    │
-│                │                                                │
-│                ▼                                                │
-│  3. Update SharePoint (Status = Completed)                      │
-│                │                                                │
-│                ▼                                                │
-│  4. Generate final PDF with all signatures                      │
-│                │                                                │
-│                ▼                                                │
-│  5. Upload PDF to SharePoint Document Library                   │
-│                │                                                │
-│                ▼                                                │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  6. HTTP: CLOSE ALEMBA TICKET                            │   │
-│  │                                                          │   │
-│  │  PATCH https://bartshealth.alemba.cloud/api/v1/         │   │
-│  │        requests/{AlembaTicketID}                         │   │
-│  │                                                          │   │
-│  │  Body:                                                   │   │
-│  │  {                                                       │   │
-│  │    "status": "Resolved",                                 │   │
-│  │    "resolution": "Supplier created. Vendor: V12345",    │   │
-│  │    "closedDate": "2025-01-26T15:30:00Z",                │   │
-│  │    "comment": {                                          │   │
-│  │      "text": "✅ SUPPLIER SETUP COMPLETE\n\n..."        │   │
-│  │    },                                                    │   │
-│  │    "attachments": [{                                     │   │
-│  │      "name": "Supplier_Setup_Complete.pdf",             │   │
-│  │      "url": "{SharePointPDFUrl}"                        │   │
-│  │    }]                                                    │   │
-│  │  }                                                       │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                │                                                │
-│                ▼                                                │
-│  7. Create AuditLog entry (ticket closed)                       │
-│                │                                                │
-│                ▼                                                │
-│  8. Send email to requester with PDF attached                   │
-│     Subject: "Supplier Setup Complete - {CompanyName}"          │
-│                │                                                │
-│                ▼                                                │
-│  9. Return success response                                     │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+Requester fills form (Sole Trader)
+       │
+       ▼
+Q2.7 = "No" → Questionnaire → PBP approves
+       │
+       ▼
+Section 7: Submit Full Form
+       │
+       ▼
+🎫 ALEMBA TICKET CREATED
+   Assigned to: Procurement Team
+       │
+       ▼
+Procurement reviews → POTENTIAL OPW
+       │
+       ▼
+🎫 TICKET UPDATED
+   Assigned to: OPW Panel
+       │
+       ▼
+OPW Panel → Inside/Outside IR35
+       │
+       ▼
+🎫 TICKET UPDATED
+   Assigned to: Contract Drafting
+       │
+       ▼
+Contract uploaded
+       │
+       ▼
+🎫 TICKET UPDATED
+   Assigned to: AP Control
+       │
+       ▼
+AP Control verifies → VERIFIED
+       │
+       ▼
+🎫 TICKET CLOSED
+   Resolution: "Supplier created. Vendor: V12345"
 ```
 
 ---
@@ -627,15 +630,6 @@ Flow Name: NHS-Supplier-CloseAlembaTicket
 ## 8. Error Handling
 
 ### Alemba API Errors
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│  In Power Automate, wrap HTTP actions in "Scope" with        │
-│  Configure Run After → "has failed"                          │
-└──────────────────────────────────────────────────────────────┘
-```
-
-**Handle common errors:**
 
 | Error Code | Meaning | Action |
 |------------|---------|--------|
@@ -645,30 +639,9 @@ Flow Name: NHS-Supplier-CloseAlembaTicket
 | 500 | Server error | Log error, send email to support |
 
 **Fallback behavior:**
-- If Alemba fails, the form should still work
+- If Alemba fails, the form workflow should still work
 - Log the error to SharePoint AuditLog
-- Send email notification instead
 - Flag submission for manual ticket creation
-
-### Power Automate Error Handling Pattern
-
-```
-Scope: Try Create Alemba Ticket
-  │
-  ├── HTTP: Create Ticket
-  │
-  └── Parse JSON Response
-
-Scope: Catch Alemba Error (Configure run after: has failed)
-  │
-  ├── Compose error details
-  │
-  ├── Create AuditLog entry: "Alemba ticket creation failed"
-  │
-  ├── Send email to IT support
-  │
-  └── Update SharePoint: AlembaTicketID = "FAILED - MANUAL REQUIRED"
-```
 
 ---
 
@@ -677,48 +650,51 @@ Scope: Catch Alemba Error (Configure run after: has failed)
 ### Test Checklist
 
 #### Ticket Creation
-- [ ] Submit a test form
+- [ ] Submit a test form (ensure Q2.7 answered correctly)
 - [ ] Verify ticket created in Alemba
+- [ ] Verify ticket assigned to PROCUREMENT (not PBP)
 - [ ] Verify all form data appears in ticket
-- [ ] Verify ticket assigned to Procurement
+- [ ] Verify PBP approval details included
 - [ ] Verify priority calculated correctly
-- [ ] Verify link to review page works
 
 #### Ticket Updates
-- [ ] Procurement Standard → Verify ticket reassigned to AP
+- [ ] Procurement Standard → Verify ticket reassigned to AP Control
 - [ ] Procurement OPW → Verify ticket reassigned to OPW Panel
 - [ ] Procurement Reject → Verify ticket status = Rejected
 - [ ] OPW Decision → Verify ticket reassigned to Contract Drafter
+- [ ] OPW Reject → Verify ticket status = Rejected
 - [ ] Contract Upload → Verify attachment added, routed to AP
 
 #### Ticket Closure
-- [ ] AP Complete → Verify ticket status = Resolved
-- [ ] Verify resolution message includes vendor number
-- [ ] Verify PDF attached to ticket
-- [ ] Verify closure date recorded
-- [ ] Verify full authorisation trail in final comment
+- [ ] AP Verified → Verify ticket status = Resolved
+- [ ] AP Rejected → Verify ticket status = Rejected
+- [ ] Verify resolution message includes vendor number (if verified)
+- [ ] Verify rejection reason included (if rejected)
 
 ### Test Scenarios
 
 | Scenario | Path | Expected Alemba State |
 |----------|------|----------------------|
-| Happy path - Standard | PBP → Procurement (Standard) → AP | Created → Updated → Closed |
-| OPW path | PBP → Procurement (OPW) → OPW → Contract → AP | Created → Updated 4x → Closed |
-| Rejection | PBP → Procurement (Reject) | Created → Rejected |
-| Alemba down | Submit when Alemba unavailable | Form works, ticket created manually later |
+| Happy path - Standard | Form → Procurement (Standard) → AP | Created → Updated → Closed |
+| OPW path | Form → Procurement (OPW) → OPW → Contract → AP | Created → Updated 3x → Closed |
+| Procurement Rejection | Form → Procurement (Reject) | Created → Rejected |
+| OPW Rejection | Form → Procurement (OPW) → OPW (Reject) | Created → Updated → Rejected |
+| AP Rejection | Form → Procurement → AP (Reject) | Created → Updated → Rejected |
 
 ---
 
-## Quick Reference - API Endpoints
+## Quick Reference - Workflow Stages in Alemba
 
-| Action | Method | Endpoint |
-|--------|--------|----------|
-| Create ticket | POST | `/api/v1/requests` |
-| Update ticket | PATCH | `/api/v1/requests/{ticketId}` |
-| Add comment | POST | `/api/v1/requests/{ticketId}/comments` |
-| Add attachment | POST | `/api/v1/requests/{ticketId}/attachments` |
-| Close ticket | PATCH | `/api/v1/requests/{ticketId}` with status: "Resolved" |
-| Get ticket | GET | `/api/v1/requests/{ticketId}` |
+| cf_workflow_stage | Meaning | Assigned Team |
+|-------------------|---------|---------------|
+| `Procurement` | Initial review after form submission | Procurement Team |
+| `OPW Review` | IR35 determination needed | OPW Panel |
+| `Contract Draft` | Agreement preparation | Contract Drafting |
+| `AP Control` | Final verification | AP Control Team |
+| `Complete` | Supplier created | (Closed) |
+| `Rejected` | Request rejected | (Closed) |
+
+**Note:** There is NO "PBP" stage in Alemba because PBP reviews the questionnaire BEFORE form submission, not after.
 
 ---
 
@@ -733,5 +709,6 @@ If you have issues with Alemba integration:
 
 ---
 
-*Document Version: 1.0*
-*Last Updated: January 2025*
+*Document Version: 2.0*
+*Last Updated: January 2026*
+*Critical Update: Corrected workflow - PBP reviews questionnaire pre-submission, not the full form*

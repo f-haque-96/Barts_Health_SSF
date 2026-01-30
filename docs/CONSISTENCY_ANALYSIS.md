@@ -55,25 +55,54 @@ If IT creates groups with different names, update these files:
 
 ## 2. Workflow Stages & Statuses
 
+### CRITICAL: Correct Workflow Understanding
+
+**PBP reviews the QUESTIONNAIRE before form submission, NOT the full form.**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           CORRECT WORKFLOW                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  PRE-SUBMISSION (Q2.7 = "No"):                                              │
+│  ─────────────────────────────                                              │
+│  1. Requester fills form → Q2.7 = "No" (procurement not engaged)           │
+│  2. Questionnaire Modal opens (Clinical/Non-Clinical)                       │
+│  3. Questionnaire submitted to PBP                                          │
+│  4. PBP reviews QUESTIONNAIRE ONLY (not full form)                         │
+│  5. PBP approves → Certificate issued to requester                         │
+│  6. Requester uploads certificate → Continues form                          │
+│                                                                              │
+│  POST-SUBMISSION (Full Form - Section 7):                                   │
+│  ─────────────────────────────────────────                                  │
+│  7. Full form submitted                                                      │
+│  8. Goes to PROCUREMENT (first stage) - NOT PBP                            │
+│  9. Procurement classifies: Standard OR Potential OPW                       │
+│     ├── STANDARD → AP Control → Verified/Rejected → Requester              │
+│     └── POTENTIAL OPW → OPW Panel → Contract Drafter → AP Control          │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
 ### Verification Status: ✅ CONSISTENT
 
-| Stage | Code Value | SQL CurrentStage | Notification Type |
-|-------|------------|------------------|-------------------|
-| PBP Review | `pbp` | `'pbp'` | `PBP_REVIEW_NEEDED` |
-| Procurement | `procurement` | `'procurement'` | `PROCUREMENT_REVIEW_NEEDED` |
-| OPW Panel | `opw` | `'opw'` | `OPW_REVIEW_NEEDED` |
-| Contract | `contract` | `'contract'` | `CONTRACT_UPLOAD_NEEDED` |
-| AP Control | `ap_control` or `ap` | `'ap'` | `AP_REVIEW_NEEDED` |
+| Stage | When | Code Value | SQL CurrentStage | Notification |
+|-------|------|------------|------------------|--------------|
+| PBP | Questionnaire only (pre-submission) | `pbp` | `'pbp'` | `PBP_QUESTIONNAIRE_*` |
+| Procurement | First stage after form submission | `procurement` | `'procurement'` | `PROCUREMENT_REVIEW_NEEDED` |
+| OPW Panel | If Potential OPW classification | `opw` | `'opw'` | `OPW_REVIEW_NEEDED` |
+| Contract | After OPW determination | `contract` | `'contract'` | `CONTRACT_UPLOAD_NEEDED` |
+| AP Control | Final verification | `ap_control` or `ap` | `'ap'` | `AP_REVIEW_NEEDED` |
 
 ### Status Values Used
 
 | Status | Meaning | Set By |
 |--------|---------|--------|
-| `pending_review` | Awaiting PBP review | Initial submission |
+| `pending_review` | Awaiting Procurement review | Full form submission |
 | `approved` | Stage approved | Any reviewer approval |
 | `rejected` | Request rejected | Any reviewer rejection |
-| `info_required` | PBP needs more info | PBP reviewer |
-| `Complete` | Supplier setup done | AP Control approval |
+| `info_required` | PBP needs more info on questionnaire | PBP reviewer (pre-submission) |
+| `Complete` | Supplier setup done | AP Control verification |
 | `Rejected_OPW` | Rejected by OPW | OPW reviewer |
 | `Rejected_AP` | Rejected by AP | AP Control |
 

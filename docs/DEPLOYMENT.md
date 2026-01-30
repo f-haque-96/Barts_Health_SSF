@@ -352,12 +352,18 @@ For DLP compliance, use **SharePoint list triggers** (not HTTP triggers).
 
 ### Test Scenarios
 
+**Note:** PBP reviews the QUESTIONNAIRE (pre-submission), not the full form. Procurement is the first stage after form submission.
+
 | Scenario | Steps | Expected Result |
 |----------|-------|-----------------|
-| Submit new request | Fill sections 1-7, submit | Submission created, PBP notified |
-| PBP Approval | Open PBP page, approve | Status updated, requester notified |
+| Questionnaire to PBP | Q2.7="No", fill questionnaire, submit | Questionnaire created, PBP notified |
+| PBP Questionnaire Approval | Open PBP page, approve questionnaire | Certificate issued, requester notified |
+| Submit full form | Complete all sections, submit in Section 7 | Submission created, PROCUREMENT notified (not PBP) |
+| Procurement Standard | Open Procurement page, classify as Standard | Routed to AP Control |
+| Procurement OPW | Open Procurement page, classify as Potential OPW | Routed to OPW Panel |
 | Unauthorized access | Open procurement page without role | Access denied page shown |
-| Document upload | Upload passport | Goes to SensitiveDocuments library |
+| Document upload (passport) | Upload passport in Section 3 | Goes to SensitiveDocuments library |
+| AP Control verification | Verify bank and company details | Supplier created, requester notified with vendor number |
 
 ---
 
