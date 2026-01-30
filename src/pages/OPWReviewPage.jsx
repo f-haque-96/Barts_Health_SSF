@@ -47,11 +47,19 @@ const ReviewCard = ({ title, children, highlight }) => {
   );
 };
 
-const OPWReviewPage = () => {
+const OPWReviewPage = ({
+  submission: propSubmission,
+  setSubmission: propSetSubmission,
+  user,
+  readOnly = false
+}) => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
-  const [submission, setSubmission] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Use props if provided (from SecureReviewPage), otherwise use local state
+  const [localSubmission, setLocalSubmission] = useState(null);
+  const submission = propSubmission || localSubmission;
+  const setSubmission = propSetSubmission || setLocalSubmission;
+  const [loading, setLoading] = useState(!propSubmission);
   const [ir35Determination, setIr35Determination] = useState(''); // 'inside' | 'outside'
   const [rationale, setRationale] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -143,6 +151,16 @@ const OPWReviewPage = () => {
   };
 
   useEffect(() => {
+    // Skip localStorage loading if submission provided via props
+    if (propSubmission) {
+      // Pre-fill if already determined
+      if (propSubmission.opwReview) {
+        setIr35Determination(propSubmission.opwReview.ir35Status);
+        setRationale(propSubmission.opwReview.rationale || '');
+      }
+      setLoading(false);
+      return;
+    }
     // Load submission from localStorage
     const submissionData = localStorage.getItem(`submission_${submissionId}`);
 
@@ -162,7 +180,7 @@ const OPWReviewPage = () => {
     }
 
     setLoading(false);
-  }, [submissionId]);
+  }, [submissionId, propSubmission]);
 
   const handleSubmitDetermination = async () => {
     if (!signatureName.trim()) {

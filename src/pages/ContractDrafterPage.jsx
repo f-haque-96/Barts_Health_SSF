@@ -9,10 +9,18 @@ import { Button, Input, CheckIcon } from '../components/common';
 import { formatDate } from '../utils/helpers';
 import './ContractDrafterPage.css';
 
-const ContractDrafterPage = () => {
+const ContractDrafterPage = ({
+  submission: propSubmission,
+  setSubmission: propSetSubmission,
+  user,
+  readOnly = false
+}) => {
   const { submissionId } = useParams();
-  const [submission, setSubmission] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Use props if provided (from SecureReviewPage), otherwise use local state
+  const [localSubmission, setLocalSubmission] = useState(null);
+  const submission = propSubmission || localSubmission;
+  const setSubmission = propSetSubmission || setLocalSubmission;
+  const [loading, setLoading] = useState(!propSubmission);
   const [contractFile, setContractFile] = useState(null);
   const [uploadedBy, setUploadedBy] = useState('');
   const [signatureDate, setSignatureDate] = useState(new Date().toISOString().split('T')[0]);
@@ -20,6 +28,15 @@ const ContractDrafterPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    // Skip localStorage loading if submission provided via props
+    if (propSubmission) {
+      // Check if contract already uploaded
+      if (propSubmission.contractDrafter) {
+        setIsSubmitted(true);
+      }
+      setLoading(false);
+      return;
+    }
     // Load submission from localStorage
     const submissionData = localStorage.getItem(`submission_${submissionId}`);
 
@@ -38,7 +55,7 @@ const ContractDrafterPage = () => {
     }
 
     setLoading(false);
-  }, [submissionId]);
+  }, [submissionId, propSubmission]);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];

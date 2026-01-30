@@ -341,11 +341,19 @@ const NonClinicalQuestionnaireReview = ({ data }) => {
   );
 };
 
-const PBPReviewPage = () => {
+const PBPReviewPage = ({
+  submission: propSubmission,
+  setSubmission: propSetSubmission,
+  user,
+  readOnly = false
+}) => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
-  const [submission, setSubmission] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Use props if provided (from SecureReviewPage), otherwise use local state
+  const [localSubmission, setLocalSubmission] = useState(null);
+  const submission = propSubmission || localSubmission;
+  const setSubmission = propSetSubmission || setLocalSubmission;
+  const [loading, setLoading] = useState(!propSubmission);
   const [approvalAction, setApprovalAction] = useState(null);
   const [comments, setComments] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -414,6 +422,11 @@ const PBPReviewPage = () => {
   };
 
   useEffect(() => {
+    // Skip localStorage loading if submission provided via props
+    if (propSubmission) {
+      setLoading(false);
+      return;
+    }
     // Load submission from localStorage
     const submissionData = localStorage.getItem(`submission_${submissionId}`);
 

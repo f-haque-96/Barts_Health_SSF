@@ -165,17 +165,30 @@ const StatusBadge = ({ status, isAwaitingYou }) => {
   );
 };
 
-const RequesterResponsePage = () => {
+const RequesterResponsePage = ({
+  submission: propSubmission,
+  setSubmission: propSetSubmission,
+  user,
+  readOnly = false
+}) => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
-  const [submission, setSubmission] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Use props if provided (from SecureReviewPage), otherwise use local state
+  const [localSubmission, setLocalSubmission] = useState(null);
+  const submission = propSubmission || localSubmission;
+  const setSubmission = propSetSubmission || setLocalSubmission;
+  const [loading, setLoading] = useState(!propSubmission);
   const [responseMessage, setResponseMessage] = useState('');
   const [responseAttachments, setResponseAttachments] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load submission
   useEffect(() => {
+    // Skip localStorage loading if submission provided via props
+    if (propSubmission) {
+      setLoading(false);
+      return;
+    }
     const submissionData = localStorage.getItem(`submission_${submissionId}`);
 
     if (submissionData) {
@@ -188,7 +201,7 @@ const RequesterResponsePage = () => {
     }
 
     setLoading(false);
-  }, [submissionId]);
+  }, [submissionId, propSubmission]);
 
   // Check status
   const exchanges = submission?.pbpReview?.exchanges || [];

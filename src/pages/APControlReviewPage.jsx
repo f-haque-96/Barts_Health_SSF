@@ -114,11 +114,19 @@ const ReviewCard = ({ title, children, highlight }) => {
   );
 };
 
-const APControlReviewPage = () => {
+const APControlReviewPage = ({
+  submission: propSubmission,
+  setSubmission: propSetSubmission,
+  user,
+  readOnly = false
+}) => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
-  const [submission, setSubmission] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Use props if provided (from SecureReviewPage), otherwise use local state
+  const [localSubmission, setLocalSubmission] = useState(null);
+  const submission = propSubmission || localSubmission;
+  const setSubmission = propSetSubmission || setLocalSubmission;
+  const [loading, setLoading] = useState(!propSubmission);
   const [bankDetailsVerified, setBankDetailsVerified] = useState(false);
   const [companyDetailsVerified, setCompanyDetailsVerified] = useState(false);
   const [vatVerified, setVatVerified] = useState(false);
@@ -291,6 +299,27 @@ const APControlReviewPage = () => {
   };
 
   useEffect(() => {
+    // Skip localStorage loading if submission provided via props
+    if (propSubmission) {
+      // Pre-fill supplier name from form data
+      if (propSubmission.formData?.companyName) {
+        setSupplierName(propSubmission.formData.companyName);
+      }
+
+      // Pre-fill if already verified
+      if (propSubmission.apReview) {
+        setBankDetailsVerified(propSubmission.apReview.bankDetailsVerified);
+        setCompanyDetailsVerified(propSubmission.apReview.companyDetailsVerified);
+        setVatVerified(propSubmission.apReview.vatVerified);
+        setInsuranceVerified(propSubmission.apReview.insuranceVerified);
+        setNotes(propSubmission.apReview.notes || '');
+        setSupplierName(propSubmission.apReview.supplierName || propSubmission.formData?.companyName || '');
+        setSupplierNumber(propSubmission.apReview.supplierNumber || '');
+        setAdditionalInfo(propSubmission.apReview.additionalInfo || '');
+      }
+      setLoading(false);
+      return;
+    }
     // Load submission from localStorage
     const submissionData = localStorage.getItem(`submission_${submissionId}`);
 
@@ -321,7 +350,7 @@ const APControlReviewPage = () => {
     }
 
     setLoading(false);
-  }, [submissionId]);
+  }, [submissionId, propSubmission]);
 
   const handleSubmitVerification = async () => {
     if (!signatureName.trim()) {
