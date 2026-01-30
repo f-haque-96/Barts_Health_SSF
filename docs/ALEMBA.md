@@ -9,9 +9,7 @@ This guide details how to integrate Alemba with the NHS Supplier Setup Form for:
 
 ---
 
-## CRITICAL: Workflow Understanding
-
-**PBP reviews the QUESTIONNAIRE, NOT the full form.**
+**Workflow Logic**
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
