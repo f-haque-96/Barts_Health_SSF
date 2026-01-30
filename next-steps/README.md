@@ -8,11 +8,24 @@ These guides will walk you through the tasks you can complete **right now** with
 
 ## Complete In This Order
 
+### Do Now (While Waiting for IT)
+
 | Step | Document | Time | What You'll Do |
 |------|----------|------|----------------|
 | **1** | [01-SQL-SERVER-SETUP.md](./01-SQL-SERVER-SETUP.md) | 30-45 min | Create the database and tables |
 | **2** | [02-SHAREPOINT-LIBRARIES-SETUP.md](./02-SHAREPOINT-LIBRARIES-SETUP.md) | 20-30 min | Create document storage libraries |
-| **3** | [03-SUPPLIER-DATA-EXPORT.md](./03-SUPPLIER-DATA-EXPORT.md) | 1-2 hours | Prepare existing supplier data |
+
+### Do After IT Responds (Requires Azure AD)
+
+| Step | Document | Time | What You'll Do |
+|------|----------|------|----------------|
+| **4** | [04-POWER-AUTOMATE-SETUP.md](./04-POWER-AUTOMATE-SETUP.md) | 2-3 hours | Create notification email flows |
+
+### Future Reference (Not Needed for Initial Launch)
+
+| Step | Document | Time | What You'll Do |
+|------|----------|------|----------------|
+| **3** | [03-SUPPLIER-DATA-EXPORT.md](./03-SUPPLIER-DATA-EXPORT.md) | 1-2 hours | Prepare existing supplier data for duplicate detection |
 
 ---
 
@@ -24,6 +37,9 @@ Use this to track your progress:
 ┌─────────────────────────────────────────────────────────────┐
 │                    SETUP PROGRESS                            │
 ├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  DO NOW (While Waiting for IT):                             │
+│  ──────────────────────────────                             │
 │                                                              │
 │  [ ] Step 1: SQL Server Database                            │
 │      [ ] SSMS installed                                      │
@@ -38,16 +54,26 @@ Use this to track your progress:
 │      [ ] SupplierDocuments folders created (6)              │
 │      [ ] SensitiveDocuments library created                 │
 │      [ ] SensitiveDocuments folders created (4)             │
+│      [ ] NotificationQueue list created                     │
 │      [ ] Permissions restricted on SensitiveDocuments       │
 │                                                              │
-│  [ ] Step 3: Supplier Data Export                           │
-│      [ ] Data exported from finance system                  │
-│      [ ] Columns renamed correctly                          │
-│      [ ] VAT numbers formatted (GB prefix)                  │
-│      [ ] Saved as CSV                                       │
-│      [ ] Stored in supplier-form-api/data/                  │
-│                                                              │
+│  ──────────────────────────────────────────────────────────  │
 │  [ ] WAITING: Azure AD from IT                              │
+│  ──────────────────────────────────────────────────────────  │
+│                                                              │
+│  DO AFTER IT RESPONDS:                                      │
+│  ─────────────────────                                      │
+│                                                              │
+│  [ ] Step 4: Power Automate Flows                           │
+│      [ ] ProcessNotificationQueue flow created              │
+│      [ ] DailyReminder flow created                         │
+│      [ ] Test email received                                │
+│      [ ] All flows turned ON                                │
+│                                                              │
+│  FUTURE (Not needed for launch):                            │
+│  ───────────────────────────────                            │
+│                                                              │
+│  [ ] Step 3: Supplier Data Export (for duplicate detection) │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
