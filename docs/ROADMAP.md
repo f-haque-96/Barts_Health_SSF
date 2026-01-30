@@ -47,12 +47,12 @@ This document tracks the project phases, current status, deployment timeline, an
 │                                                                             │
 │   PHASE 1: Development           ████████████████████████████████  100%     │
 │   PHASE 2: Documentation         ████████████████████████████████  100%     │
-│   PHASE 3: Infrastructure        ████████████████░░░░░░░░░░░░░░░░   50%     │
+│   PHASE 3: Infrastructure        ███████████████░░░░░░░░░░░░░░░░░   45%     │
 │   PHASE 4: IT Dependencies       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    0%     │
 │   PHASE 5: Deployment            ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    0%     │
 │   PHASE 6: Testing & Go-Live     ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    0%     │
 │                                                                             │
-│   OVERALL PROGRESS:              ████████████████░░░░░░░░░░░░░░░░   40%     │
+│   OVERALL PROGRESS:              ████████████████░░░░░░░░░░░░░░░░   45%     │
 │                                                                             │
 │   CURRENT BLOCKER: Waiting for IT (Azure AD)                                │
 │                                                                             │
