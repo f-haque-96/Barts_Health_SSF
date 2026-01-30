@@ -97,10 +97,25 @@ npm run preview    # Preview production build
 ```
 nhs-supplier-form-react/
 │
+├── docs/                       # Documentation
+│   ├── DEPLOYMENT.md          # Full deployment guide
+│   ├── CHECKLIST.md           # Production checklist
+│   ├── ALEMBA.md              # Alemba integration
+│   └── USER_GUIDE.md          # User guide for requesters
+│
+├── supplier-form-api/          # Backend API (Express.js)
+│   ├── database/              # SQL schema scripts
+│   ├── src/
+│   │   ├── config/            # Database, auth, SharePoint config
+│   │   ├── middleware/        # Auth, RBAC, audit middleware
+│   │   ├── routes/            # API routes
+│   │   └── services/          # Business logic
+│   └── package.json
+│
 ├── public/                     # Static assets served as-is
 │   └── barts-logo.png         # NHS Barts Health logo
 │
-├── src/                        # Source code (main application)
+├── src/                        # Frontend source code (React)
 │   ├── components/            # Reusable React components
 │   │   ├── common/            # Basic UI components (buttons, inputs, etc.)
 │   │   ├── layout/            # Page structure components
@@ -150,7 +165,8 @@ nhs-supplier-form-react/
 | `.gitignore` | Lists files/folders Git should ignore (node_modules, .env files, etc.). |
 | `.env.example` | Template showing what environment variables are needed. Copy to `.env.local`. |
 | `.env.production` | Environment variables for production deployment. |
-| `DEPLOYMENT_GUIDE.md` | Step-by-step instructions for deploying to production. |
+| `docs/` | Documentation folder (deployment, checklist, guides). |
+| `supplier-form-api/` | Backend API (Express.js with Azure AD auth). |
 | `README.md` | This documentation file. |
 
 ---
@@ -346,9 +362,17 @@ VITE_INTRANET_URL=https://intranet.nhs.uk
 
 ---
 
-## Further Documentation
+## Documentation
 
-- **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** - Detailed instructions for deploying to production
+| Document | Description |
+|----------|-------------|
+| [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Complete deployment guide (Azure AD, SQL, SharePoint, API) |
+| [docs/CHECKLIST.md](./docs/CHECKLIST.md) | Production deployment checklist |
+| [docs/ALEMBA.md](./docs/ALEMBA.md) | Alemba ticketing integration guide |
+| [docs/USER_GUIDE.md](./docs/USER_GUIDE.md) | User guide for requesters |
+
+### External Documentation
+
 - **[Vite Documentation](https://vitejs.dev/)** - Build tool documentation
 - **[React Documentation](https://react.dev/)** - React framework documentation
 
