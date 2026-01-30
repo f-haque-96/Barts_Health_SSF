@@ -374,4 +374,4 @@ For issues or questions, contact the development team or raise an issue on GitHu
 
 ---
 
-*Last updated: January 2025*
+*Last updated: January 2026*
