@@ -61,26 +61,26 @@ If IT creates groups with different names, update these files:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           CORRECT WORKFLOW                                   │
+│                           CORRECT WORKFLOW                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
+│                                                                             │
 │  PRE-SUBMISSION (Q2.7 = "No"):                                              │
 │  ─────────────────────────────                                              │
-│  1. Requester fills form → Q2.7 = "No" (procurement not engaged)           │
+│  1. Requester fills form → Q2.7 = "No" (procurement not engaged)            │
 │  2. Questionnaire Modal opens (Clinical/Non-Clinical)                       │
 │  3. Questionnaire submitted to PBP                                          │
-│  4. PBP reviews QUESTIONNAIRE ONLY (not full form)                         │
-│  5. PBP approves → Certificate issued to requester                         │
+│  4. PBP reviews QUESTIONNAIRE ONLY (not full form)                          │
+│  5. PBP approves → Certificate issued to requester                          │
 │  6. Requester uploads certificate → Continues form                          │
-│                                                                              │
+│                                                                             │
 │  POST-SUBMISSION (Full Form - Section 7):                                   │
 │  ─────────────────────────────────────────                                  │
-│  7. Full form submitted                                                      │
-│  8. Goes to PROCUREMENT (first stage) - NOT PBP                            │
+│  7. Full form submitted                                                     │
+│  8. Goes to PROCUREMENT (first stage) - NOT PBP                             │
 │  9. Procurement classifies: Standard OR Potential OPW                       │
-│     ├── STANDARD → AP Control → Verified/Rejected → Requester              │
-│     └── POTENTIAL OPW → OPW Panel → Contract Drafter → AP Control          │
-│                                                                              │
+│     ├── STANDARD → AP Control → Verified/Rejected → Requester               │
+│     └── POTENTIAL OPW → OPW Panel → Contract Drafter → AP Control           │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
