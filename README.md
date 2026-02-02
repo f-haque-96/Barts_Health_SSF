@@ -45,7 +45,7 @@ This application provides:
 
 ```bash
 # 1. Download/clone the project from GitHub
-git clone https://github.com/YOUR-ORG/nhs-supplier-form-react.git
+git clone https://github.com/f-haque-96/Barts_Health_SSF.git
 
 # 2. Open terminal/command prompt in the project folder
 cd nhs-supplier-form-react
