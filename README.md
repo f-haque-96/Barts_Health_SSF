@@ -48,7 +48,7 @@ This application provides:
 git clone https://github.com/f-haque-96/Barts_Health_SSF.git
 
 # 2. Open terminal/command prompt in the project folder
-cd nhs-supplier-form-react
+cd Barts_Health_SSF
 
 # 3. Install dependencies (downloads all required packages)
 npm install
