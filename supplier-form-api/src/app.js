@@ -1,0 +1,187 @@
+/**
+ * NHS Supplier Setup Form API
+ * Main Application Entry Point
+ *
+ * CRITICAL: This API must be deployed on an internal server only.
+ * It handles sensitive supplier and banking data.
+ */
+
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const csrf = require('csurf');
+const cookieParser = require('cookie-parser');
+const routes = require('./routes');
+const { initializeDatabase, getPool } = require('./config/database');
+const { initializeSharePoint, getSP } = require('./config/sharepoint');
+const { configurePassport } = require('./config/auth');
+const { auditMiddleware } = require('./middleware/audit');
+const { errorHandler } = require('./middleware/errorHandler');
+const logger = require('./config/logger');
+
+const app = express();
+const PORT = process.env.API_PORT || 3001;
+
+// Validate required environment variables on startup
+const requiredEnvVars = [
+  'DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASSWORD',
+  'AZURE_AD_CLIENT_ID', 'AZURE_AD_TENANT_ID',
+  'SP_SITE_URL', 'SP_CLIENT_ID', 'SP_CLIENT_SECRET',
+  'SESSION_SECRET'
+];
+
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+if (missingEnvVars.length > 0) {
+  logger.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+  logger.error('Please set all required environment variables before starting the server');
+  process.exit(1);
+}
+
+// Security middleware with enhanced CSP
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  hsts: {
+    maxAge: 31536000, // 1 year
+    includeSubDomains: true,
+    preload: true
+  }
+}));
+
+// CORS configuration - only allow frontend origin
+app.use(cors({
+  origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:5173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: parseInt(process.env.RATE_LIMIT_MAX) || 100,
+  message: { error: 'Too many requests, please try again later' }
+});
+app.use('/api', limiter);
+
+// Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
+
+// Configure Passport authentication
+configurePassport(app);
+
+// CSRF Protection (only for state-changing operations)
+// Note: GET requests are excluded from CSRF protection
+const csrfProtection = csrf({
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+  }
+});
+
+// Apply CSRF to all POST, PUT, DELETE requests
+app.use('/api', (req, res, next) => {
+  if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
+    return csrfProtection(req, res, next);
+  }
+  next();
+});
+
+// Provide CSRF token to clients
+app.get('/api/csrf-token', csrfProtection, (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
+
+// Audit logging middleware
+app.use('/api', auditMiddleware);
+
+// Enhanced health check endpoint with dependency verification
+app.get('/health', async (req, res) => {
+  const health = {
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    checks: {
+      database: 'unknown',
+      sharepoint: 'unknown'
+    }
+  };
+
+  // Check database connection
+  try {
+    const pool = getPool();
+    await pool.request().query('SELECT 1');
+    health.checks.database = 'connected';
+  } catch (error) {
+    health.checks.database = 'disconnected';
+    health.status = 'unhealthy';
+    logger.error('Health check: Database connection failed', error);
+  }
+
+  // Check SharePoint connection
+  try {
+    const sp = getSP();
+    await sp.web.get();
+    health.checks.sharepoint = 'connected';
+  } catch (error) {
+    health.checks.sharepoint = 'disconnected';
+    health.status = 'unhealthy';
+    logger.error('Health check: SharePoint connection failed', error);
+  }
+
+  const statusCode = health.status === 'healthy' ? 200 : 503;
+  res.status(statusCode).json(health);
+});
+
+// API routes
+app.use('/api', routes);
+
+// Error handling
+app.use(errorHandler);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Endpoint not found' });
+});
+
+// Initialize services and start server
+async function startServer() {
+  try {
+    // Initialize database connection
+    await initializeDatabase();
+    logger.info('Database connection established');
+
+    // Initialize SharePoint connection
+    await initializeSharePoint();
+    logger.info('SharePoint connection established');
+
+    // Start server
+    app.listen(PORT, () => {
+      logger.info(`NHS Supplier Form API running on port ${PORT}`);
+      logger.info(`Environment: ${process.env.NODE_ENV}`);
+    });
+  } catch (error) {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
+
+module.exports = app;
