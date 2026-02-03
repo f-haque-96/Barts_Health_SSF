@@ -81,7 +81,7 @@ Use this to track your progress:
 │  [ ] Step 2: SharePoint Libraries                           │
 │      [ ] Site created: NHS-Supplier-Forms                   │
 │      [ ] SupplierDocuments library created                  │
-│      [ ] SupplierDocuments folders created (5)              │
+│      [ ] SupplierDocuments folders created (4)              │
 │      [ ] SensitiveDocuments library created                 │
 │      [ ] SensitiveDocuments folders created (4)             │
 │      [ ] NotificationQueue list created                     │

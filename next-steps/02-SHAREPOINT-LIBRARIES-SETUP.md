@@ -160,23 +160,23 @@ Repeat Step 2 for each of these folders:
 - [ ] `Letterheads` (done above)
 - [ ] `Contracts`
 - [ ] `PBP_Certificates`
-- [ ] `Insurance_Documents`
 - [ ] `Other`
+
+**Note:** The "Other" folder is for additional documents exchanged between PBP and requester when PBP requests more information.
 
 ### Step 4: Verify Folders
 
-You should now see 5 folders in your SupplierDocuments library:
+You should now see 4 folders in your SupplierDocuments library:
 
 ```
 SupplierDocuments/
 ├── Letterheads/
 ├── Contracts/
 ├── PBP_Certificates/
-├── Insurance_Documents/
 └── Other/
 ```
 
-**✅ CHECKPOINT: Can you see all 5 folders? If yes, continue.**
+**✅ CHECKPOINT: Can you see all 4 folders? If yes, continue.**
 
 ---
 

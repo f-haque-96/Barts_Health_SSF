@@ -219,8 +219,7 @@ GRANT EXECUTE ON SCHEMA::dbo TO SupplierFormAPI;
    - `/Letterheads/`
    - `/Contracts/`
    - `/PBP_Certificates/`
-   - `/Insurance_Documents/`
-   - `/Other/`
+   - `/Other/` (for PBP-requester additional documentation)
 
 #### Library 2: SensitiveDocuments (ID documents)
 
