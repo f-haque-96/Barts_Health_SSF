@@ -5,16 +5,13 @@
  * CRITICAL: In production, all data access goes through the API which enforces RBAC
  */
 
+import { getDevUser } from '../config/devAuth';
+
 class LocalStorageProvider {
   async getSession() {
-    // In dev, simulate a logged-in user
-    return {
-      user: {
-        email: 'dev.user@nhs.net',
-        name: 'Dev User',
-        groups: ['All-Staff', 'Procurement-Team', 'AP-Control-Team', 'PBP-Team', 'OPW-Panel', 'Contract-Drafters']
-      }
-    };
+    // In dev, simulate a logged-in user based on devAuth.js configuration
+    // To change roles: Edit ACTIVE_TEST_USER in src/config/devAuth.js
+    return { user: getDevUser() };
   }
 
   async getSubmission(id) {
