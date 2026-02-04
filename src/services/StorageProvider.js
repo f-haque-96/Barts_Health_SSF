@@ -5,13 +5,17 @@
  * CRITICAL: In production, all data access goes through the API which enforces RBAC
  */
 
-import { getDevUser } from '../config/devAuth';
-
+// Development-only LocalStorageProvider
 class LocalStorageProvider {
   async getSession() {
     // In dev, simulate a logged-in user based on devAuth.js configuration
-    // To change roles: Edit ACTIVE_TEST_USER in src/config/devAuth.js
-    return { user: getDevUser() };
+    // Dynamically import devAuth only in development to keep it out of production bundle
+    if (import.meta.env.DEV) {
+      const { getDevUser } = await import('../config/devAuth');
+      return { user: getDevUser() };
+    }
+    // Should never reach here in production, but return error if it does
+    throw new Error('LocalStorageProvider should not be used in production');
   }
 
   async getSubmission(id) {

@@ -160,11 +160,89 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
 });
 
+// Validate required environment variables for production
+function validateEnvironmentVariables() {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const requiredVars = [
+    'SESSION_SECRET',
+    'CORS_ORIGIN',
+  ];
+
+  const productionRequiredVars = [
+    'DB_HOST',
+    'DB_NAME',
+    'DB_USER',
+    'DB_PASSWORD',
+    'AZURE_AD_TENANT_ID',
+    'AZURE_AD_CLIENT_ID',
+    'AZURE_AD_CLIENT_SECRET',
+    'SP_SITE_URL',
+    'SP_CLIENT_ID',
+    'SP_CLIENT_SECRET',
+    'SP_TENANT_ID',
+  ];
+
+  const missing = [];
+  const warnings = [];
+
+  // Check always-required variables
+  requiredVars.forEach(varName => {
+    if (!process.env[varName]) {
+      missing.push(varName);
+    }
+  });
+
+  // Check SESSION_SECRET is not the development default
+  if (process.env.SESSION_SECRET && process.env.SESSION_SECRET.includes('dev-secret')) {
+    if (!isDevelopment) {
+      missing.push('SESSION_SECRET (using insecure development default)');
+    } else {
+      warnings.push('SESSION_SECRET is using development default - generate a secure one for production');
+    }
+  }
+
+  // Check production-only required variables
+  if (!isDevelopment) {
+    productionRequiredVars.forEach(varName => {
+      const value = process.env[varName];
+      if (!value || value.includes('placeholder') || value.includes('00000000-0000-0000-0000-000000000000')) {
+        missing.push(`${varName} (has placeholder value)`);
+      }
+    });
+  } else {
+    // In development, just warn about missing production variables
+    productionRequiredVars.forEach(varName => {
+      if (!process.env[varName] || process.env[varName].includes('placeholder')) {
+        warnings.push(`${varName} not configured - some features may not work`);
+      }
+    });
+  }
+
+  // Log warnings for development
+  if (warnings.length > 0 && isDevelopment) {
+    warnings.forEach(warning => logger.warn(warning));
+  }
+
+  // Fail fast in production or for critical missing vars
+  if (missing.length > 0) {
+    logger.error('FATAL: Missing or invalid required environment variables:');
+    missing.forEach(varName => logger.error(`  - ${varName}`));
+    if (!isDevelopment) {
+      logger.error('Cannot start in production mode without all required environment variables');
+      logger.error('Please check your .env file and ensure all placeholders are replaced');
+      process.exit(1);
+    }
+  }
+}
+
 // Initialize services and start server
 async function startServer() {
   const isDevelopment = process.env.NODE_ENV === 'development';
 
   try {
+    // Validate environment variables first
+    validateEnvironmentVariables();
+
     // Initialize database connection (optional in development)
     try {
       await initializeDatabase();
@@ -174,6 +252,7 @@ async function startServer() {
         logger.warn('Database connection failed (continuing in dev mode):', dbError.message);
         logger.warn('Database-dependent features will not work');
       } else {
+        logger.error('Database connection failed in production:', dbError.message);
         throw dbError;
       }
     }
@@ -187,6 +266,7 @@ async function startServer() {
         logger.warn('SharePoint connection failed (continuing in dev mode):', spError.message);
         logger.warn('Document upload features will not work');
       } else {
+        logger.error('SharePoint connection failed in production:', spError.message);
         throw spError;
       }
     }
@@ -196,7 +276,9 @@ async function startServer() {
       logger.info(`NHS Supplier Form API running on port ${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV}`);
       if (isDevelopment) {
-        logger.info('Development mode: CRN verification available, DB/SharePoint features may be limited');
+        logger.info('Development mode: Some features may be limited if database/SharePoint are not configured');
+      } else {
+        logger.info('Production mode: All systems operational');
       }
     });
   } catch (error) {

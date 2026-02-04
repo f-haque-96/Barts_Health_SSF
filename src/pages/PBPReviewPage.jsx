@@ -435,20 +435,17 @@ const PBPReviewPage = ({
     if (submissionData) {
       try {
         const parsed = JSON.parse(submissionData);
+
         setSubmission(parsed);
 
         // Load letterhead and procurement approval from multiple locations
         let letterhead = null;
         let procurementApproval = null;
 
-        console.log('[PBP] Loading documents for submission:', submissionId);
-        console.log('[PBP] Parsed submission uploadedFiles:', parsed.uploadedFiles);
-
         // Check uploadedFiles object (skip if it's an array from old bug)
         if (parsed.uploadedFiles && !Array.isArray(parsed.uploadedFiles)) {
           letterhead = parsed.uploadedFiles.letterhead || null;
           procurementApproval = parsed.uploadedFiles.procurementApproval || null;
-          console.log('[PBP] Found in uploadedFiles - letterhead:', !!letterhead, 'procurement:', !!procurementApproval);
         } else if (Array.isArray(parsed.uploadedFiles)) {
           console.warn('[PBP] uploadedFiles is an array (old bug format), skipping...');
         }
@@ -456,58 +453,38 @@ const PBPReviewPage = ({
         // Check formData.uploadedFiles
         if (!letterhead && parsed.formData?.uploadedFiles?.letterhead) {
           letterhead = parsed.formData.uploadedFiles.letterhead;
-          console.log('[PBP] Found letterhead in formData.uploadedFiles');
         }
         if (!procurementApproval && parsed.formData?.uploadedFiles?.procurementApproval) {
           procurementApproval = parsed.formData.uploadedFiles.procurementApproval;
-          console.log('[PBP] Found procurement in formData.uploadedFiles');
         }
 
         // Check uploads object
         if (!letterhead && parsed.uploads?.letterhead) {
           letterhead = parsed.uploads.letterhead;
-          console.log('[PBP] Found letterhead in uploads');
         }
         if (!procurementApproval && parsed.uploads?.procurementApproval) {
           procurementApproval = parsed.uploads.procurementApproval;
-          console.log('[PBP] Found procurement in uploads');
         }
 
         // Also check localStorage for uploads (try both possible keys)
         const storedFormUploads = localStorage.getItem('supplier-form-uploads') || localStorage.getItem('formUploads');
-        console.log('[PBP] Checking localStorage for uploads...');
         if (storedFormUploads) {
           try {
             const formUploads = JSON.parse(storedFormUploads);
-            console.log('[PBP] localStorage uploads:', Object.keys(formUploads));
             if (!letterhead && formUploads.letterhead) {
               letterhead = formUploads.letterhead;
-              console.log('[PBP] Found letterhead in localStorage');
             }
             if (!procurementApproval && formUploads.procurementApproval) {
               procurementApproval = formUploads.procurementApproval;
-              console.log('[PBP] Found procurement in localStorage');
             }
           } catch (e) {
             console.error('[PBP] Error parsing form uploads:', e);
           }
-        } else {
-          console.warn('[PBP] No uploads found in localStorage');
         }
-
-        console.log('[PBP] Final result - letterhead:', !!letterhead, 'procurement:', !!procurementApproval);
         setAllUploads({
           letterhead,
           procurementApproval
         });
-
-        // DEBUG: Check for questionnaire uploads
-        console.log('[PBP DEBUG] Checking questionnaire uploads...');
-        console.log('[PBP DEBUG] submission.questionnaireUploads:', parsed.questionnaireUploads);
-        console.log('[PBP DEBUG] submission.uploads:', parsed.uploads);
-        console.log('[PBP DEBUG] submission.questionnaireData:', parsed.questionnaireData);
-        console.log('[PBP DEBUG] submission.uploadedFiles:', parsed.uploadedFiles);
-        console.log('[PBP DEBUG] Full submission keys:', Object.keys(parsed));
 
         // Note: Questionnaire uploads and other files are accessed directly in the JSX
         // via submission.uploadedFiles and submission.questionnaireUploads
@@ -911,7 +888,7 @@ const PBPReviewPage = ({
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><CheckIcon size={18} color="#065f46" /> Approval Confirmed</span>
           </h3>
           <p style={{ margin: '0 0 var(--space-16) 0', color: '#047857' }}>
-            Download the approval certificate for the requester:
+            Approval certificate for reference:
           </p>
           <PDFDownloadLink
             document={
@@ -943,20 +920,6 @@ const PBPReviewPage = ({
               </Button>
             )}
           </PDFDownloadLink>
-          <p style={{ margin: '0 0 var(--space-8) 0', fontSize: 'var(--font-size-sm)', color: '#047857', fontStyle: 'italic' }}>
-            Send this to the requester to upload for "Engaged with Procurement" question
-          </p>
-          <div style={{
-            padding: 'var(--space-12)',
-            backgroundColor: '#eff6ff',
-            borderRadius: 'var(--radius-sm)',
-            borderLeft: '3px solid #3b82f6',
-            fontSize: 'var(--font-size-sm)',
-            color: '#1e40af',
-          }}>
-            <strong>Note:</strong> In production, this certificate will be automatically emailed to the requester ({submission.formData?.nhsEmail || 'requester email'}).
-            For now, download manually and send via email.
-          </div>
         </div>
       )}
 
@@ -1193,9 +1156,6 @@ const PBPReviewPage = ({
               submission?.questionnaireData?.uploads ||
               submission?.questionnaireData?.uploadedFiles ||
               {};
-
-            console.log('[PBP RENDER] Questionnaire uploads to display:', qUploads);
-            console.log('[PBP RENDER] Number of questionnaire files:', Object.keys(qUploads).length);
 
             return Object.entries(qUploads).map(([key, file]) => (
               <div key={`questionnaire-${key}`} style={{

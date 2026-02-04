@@ -28,11 +28,10 @@ const validateEnvVars = () => {
   const configuredEndpoints = endpoints.filter(key => import.meta.env[key]);
 
   if (configuredEndpoints.length === 0) {
-    console.warn('⚠️  No API endpoints configured - running in MOCK mode');
-    console.warn('Configure environment variables in .env.local to connect to Power Automate');
+    // Running in MOCK mode - API endpoints not configured
+    envStatus.configured = false;
   } else {
     envStatus.configured = true;
-    console.log(`✓ ${configuredEndpoints.length}/${endpoints.length} API endpoints configured`);
   }
 
   return envStatus;

@@ -227,7 +227,6 @@ const Section7ReviewSubmit = () => {
         if (storedQuestionnaire) {
           const parsedQuestionnaire = JSON.parse(storedQuestionnaire);
           questionnaireUploads = parsedQuestionnaire.uploads || parsedQuestionnaire.uploadedFiles || {};
-          console.log('[Section7] Found questionnaire uploads:', Object.keys(questionnaireUploads));
         }
       } catch (error) {
         console.error('[Section7] Error loading questionnaire uploads:', error);
@@ -273,7 +272,7 @@ const Section7ReviewSubmit = () => {
       setSubmissionId(submissionId);
       setSubmitSuccess(true);
     } catch (error) {
-      console.error('❌ Submission error:', error);
+      console.error('Submission error:', error);
       setSubmitError(
         'An error occurred while submitting the form. Your progress has been saved. Please try again or contact support at procurement@nhs.net if the problem persists.'
       );
@@ -375,6 +374,18 @@ const Section7ReviewSubmit = () => {
   const handlePreviewAuthorisation = (type) => {
     const allData = getAllFormData();
 
+    // Retrieve questionnaire uploads from localStorage (if they exist)
+    let questionnaireUploads = {};
+    try {
+      const storedQuestionnaire = localStorage.getItem('questionnaireSubmission');
+      if (storedQuestionnaire) {
+        const parsedQuestionnaire = JSON.parse(storedQuestionnaire);
+        questionnaireUploads = parsedQuestionnaire.uploads || parsedQuestionnaire.uploadedFiles || parsedQuestionnaire.questionnaireUploads || {};
+      }
+    } catch (error) {
+      console.error('[Preview] Error loading questionnaire uploads:', error);
+    }
+
     let currentSubmissionId = testSubmissionId;
 
     // Create new submission only if one doesn't exist
@@ -388,6 +399,11 @@ const Section7ReviewSubmit = () => {
         submissionId: currentSubmissionId,
         formData: allData.formData,
         uploadedFiles: allData.uploadedFiles,
+        questionnaireUploads: questionnaireUploads,
+        questionnaireData: {
+          uploads: questionnaireUploads,
+          uploadedFiles: questionnaireUploads
+        },
         submittedBy: allData.formData.nhsEmail,
         submissionDate: new Date().toISOString(),
         status: 'pending_review',
@@ -410,6 +426,11 @@ const Section7ReviewSubmit = () => {
           ...parsed,
           formData: allData.formData,
           uploadedFiles: allData.uploadedFiles,
+          questionnaireUploads: questionnaireUploads,
+          questionnaireData: {
+            uploads: questionnaireUploads,
+            uploadedFiles: questionnaireUploads
+          },
           // Preserve existing reviews
           pbpReview: parsed.pbpReview,
           procurementReview: parsed.procurementReview,
@@ -618,18 +639,21 @@ const Section7ReviewSubmit = () => {
         </Button>
       </div>
 
-      {/* Authorisation Preview Buttons - Hidden in production, toggle via VITE_ENABLE_TEST_BUTTONS */}
-      {(import.meta.env.DEV || import.meta.env.VITE_ENABLE_TEST_BUTTONS === 'true') && (
+      {/* Development Testing Tools - ONLY shown when explicitly enabled via VITE_ENABLE_TEST_BUTTONS=true */}
+      {import.meta.env.VITE_ENABLE_TEST_BUTTONS === 'true' && (
         <div style={{
           marginTop: 'var(--space-16)',
           padding: 'var(--space-16)',
-          backgroundColor: 'var(--color-surface)',
+          backgroundColor: '#fef3c7',
           borderRadius: 'var(--radius-base)',
-          border: '1px solid var(--color-border)',
+          border: '2px solid #f59e0b',
         }}>
-          <h4 style={{ margin: '0 0 var(--space-12) 0', fontSize: 'var(--font-size-md)', color: 'var(--color-text-secondary)' }}>
-            Test Authorisation Views
+          <h4 style={{ margin: '0 0 var(--space-8) 0', fontSize: 'var(--font-size-md)', color: '#92400e', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            ⚠️ Development Testing Mode
           </h4>
+          <p style={{ fontSize: 'var(--font-size-sm)', color: '#92400e', marginBottom: 'var(--space-12)', fontWeight: '600' }}>
+            WARNING: Testing tools are enabled. This should NEVER be visible in production.
+          </p>
           {testSubmissionId && (
             <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-12)', display: 'flex', alignItems: 'center', gap: 'var(--space-8)' }}>
               Current test submission: <code style={{ backgroundColor: 'var(--color-background)', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace' }}>{testSubmissionId}</code>
@@ -649,7 +673,7 @@ const Section7ReviewSubmit = () => {
             </p>
           )}
           <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-12)' }}>
-            Click each button in order to test the full workflow: PBP → Procurement → OPW (if applicable) → AP Control
+            Test authorization workflow: PBP → Procurement → OPW → AP Control
           </p>
           <div style={{ display: 'flex', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
             <Button variant="outline" onClick={() => handlePreviewAuthorisation('pbp')} style={{ color: 'var(--nhs-blue)' }}>
