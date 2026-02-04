@@ -1001,37 +1001,6 @@ const PBPReviewPage = ({
           label="Q2.2 - Letterhead with Bank Details"
           value={formatYesNo(submission.section2Summary?.letterheadAvailable || formData.letterheadAvailable)}
         />
-        {/* Letterhead Preview Button */}
-        {allUploads.letterhead && (
-          <div style={{ gridColumn: '1 / -1', marginTop: 'var(--space-8)' }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--space-12)',
-              padding: 'var(--space-12)',
-              backgroundColor: '#f0fdf4',
-              borderRadius: 'var(--radius-base)',
-              border: '1px solid #86efac',
-            }}>
-              <ClipboardIcon size={20} color="#16a34a" />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 'var(--font-weight-semibold)', color: '#166534', fontSize: 'var(--font-size-sm)' }}>
-                  {allUploads.letterhead.name}
-                </div>
-                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>
-                  {Math.round((allUploads.letterhead.size || 0) / 1024)} KB
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePreviewDocument(allUploads.letterhead)}
-              >
-                Preview Letterhead
-              </Button>
-            </div>
-          </div>
-        )}
         <ReviewField
           label="Q2.3 - Justification"
           value={submission.section2Summary?.justification || formData.justification}
@@ -1117,7 +1086,7 @@ const PBPReviewPage = ({
       <ReviewSection title="Uploaded Documents">
         <div style={{ gridColumn: '1 / -1' }}>
           {/* Letterhead Document */}
-          {allUploads.letterhead && (
+          {(submission?.uploadedFiles?.letterhead || submission?.uploads?.letterhead) && (
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -1134,13 +1103,13 @@ const PBPReviewPage = ({
                   Letterhead with Bank Details
                 </div>
                 <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-                  {allUploads.letterhead.name} • {Math.round((allUploads.letterhead.size || 0) / 1024)} KB
+                  {(submission?.uploadedFiles?.letterhead || submission?.uploads?.letterhead)?.name} • {Math.round(((submission?.uploadedFiles?.letterhead || submission?.uploads?.letterhead)?.size || 0) / 1024)} KB
                 </div>
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePreviewDocument(allUploads.letterhead)}
+                onClick={() => handlePreviewDocument(submission?.uploadedFiles?.letterhead || submission?.uploads?.letterhead)}
               >
                 Preview
               </Button>
@@ -1148,7 +1117,7 @@ const PBPReviewPage = ({
           )}
 
           {/* Procurement Approval Document */}
-          {allUploads.procurementApproval && (
+          {(submission?.uploadedFiles?.procurementApproval || submission?.uploads?.procurementApproval) && (
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -1165,13 +1134,13 @@ const PBPReviewPage = ({
                   Procurement Approval Document
                 </div>
                 <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-                  {allUploads.procurementApproval.name} • {Math.round((allUploads.procurementApproval.size || 0) / 1024)} KB
+                  {(submission?.uploadedFiles?.procurementApproval || submission?.uploads?.procurementApproval)?.name} • {Math.round(((submission?.uploadedFiles?.procurementApproval || submission?.uploads?.procurementApproval)?.size || 0) / 1024)} KB
                 </div>
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePreviewDocument(allUploads.procurementApproval)}
+                onClick={() => handlePreviewDocument(submission?.uploadedFiles?.procurementApproval || submission?.uploads?.procurementApproval)}
               >
                 Preview
               </Button>
@@ -1221,7 +1190,7 @@ const PBPReviewPage = ({
           ))}
 
           {/* Show message if no uploads at all */}
-          {!allUploads.letterhead && !allUploads.procurementApproval && Object.keys(questionnaireUploads).length === 0 && (
+          {!submission?.uploadedFiles && !submission?.uploads && Object.keys(questionnaireUploads).length === 0 && (
             <p style={{ color: '#6b7280', fontStyle: 'italic', margin: 0 }}>
               No documents were uploaded with this submission.
             </p>
