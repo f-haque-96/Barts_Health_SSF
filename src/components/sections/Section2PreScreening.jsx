@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { RadioGroup, Textarea, Checkbox, FileUpload, NoticeBox, Button, QuestionLabel, WarningIcon, CheckIcon, ClipboardIcon, ExternalLinkIcon } from '../common';
+import { RadioGroup, Textarea, Checkbox, FileUpload, NoticeBox, Button, QuestionLabel, WarningIcon, CheckIcon, ClipboardIcon, ExternalLinkIcon, HelpCircleIcon } from '../common';
 import { FormNavigation } from '../layout';
 import { section2Schema } from '../../utils/validation';
 import { FILE_UPLOAD_CONFIG } from '../../utils/constants';
@@ -703,8 +703,10 @@ const Section2PreScreening = () => {
 
           {usageFrequency === 'one-off' && !questionStatus.q5_usageFrequency.locked && (
             <NoticeBox type="info">
-              For one-off purchases, you may be able to use a purchase card instead of setting up a new supplier.
-              Please check with your Procurement team.
+              For one-off purchases, you may be able to use a credit card instead of setting up a new supplier.
+              <p style={{ margin: '8px 0 0 0' }}>
+                <strong>Please contact the Procurement Helpdesk by clicking the <HelpCircleIcon size={16} color="#005EB8" style={{ verticalAlign: 'middle', margin: '0 2px' }} /> on the bottom right of the page.</strong>
+              </p>
             </NoticeBox>
           )}
         </div>
