@@ -57,58 +57,53 @@ export const getCompanyDetails = async (companyNumber) => {
     }
 
     // Use backend API proxy to avoid CORS issues
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:7071/api';
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-    const response = await fetch(`${API_URL}/VerifyCRN`, {
-      method: 'POST',
+    const response = await fetch(`${API_URL}/api/companies-house/${cleanedNumber}`, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ crn: cleanedNumber })
+      credentials: 'include' // Include cookies for auth
     });
 
     if (!response.ok) {
+      if (response.status === 404) {
+        return {
+          success: false,
+          error: CRN_ERROR_TYPES.NOT_FOUND,
+          message: 'Company not found. Please check the CRN and try again.'
+        };
+      }
       throw new Error(`Backend API error: ${response.status}`);
     }
 
     const result = await response.json();
 
-    // Handle backend response
-    if (!result.success) {
-      // Map backend errors to frontend error types
-      let errorType = CRN_ERROR_TYPES.API_ERROR;
-      
-      if (result.error === 'NOT_FOUND') {
-        errorType = CRN_ERROR_TYPES.NOT_FOUND;
-      } else if (result.error === 'INVALID_CRN') {
-        errorType = CRN_ERROR_TYPES.INVALID_CRN;
-      } else if (result.error === 'NETWORK_ERROR') {
-        errorType = CRN_ERROR_TYPES.NETWORK_ERROR;
-      }
-
-      return {
-        success: false,
-        error: errorType,
-        message: result.message || 'Unable to verify CRN. Please enter company details manually.'
-      };
-    }
-
-    // Backend successfully verified the company
+    // Companies House API returns the company data directly
+    // Transform to our expected format
     return {
       success: true,
       data: {
-        companyName: result.data.companyName,
-        companyNumber: result.data.companyNumber,
-        companyStatus: result.data.companyStatus,
-        companyType: result.data.companyType,
-        dateOfCreation: result.data.dateOfCreation,
-        registeredAddress: result.data.registeredAddress,
-        sicCodes: result.data.sicCodes || [],
-        accounts: result.data.accounts || {},
-        confirmationStatement: result.data.confirmationStatement || {},
-        hasCharges: result.data.hasCharges,
-        hasInsolvencyHistory: result.data.hasInsolvencyHistory,
-        jurisdiction: result.data.jurisdiction,
+        companyName: result.company_name,
+        companyNumber: result.company_number,
+        companyStatus: result.company_status,
+        companyType: result.type,
+        dateOfCreation: result.date_of_creation,
+        registeredAddress: {
+          addressLine1: result.registered_office_address?.address_line_1 || '',
+          addressLine2: result.registered_office_address?.address_line_2 || '',
+          city: result.registered_office_address?.locality || '',
+          county: result.registered_office_address?.region || '',
+          postcode: result.registered_office_address?.postal_code || '',
+          country: result.registered_office_address?.country || 'United Kingdom',
+        },
+        sicCodes: result.sic_codes || [],
+        accounts: result.accounts || {},
+        confirmationStatement: result.confirmation_statement || {},
+        hasCharges: result.has_charges || false,
+        hasInsolvencyHistory: result.has_insolvency_history || false,
+        jurisdiction: result.jurisdiction || 'england-wales',
         verified: true,
       }
     };
