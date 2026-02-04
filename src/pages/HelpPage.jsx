@@ -15,6 +15,136 @@ const HelpPage = () => {
         'The Supplier Setup Form is used to register new suppliers with NHS Barts Health Trust. It collects all necessary information for procurement, finance, and compliance purposes.',
     },
     {
+      question: 'What information do I need from the supplier?',
+      answer: (
+        <div>
+          <p><strong>You'll need the following information from your supplier to complete the form:</strong></p>
+
+          <h4 style={{ marginTop: '15px', color: '#005EB8' }}>For the Questionnaire (if required):</h4>
+          <ul style={{ marginLeft: '20px' }}>
+            <li>Service category (Clinical or Non-Clinical)</li>
+            <li>Detailed description of services to be provided</li>
+            <li>Estimated contract value</li>
+            <li>Justification for using this supplier</li>
+            <li>Confirmation of budget availability</li>
+          </ul>
+
+          <h4 style={{ marginTop: '15px', color: '#005EB8' }}>Section 3: Supplier Classification</h4>
+          <ul style={{ marginLeft: '20px' }}>
+            <li>Supplier type (Limited Company, Sole Trader, Charity, or Public Sector)</li>
+            <li>Company Registration Number (CRN) if registered with Companies House</li>
+            <li>Charity number (if applicable)</li>
+            <li>For sole traders: Photo ID (passport or driving licence)</li>
+          </ul>
+
+          <h4 style={{ marginTop: '15px', color: '#005EB8' }}>Section 4: Company Details</h4>
+          <ul style={{ marginLeft: '20px' }}>
+            <li>Full legal company name</li>
+            <li>Trading name (if different from legal name)</li>
+            <li>Registered address (full address with postcode)</li>
+            <li>Main contact person (name, email, phone number)</li>
+            <li>Company website (if available)</li>
+          </ul>
+
+          <h4 style={{ marginTop: '15px', color: '#005EB8' }}>Section 5: Service Description</h4>
+          <ul style={{ marginLeft: '20px' }}>
+            <li>Detailed description of goods/services they will provide</li>
+            <li>Service type (Goods, Services, Construction, Consultancy, Temporary Staff)</li>
+          </ul>
+
+          <h4 style={{ marginTop: '15px', color: '#005EB8' }}>Section 6: Financial Information</h4>
+          <ul style={{ marginLeft: '20px' }}>
+            <li><strong>Bank details on official letterhead (REQUIRED):</strong>
+              <ul style={{ marginLeft: '20px', marginTop: '5px' }}>
+                <li>Bank name</li>
+                <li>Sort code (UK) or IBAN (International)</li>
+                <li>Account number</li>
+                <li>Account name</li>
+              </ul>
+            </li>
+            <li>VAT registration number (if VAT registered)</li>
+            <li>Public liability insurance details (if applicable)</li>
+            <li>GHX/DUNS number (if known)</li>
+            <li>CIS registration details (for construction suppliers)</li>
+          </ul>
+
+          <h4 style={{ marginTop: '20px', color: '#d4351c' }}>Email Template for Suppliers</h4>
+          <div style={{
+            backgroundColor: '#f5f5f5',
+            padding: '15px',
+            borderRadius: '5px',
+            border: '1px solid #ddd',
+            marginTop: '10px',
+            fontFamily: 'monospace',
+            fontSize: '13px'
+          }}>
+            <p style={{ margin: '0 0 10px 0', fontWeight: 'bold' }}>Subject: Information Required for NHS Supplier Setup</p>
+            <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #ccc' }} />
+            <p>Dear [Supplier Name],</p>
+            <p>I am in the process of setting you up as an approved supplier with Barts Health NHS Trust. To complete this registration, I need the following information from you:</p>
+
+            <p><strong>COMPANY INFORMATION:</strong></p>
+            <ul style={{ marginLeft: '20px' }}>
+              <li>Full legal company name</li>
+              <li>Trading name (if different)</li>
+              <li>Company Registration Number (if registered with Companies House)</li>
+              <li>Registered company address (including postcode)</li>
+              <li>Main contact person (name, email, phone number)</li>
+              <li>Company website</li>
+            </ul>
+
+            <p><strong>SERVICE INFORMATION:</strong></p>
+            <ul style={{ marginLeft: '20px' }}>
+              <li>Detailed description of the goods/services you will provide to us</li>
+              <li>Type of service (Goods, Services, Construction, Consultancy, Temporary Staff)</li>
+            </ul>
+
+            <p><strong>FINANCIAL INFORMATION (CRITICAL):</strong></p>
+            <ul style={{ marginLeft: '20px' }}>
+              <li><strong>Official company letterhead showing bank details:</strong>
+                <ul style={{ marginLeft: '20px' }}>
+                  <li>Bank name</li>
+                  <li>Sort code (UK suppliers) or IBAN (international suppliers)</li>
+                  <li>Account number</li>
+                  <li>Account name</li>
+                  <li>Must be on company letterhead with company stamp/signature</li>
+                </ul>
+              </li>
+              <li>VAT registration number (if VAT registered)</li>
+              <li>Public liability insurance certificate (if applicable)</li>
+            </ul>
+
+            <p><strong>ADDITIONAL INFORMATION (if applicable):</strong></p>
+            <ul style={{ marginLeft: '20px' }}>
+              <li>For Sole Traders: Copy of passport or driving licence (for ID verification)</li>
+              <li>For Construction suppliers: CIS registration details and UTR number</li>
+              <li>GHX or DUNS number (if you have one)</li>
+            </ul>
+
+            <p><strong>IMPORTANT:</strong></p>
+            <ul style={{ marginLeft: '20px' }}>
+              <li>All documents must be in PDF format</li>
+              <li>Bank details MUST be provided on official company letterhead</li>
+              <li>Maximum file size: 3MB per document</li>
+            </ul>
+
+            <p>Please send the above information to me at your earliest convenience so I can complete the supplier setup process.</p>
+
+            <p>If you have any questions, please don't hesitate to contact me.</p>
+
+            <p>Best regards,<br />
+            [Your Name]<br />
+            [Your Department]<br />
+            [Your Contact Details]<br />
+            Barts Health NHS Trust</p>
+          </div>
+          <p style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
+            <em>Note: Copy the email template above and paste it into your email client. Replace the bracketed fields [like this] with your actual information.</em>
+          </p>
+        </div>
+      ),
+    },
+    {
       question: 'Do I need to engage with Procurement first?',
       answer:
         'If you have not already engaged with the Procurement team, you will need to complete a questionnaire which will be reviewed by a Procurement Business Partner before you can continue.',
