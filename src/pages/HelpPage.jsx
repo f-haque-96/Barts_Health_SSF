@@ -20,15 +20,6 @@ const HelpPage = () => {
         <div>
           <p><strong>You'll need the following information from your supplier to complete the form:</strong></p>
 
-          <h4 style={{ marginTop: '15px', color: '#005EB8' }}>For the Questionnaire (if required):</h4>
-          <ul style={{ marginLeft: '20px' }}>
-            <li>Service category (Clinical or Non-Clinical)</li>
-            <li>Detailed description of services to be provided</li>
-            <li>Estimated contract value</li>
-            <li>Justification for using this supplier</li>
-            <li>Confirmation of budget availability</li>
-          </ul>
-
           <h4 style={{ marginTop: '15px', color: '#005EB8' }}>Section 3: Supplier Classification</h4>
           <ul style={{ marginLeft: '20px' }}>
             <li>Supplier type (Limited Company, Sole Trader, Charity, or Public Sector)</li>
@@ -68,7 +59,7 @@ const HelpPage = () => {
             <li>CIS registration details (for construction suppliers)</li>
           </ul>
 
-          <h4 style={{ marginTop: '20px', color: '#d4351c' }}>Email Template for Suppliers</h4>
+          <h4 style={{ marginTop: '20px', color: '#d4351c' }} id="supplier-information-faq">Email Template for Suppliers</h4>
           <div style={{
             backgroundColor: '#f5f5f5',
             padding: '15px',
@@ -76,67 +67,72 @@ const HelpPage = () => {
             border: '1px solid #ddd',
             marginTop: '10px',
             fontFamily: 'monospace',
-            fontSize: '13px'
+            fontSize: '13px',
+            lineHeight: '1.6'
           }}>
             <p style={{ margin: '0 0 10px 0', fontWeight: 'bold' }}>Subject: Information Required for NHS Supplier Setup</p>
             <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #ccc' }} />
-            <p>Dear [Supplier Name],</p>
-            <p>I am in the process of setting you up as an approved supplier with Barts Health NHS Trust. To complete this registration, I need the following information from you:</p>
+            <p style={{ margin: '10px 0' }}>Dear [Supplier Name],</p>
 
-            <p><strong>COMPANY INFORMATION:</strong></p>
-            <ul style={{ marginLeft: '20px' }}>
-              <li>Full legal company name</li>
-              <li>Trading name (if different)</li>
-              <li>Company Registration Number (if registered with Companies House)</li>
-              <li>Registered company address (including postcode)</li>
-              <li>Main contact person (name, email, phone number)</li>
-              <li>Company website</li>
+            <p style={{ margin: '10px 0' }}>I am in the process of setting you up as an approved supplier with Barts Health NHS Trust. To complete this registration, I need the following information from you:</p>
+
+            <p style={{ margin: '15px 0 5px 0' }}><strong>COMPANY INFORMATION:</strong></p>
+            <ul style={{ margin: '5px 0 10px 20px', paddingLeft: '0' }}>
+              <li style={{ marginBottom: '3px' }}>Full legal company name</li>
+              <li style={{ marginBottom: '3px' }}>Trading name (if different)</li>
+              <li style={{ marginBottom: '3px' }}>Company Registration Number (if registered with Companies House)</li>
+              <li style={{ marginBottom: '3px' }}>Registered company address (including postcode)</li>
+              <li style={{ marginBottom: '3px' }}>Main contact person (name, email, phone number)</li>
+              <li style={{ marginBottom: '3px' }}>Company website</li>
             </ul>
 
-            <p><strong>SERVICE INFORMATION:</strong></p>
-            <ul style={{ marginLeft: '20px' }}>
-              <li>Detailed description of the goods/services you will provide to us</li>
-              <li>Type of service (Goods, Services, Construction, Consultancy, Temporary Staff)</li>
+            <p style={{ margin: '15px 0 5px 0' }}><strong>SERVICE INFORMATION:</strong></p>
+            <ul style={{ margin: '5px 0 10px 20px', paddingLeft: '0' }}>
+              <li style={{ marginBottom: '3px' }}>Detailed description of the goods/services you will provide to us</li>
+              <li style={{ marginBottom: '3px' }}>Type of service (Goods, Services, Construction, Consultancy, Temporary Staff)</li>
             </ul>
 
-            <p><strong>FINANCIAL INFORMATION (CRITICAL):</strong></p>
-            <ul style={{ marginLeft: '20px' }}>
-              <li><strong>Official company letterhead showing bank details:</strong>
-                <ul style={{ marginLeft: '20px' }}>
-                  <li>Bank name</li>
-                  <li>Sort code (UK suppliers) or IBAN (international suppliers)</li>
-                  <li>Account number</li>
-                  <li>Account name</li>
-                  <li>Must be on company letterhead with company stamp/signature</li>
+            <p style={{ margin: '15px 0 5px 0' }}><strong>FINANCIAL INFORMATION (CRITICAL):</strong></p>
+            <ul style={{ margin: '5px 0 10px 20px', paddingLeft: '0' }}>
+              <li style={{ marginBottom: '8px' }}>
+                <strong>Official company letterhead showing bank details:</strong>
+                <ul style={{ margin: '5px 0 0 20px', paddingLeft: '0' }}>
+                  <li style={{ marginBottom: '3px' }}>Bank name</li>
+                  <li style={{ marginBottom: '3px' }}>Sort code (UK suppliers) or IBAN (international suppliers)</li>
+                  <li style={{ marginBottom: '3px' }}>Account number</li>
+                  <li style={{ marginBottom: '3px' }}>Account name</li>
+                  <li style={{ marginBottom: '3px' }}>Must be on company letterhead with company stamp/signature</li>
                 </ul>
               </li>
-              <li>VAT registration number (if VAT registered)</li>
-              <li>Public liability insurance certificate (if applicable)</li>
+              <li style={{ marginBottom: '3px' }}>VAT registration number (if VAT registered)</li>
+              <li style={{ marginBottom: '3px' }}>Public liability insurance certificate (if applicable)</li>
             </ul>
 
-            <p><strong>ADDITIONAL INFORMATION (if applicable):</strong></p>
-            <ul style={{ marginLeft: '20px' }}>
-              <li>For Sole Traders: Copy of passport or driving licence (for ID verification)</li>
-              <li>For Construction suppliers: CIS registration details and UTR number</li>
-              <li>GHX or DUNS number (if you have one)</li>
+            <p style={{ margin: '15px 0 5px 0' }}><strong>ADDITIONAL INFORMATION (if applicable):</strong></p>
+            <ul style={{ margin: '5px 0 10px 20px', paddingLeft: '0' }}>
+              <li style={{ marginBottom: '3px' }}>For Sole Traders: Copy of passport or driving licence (for ID verification)</li>
+              <li style={{ marginBottom: '3px' }}>For Construction suppliers: CIS registration details and UTR number</li>
+              <li style={{ marginBottom: '3px' }}>GHX or DUNS number (if you have one)</li>
             </ul>
 
-            <p><strong>IMPORTANT:</strong></p>
-            <ul style={{ marginLeft: '20px' }}>
-              <li>All documents must be in PDF format</li>
-              <li>Bank details MUST be provided on official company letterhead</li>
-              <li>Maximum file size: 3MB per document</li>
+            <p style={{ margin: '15px 0 5px 0' }}><strong>IMPORTANT:</strong></p>
+            <ul style={{ margin: '5px 0 10px 20px', paddingLeft: '0' }}>
+              <li style={{ marginBottom: '3px' }}>All documents must be in PDF format</li>
+              <li style={{ marginBottom: '3px' }}>Bank details MUST be provided on official company letterhead</li>
+              <li style={{ marginBottom: '3px' }}>Maximum file size: 3MB per document</li>
             </ul>
 
-            <p>Please send the above information to me at your earliest convenience so I can complete the supplier setup process.</p>
+            <p style={{ margin: '15px 0 10px 0' }}>Please send the above information to me at your earliest convenience so I can complete the supplier setup process.</p>
 
-            <p>If you have any questions, please don't hesitate to contact me.</p>
+            <p style={{ margin: '10px 0' }}>If you have any questions, please don't hesitate to contact me.</p>
 
-            <p>Best regards,<br />
-            [Your Name]<br />
-            [Your Department]<br />
-            [Your Contact Details]<br />
-            Barts Health NHS Trust</p>
+            <p style={{ margin: '15px 0 0 0' }}>
+              Best regards,<br />
+              [Your Name]<br />
+              [Your Department]<br />
+              [Your Contact Details]<br />
+              Barts Health NHS Trust
+            </p>
           </div>
           <p style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
             <em>Note: Copy the email template above and paste it into your email client. Replace the bracketed fields [like this] with your actual information.</em>
@@ -157,7 +153,7 @@ const HelpPage = () => {
     {
       question: 'How long does approval take?',
       answer:
-        'PBP review typically takes 3-5 business days. Full supplier setup can take 1-2 weeks depending on the complexity and required approvals.',
+        'PBP review typically takes 1-3 business days. Full supplier setup can take 2-3 business days depending on the complexity and required approvals.',
     },
     {
       question: 'Who do I contact for help?',

@@ -593,9 +593,26 @@ const Section2PreScreening = () => {
           />
 
           {letterheadAvailable === 'no' && !questionStatus.q3_letterhead.locked && (
-            <div className="blocking-warning">
-              <span className="warning-icon"><WarningIcon size={18} color="#dc2626" /></span>
-              <p>You must upload bank details on supplier letterhead to proceed. Please select "Yes" and upload the document.</p>
+            <div className="blocking-warning" style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <span className="warning-icon"><WarningIcon size={18} color="#dc2626" /></span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: '0 0 12px 0' }}>
+                    You must upload bank details on supplier letterhead to proceed. Please select "Yes" and upload the document.
+                  </p>
+                  <p style={{ margin: '0', fontSize: '0.9rem' }}>
+                    <strong>Need help requesting this from your supplier?</strong>{' '}
+                    <a
+                      href="/help#supplier-information-faq"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: '#005EB8', textDecoration: 'underline', fontWeight: '500' }}
+                    >
+                      View our email template on the Help & FAQ page
+                    </a>
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
