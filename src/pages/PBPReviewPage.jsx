@@ -501,6 +501,14 @@ const PBPReviewPage = ({
           procurementApproval
         });
 
+        // DEBUG: Check for questionnaire uploads
+        console.log('[PBP DEBUG] Checking questionnaire uploads...');
+        console.log('[PBP DEBUG] submission.questionnaireUploads:', parsed.questionnaireUploads);
+        console.log('[PBP DEBUG] submission.uploads:', parsed.uploads);
+        console.log('[PBP DEBUG] submission.questionnaireData:', parsed.questionnaireData);
+        console.log('[PBP DEBUG] submission.uploadedFiles:', parsed.uploadedFiles);
+        console.log('[PBP DEBUG] Full submission keys:', Object.keys(parsed));
+
         // Note: Questionnaire uploads and other files are accessed directly in the JSX
         // via submission.uploadedFiles and submission.questionnaireUploads
       } catch (error) {
@@ -1185,6 +1193,9 @@ const PBPReviewPage = ({
               submission?.questionnaireData?.uploads ||
               submission?.questionnaireData?.uploadedFiles ||
               {};
+
+            console.log('[PBP RENDER] Questionnaire uploads to display:', qUploads);
+            console.log('[PBP RENDER] Number of questionnaire files:', Object.keys(qUploads).length);
 
             return Object.entries(qUploads).map(([key, file]) => (
               <div key={`questionnaire-${key}`} style={{
