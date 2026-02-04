@@ -6,13 +6,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PDFDownloadLink } from '@react-pdf/renderer';
-import { Button, NoticeBox, ApprovalStamp, Textarea, RadioGroup, SignatureSection, FileUpload, Input, CheckIcon, XIcon, WarningIcon, DocumentIcon, UploadIcon, CircleXIcon } from '../components/common';
+import { Button, NoticeBox, ApprovalStamp, Textarea, RadioGroup, SignatureSection, FileUpload, Input, CheckIcon, XIcon, WarningIcon, DocumentIcon, UploadIcon, CircleXIcon, VerificationBadge } from '../components/common';
 import { formatDate } from '../utils/helpers';
 import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
 import { sendApprovalNotification, notifyDepartment, sendRejectionNotification } from '../services/notificationService';
 
-const ReviewItem = ({ label, value, raw = false }) => {
+const ReviewItem = ({ label, value, raw = false, badge = null }) => {
   if (!value && value !== 0) return null;
 
   // Format the value unless raw is true
@@ -23,7 +23,10 @@ const ReviewItem = ({ label, value, raw = false }) => {
       <div style={{ fontWeight: 'var(--font-weight-medium)', minWidth: '200px', color: 'var(--color-text-secondary)' }}>
         {label}:
       </div>
-      <div style={{ color: 'var(--color-text)', paddingLeft: '16px' }}>{displayValue}</div>
+      <div style={{ color: 'var(--color-text)', paddingLeft: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {displayValue}
+        {badge}
+      </div>
     </div>
   );
 };

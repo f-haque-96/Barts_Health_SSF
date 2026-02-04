@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { pdf } from '@react-pdf/renderer';
-import { Checkbox, Button, NoticeBox, QuestionLabel, CheckIcon, WarningIcon } from '../common';
+import { Checkbox, Button, NoticeBox, QuestionLabel, CheckIcon, WarningIcon, VerificationBadge } from '../common';
 import { FormNavigation } from '../layout';
 import { section7Schema } from '../../utils/validation';
 import { formatCurrency } from '../../utils/helpers';
@@ -39,19 +39,16 @@ const ReviewItem = ({ label, value, badge, raw = false }) => {
 const CRNStatusBadge = ({ crn, verificationData }) => {
   if (!crn) return null;
 
-  const isVerified = verificationData?.verified;
-  const companyStatus = verificationData?.company_status?.toLowerCase();
-  const isActive = companyStatus === 'active';
+  // Get company status from verification data
+  const companyStatus = verificationData?.status || null;
 
-  if (isVerified && isActive) {
-    return <span className="crn-badge crn-badge--verified" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><CheckIcon size={12} color="#22c55e" /> Verified</span>;
+  // If we have verification data with a status, show the verification badge
+  if (companyStatus) {
+    return <VerificationBadge companyStatus={companyStatus} size="small" showLabel={true} />;
   }
 
-  if (isVerified && !isActive) {
-    return <span className="crn-badge crn-badge--warning" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><WarningIcon size={12} color="#f59e0b" /> {companyStatus}</span>;
-  }
-
-  return <span className="crn-badge crn-badge--unverified">Verification needed</span>;
+  // No verification data - show amber badge
+  return <VerificationBadge companyStatus={null} size="small" showLabel={true} />;
 };
 
 const ReviewCard = ({ title, children, sectionNumber }) => {

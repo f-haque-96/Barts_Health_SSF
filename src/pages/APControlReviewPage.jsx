@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PDFDownloadLink } from '@react-pdf/renderer';
-import { Button, NoticeBox, ApprovalStamp, Checkbox, Textarea, SignatureSection, Input, CheckIcon, XIcon, WarningIcon, ClockIcon, DocumentIcon, DownloadIcon, LockIcon, CircleXIcon } from '../components/common';
+import { Button, NoticeBox, ApprovalStamp, Checkbox, Textarea, SignatureSection, Input, CheckIcon, XIcon, WarningIcon, ClockIcon, DocumentIcon, DownloadIcon, LockIcon, CircleXIcon, VerificationBadge } from '../components/common';
 import { formatDate, formatCurrency } from '../utils/helpers';
 import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
@@ -45,54 +45,16 @@ const ReviewItem = ({ label, value, highlight, raw = false, badge }) => {
 const CRNStatusBadge = ({ crn, verificationData }) => {
   if (!crn) return null;
 
-  const isVerified = verificationData?.verified;
-  const companyStatus = verificationData?.company_status?.toLowerCase();
-  const isActive = companyStatus === 'active';
+  // Get company status from verification data
+  const companyStatus = verificationData?.status || null;
 
-  const badgeStyle = {
-    display: 'inline-block',
-    padding: '2px 8px',
-    borderRadius: '4px',
-    fontSize: '0.75rem',
-    fontWeight: '600',
-  };
-
-  if (isVerified && isActive) {
-    return (
-      <span style={{
-        ...badgeStyle,
-        backgroundColor: '#d1fae5',
-        color: '#065f46',
-        border: '1px solid #10b981',
-      }}>
-        <CheckIcon size={14} style={{ marginRight: '4px' }} /> Verified - Active
-      </span>
-    );
+  // If we have verification data with a status, show the verification badge
+  if (companyStatus) {
+    return <VerificationBadge companyStatus={companyStatus} size="small" showLabel={true} />;
   }
 
-  if (isVerified && !isActive) {
-    return (
-      <span style={{
-        ...badgeStyle,
-        backgroundColor: '#fef3c7',
-        color: '#92400e',
-        border: '1px solid #f59e0b',
-      }}>
-        <WarningIcon size={14} style={{ marginRight: '4px' }} /> {companyStatus ? companyStatus.charAt(0).toUpperCase() + companyStatus.slice(1) : 'Inactive'}
-      </span>
-    );
-  }
-
-  return (
-    <span style={{
-      ...badgeStyle,
-      backgroundColor: '#fee2e2',
-      color: '#991b1b',
-      border: '1px solid #ef4444',
-    }}>
-      <WarningIcon size={14} style={{ marginRight: '4px' }} /> Not Verified
-    </span>
-  );
+  // No verification data - show amber badge
+  return <VerificationBadge companyStatus={null} size="small" showLabel={true} />;
 };
 
 const ReviewCard = ({ title, children, highlight }) => {

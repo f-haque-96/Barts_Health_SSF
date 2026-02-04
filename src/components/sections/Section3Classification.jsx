@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Input, RadioGroup, Select, FileUpload, NoticeBox, Button, Tooltip, QuestionLabel, CheckIcon, InfoIcon, WarningIcon, LockIcon, ExternalLinkIcon } from '../common';
+import { Input, RadioGroup, Select, FileUpload, NoticeBox, Button, Tooltip, QuestionLabel, CheckIcon, InfoIcon, WarningIcon, LockIcon, ExternalLinkIcon, VerificationBadge } from '../common';
 import { SupplierIcon } from '../common/SupplierTypeIcons';
 import { FormNavigation } from '../layout';
 import {
@@ -344,9 +344,12 @@ const Section3Classification = () => {
 
               {isValid && companyData && (
                 <NoticeBox type="success" style={{ marginTop: 'var(--space-8)' }}>
-                  <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><CheckIcon size={14} color="#22c55e" /> Verified:</strong> {companyData.name}
-                  <br />
-                  <small>Status: {companyData.status}</small>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                    <div>
+                      <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><CheckIcon size={14} color="#22c55e" /> Verified:</strong> {companyData.name}
+                    </div>
+                    <VerificationBadge companyStatus={companyData.status} size="medium" />
+                  </div>
                 </NoticeBox>
               )}
 
@@ -372,9 +375,16 @@ const Section3Classification = () => {
                 </NoticeBox>
               )}
 
-              {crnStatus === 'dissolved' && (
+              {crnStatus === 'dissolved' && companyData && (
                 <NoticeBox type="warning" style={{ marginTop: 'var(--space-8)' }}>
-                  <strong>Warning:</strong> This company is dissolved. Please verify with Procurement before proceeding.
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                    <div>
+                      <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><WarningIcon size={14} color="#f59e0b" /> Warning:</strong> {companyData.name}
+                      <br />
+                      <small>This company is dissolved. Please verify with Procurement before proceeding.</small>
+                    </div>
+                    <VerificationBadge companyStatus={companyData.status} size="medium" />
+                  </div>
                 </NoticeBox>
               )}
             </div>

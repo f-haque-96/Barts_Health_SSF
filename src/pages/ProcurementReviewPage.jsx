@@ -6,13 +6,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PDFDownloadLink } from '@react-pdf/renderer';
-import { Button, NoticeBox, ApprovalStamp, Textarea, SignatureSection, CheckIcon, XIcon, CircleXIcon, InfoIcon, WarningIcon, ClockIcon } from '../components/common';
+import { Button, NoticeBox, ApprovalStamp, Textarea, SignatureSection, CheckIcon, XIcon, CircleXIcon, InfoIcon, WarningIcon, ClockIcon, VerificationBadge } from '../components/common';
 import { formatDate, formatCurrency } from '../utils/helpers';
 import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
 import { sendRejectionNotification, sendApprovalNotification, notifyDepartment } from '../services/notificationService';
 
-const ReviewItem = ({ label, value, raw = false }) => {
+const ReviewItem = ({ label, value, raw = false, badge = null }) => {
   if (!value && value !== 0) return null;
 
   // Format the value unless raw is true
@@ -23,7 +23,10 @@ const ReviewItem = ({ label, value, raw = false }) => {
       <div style={{ fontWeight: 'var(--font-weight-medium)', minWidth: '200px', color: 'var(--color-text-secondary)' }}>
         {label}:
       </div>
-      <div style={{ color: 'var(--color-text)', paddingLeft: '16px' }}>{displayValue}</div>
+      <div style={{ color: 'var(--color-text)', paddingLeft: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {displayValue}
+        {badge}
+      </div>
     </div>
   );
 };
@@ -540,7 +543,13 @@ const ProcurementReviewPage = ({
       <ReviewCard title="Section 3: Supplier Classification">
         <ReviewItem label="Companies House Registered" value={formData.companiesHouseRegistered} />
         <ReviewItem label="Supplier Type" value={formatSupplierType(formData.supplierType)} raw />
-        {formData.crn && <ReviewItem label="CRN" value={formData.crn} />}
+        {formData.crn && (
+          <ReviewItem
+            label="CRN"
+            value={formData.crn}
+            badge={formData.crnVerification?.status && <VerificationBadge companyStatus={formData.crnVerification.status} size="small" />}
+          />
+        )}
         {formData.charityNumber && <ReviewItem label="Charity Number" value={formData.charityNumber} />}
         <ReviewItem label="Annual Value" value={formData.annualValue ? formatCurrency(formData.annualValue) : ''} />
         <ReviewItem label="Employee Count" value={formData.employeeCount} />

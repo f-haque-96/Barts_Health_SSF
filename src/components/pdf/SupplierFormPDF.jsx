@@ -320,6 +320,29 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     fontSize: 8,
   },
+
+  // Verification Badge styles
+  verificationBadge: {
+    display: 'inline-block',
+    paddingTop: 4,
+    paddingBottom: 4,
+    paddingLeft: 8,
+    paddingRight: 8,
+    borderRadius: 4,
+    fontSize: 8,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  verifiedBadge: {
+    backgroundColor: '#d1fae5',
+    color: '#065f46',
+    border: '1pt solid #10b981',
+  },
+  needsVerificationBadge: {
+    backgroundColor: '#fef3c7',
+    color: '#92400e',
+    border: '1pt solid #f59e0b',
+  },
 });
 
 // Helper to format file size
@@ -367,15 +390,37 @@ const getSectionData = (submission, formData, sectionNum) => {
     || {};
 };
 
+// Verification Badge for PDF
+const PDFVerificationBadge = ({ companyStatus }) => {
+  const isVerified = companyStatus && companyStatus.toLowerCase() === 'active';
+  const formatStatus = (status) => {
+    if (!status) return 'Unknown';
+    return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+  };
+
+  const badgeStyle = isVerified
+    ? [styles.verificationBadge, styles.verifiedBadge]
+    : [styles.verificationBadge, styles.needsVerificationBadge];
+
+  const badgeText = isVerified
+    ? 'Verified'
+    : `Verification Needed${companyStatus ? ` (${formatStatus(companyStatus)})` : ''}`;
+
+  return <Text style={badgeStyle}>{badgeText}</Text>;
+};
+
 // Field display component
-const Field = ({ label, value, raw = false }) => {
+const Field = ({ label, value, raw = false, badge = null }) => {
   if (!value && value !== 0) return null;
   // Format the value unless raw is true
   const displayValue = raw ? value : formatFieldValue(value);
   return (
     <View style={styles.fieldRow}>
       <Text style={styles.fieldLabel}>{label}:</Text>
-      <Text style={styles.fieldValue}>{displayValue}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', width: '60%', paddingLeft: 8 }}>
+        <Text style={styles.fieldValue}>{displayValue}</Text>
+        {badge}
+      </View>
     </View>
   );
 };
@@ -544,9 +589,15 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submissionDate
         {/* CRN - Only show if not sole trader/individual */}
         {(normalizedData.section3?.crn || normalizedData.crn) && !['sole_trader', 'individual'].includes(normalizedData.section3?.supplierType || normalizedData.supplierType) && (
           <>
-            <Field label="CRN" value={normalizedData.section3?.crn || normalizedData.crn} />
-            {(normalizedData.section3?.crnVerification || normalizedData.crnVerification)?.company_name && (
-              <Field label="Verified Company Name" value={(normalizedData.section3?.crnVerification || normalizedData.crnVerification)?.company_name} />
+            <Field
+              label="CRN"
+              value={normalizedData.section3?.crn || normalizedData.crn}
+              badge={(normalizedData.section3?.crnVerification || normalizedData.crnVerification)?.status && (
+                <PDFVerificationBadge companyStatus={(normalizedData.section3?.crnVerification || normalizedData.crnVerification)?.status} />
+              )}
+            />
+            {(normalizedData.section3?.crnVerification || normalizedData.crnVerification)?.name && (
+              <Field label="Verified Company Name" value={(normalizedData.section3?.crnVerification || normalizedData.crnVerification)?.name} />
             )}
           </>
         )}
