@@ -603,7 +603,7 @@ const Section2PreScreening = () => {
                   <p style={{ margin: '0', fontSize: '0.9rem' }}>
                     <strong>Need help requesting this from your supplier?</strong>{' '}
                     <a
-                      href="/help#supplier-information-faq"
+                      href="/help/faq#supplier-information-faq"
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ color: '#005EB8', textDecoration: 'underline', fontWeight: '500' }}
