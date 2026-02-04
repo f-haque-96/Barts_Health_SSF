@@ -15,7 +15,11 @@ const HelpPage = () => {
         'The Supplier Setup Form is used to register new suppliers with NHS Barts Health Trust. It collects all necessary information for procurement, finance, and compliance purposes.',
     },
     {
-      question: 'What information do I need from the supplier?',
+      question: (
+        <>
+          What information do I need from the supplier? <em style={{ color: '#f59e0b', fontSize: '0.9em' }}>[EMAIL TEMPLATE]</em>
+        </>
+      ),
       answer: (
         <div>
           <p><strong>You'll need the following information from your supplier to complete the form:</strong></p>
