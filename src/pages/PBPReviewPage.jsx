@@ -501,17 +501,8 @@ const PBPReviewPage = ({
           procurementApproval
         });
 
-        // Questionnaire uploads are in submission.uploadedFiles
-        // Extract files that aren't letterhead or procurementApproval (those are displayed separately)
-        const allFiles = parsed.uploadedFiles || parsed.uploads || {};
-        const qUploads = Object.keys(allFiles)
-          .filter(key => key !== 'letterhead' && key !== 'procurementApproval')
-          .reduce((acc, key) => {
-            acc[key] = allFiles[key];
-            return acc;
-          }, {});
-
-        setQuestionnaireUploads(qUploads);
+        // Note: Questionnaire uploads and other files are accessed directly in the JSX
+        // via submission.uploadedFiles and submission.questionnaireUploads
       } catch (error) {
         console.error('Error parsing submission:', error);
       }
@@ -1136,16 +1127,16 @@ const PBPReviewPage = ({
             </div>
           )}
 
-          {/* Questionnaire Uploads (other than letterhead and procurement approval) */}
+          {/* Other Uploads from Section 2 (CEST form, etc.) */}
           {(() => {
-            // Get all uploaded files, excluding letterhead and procurementApproval which are shown separately
-            const allFiles = submission?.uploadedFiles || submission?.uploads || {};
-            const otherFiles = Object.entries(allFiles).filter(
+            // Get regular uploaded files from Section 2 (cestForm, etc.), excluding letterhead and procurementApproval
+            const regularFiles = submission?.uploadedFiles || {};
+            const otherRegularFiles = Object.entries(regularFiles).filter(
               ([key]) => key !== 'letterhead' && key !== 'procurementApproval'
             );
 
-            return otherFiles.map(([key, file]) => (
-              <div key={key} style={{
+            return otherRegularFiles.map(([key, file]) => (
+              <div key={`regular-${key}`} style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 'var(--space-12)',
@@ -1186,12 +1177,76 @@ const PBPReviewPage = ({
             ));
           })()}
 
+          {/* Questionnaire Modal Uploads (Clinical/Non-Clinical supporting documents) */}
+          {(() => {
+            // Get questionnaire uploads from the modal (quotes, proposals, supporting docs)
+            const qUploads =
+              submission?.questionnaireUploads ||
+              submission?.questionnaireData?.uploads ||
+              submission?.questionnaireData?.uploadedFiles ||
+              {};
+
+            return Object.entries(qUploads).map(([key, file]) => (
+              <div key={`questionnaire-${key}`} style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-12)',
+                padding: 'var(--space-12)',
+                backgroundColor: 'var(--color-background)',
+                borderRadius: 'var(--radius-base)',
+                border: '1px solid var(--color-border)',
+                marginBottom: 'var(--space-8)',
+              }}>
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '32px',
+                  height: '32px',
+                  background: '#eff6ff',
+                  borderRadius: '6px',
+                  color: '#005EB8',
+                  fontSize: '0.75rem',
+                  fontWeight: '600'
+                }}>
+                  {file?.type?.includes('pdf') ? 'PDF' : 'FILE'}
+                </span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 'var(--font-weight-semibold)' }}>
+                    {file?.name || key}
+                  </div>
+                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                    {file?.size && `${Math.round((file?.size || 0) / 1024)} KB`}
+                    {file?.uploadedAt && ` • Uploaded: ${new Date(file.uploadedAt).toLocaleDateString()}`}
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePreviewDocument(file)}
+                >
+                  Preview
+                </Button>
+              </div>
+            ));
+          })()}
+
           {/* Show message if no uploads at all */}
-          {!submission?.uploadedFiles && !submission?.uploads && (
-            <p style={{ color: '#6b7280', fontStyle: 'italic', margin: 0 }}>
-              No documents were uploaded with this submission.
-            </p>
-          )}
+          {(() => {
+            const hasRegularUploads = submission?.uploadedFiles && Object.keys(submission.uploadedFiles).length > 0;
+            const hasQuestionnaireUploads =
+              (submission?.questionnaireUploads && Object.keys(submission.questionnaireUploads).length > 0) ||
+              (submission?.questionnaireData?.uploads && Object.keys(submission.questionnaireData.uploads).length > 0);
+
+            if (!hasRegularUploads && !hasQuestionnaireUploads) {
+              return (
+                <p style={{ color: '#6b7280', fontStyle: 'italic', margin: 0 }}>
+                  No documents were uploaded with this submission.
+                </p>
+              );
+            }
+            return null;
+          })()}
         </div>
       </ReviewSection>
 
