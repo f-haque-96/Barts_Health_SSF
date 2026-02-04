@@ -6,9 +6,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PDFDownloadLink } from '@react-pdf/renderer';
-import { Button, NoticeBox, ApprovalStamp, Textarea, SignatureSection, CheckIcon, XIcon, CircleXIcon, InfoIcon, WarningIcon, ClockIcon, VerificationBadge } from '../components/common';
+import { Button, NoticeBox, ApprovalStamp, Textarea, SignatureSection, Input, CheckIcon, XIcon, CircleXIcon, InfoIcon, WarningIcon, ClockIcon, VerificationBadge } from '../components/common';
 import { formatDate, formatCurrency } from '../utils/helpers';
-import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes } from '../utils/formatters';
+import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes, formatEmployeeCount } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
 import { sendRejectionNotification, sendApprovalNotification, notifyDepartment } from '../services/notificationService';
 
@@ -543,16 +543,43 @@ const ProcurementReviewPage = ({
       <ReviewCard title="Section 3: Supplier Classification">
         <ReviewItem label="Companies House Registered" value={formData.companiesHouseRegistered} />
         <ReviewItem label="Supplier Type" value={formatSupplierType(formData.supplierType)} raw />
-        {formData.crn && (
+        {formData.crn && formData.supplierType === 'limited_company' && (
           <ReviewItem
             label="CRN"
             value={formData.crn}
-            badge={formData.crnVerification?.status && <VerificationBadge companyStatus={formData.crnVerification.status} size="small" />}
+            badge={formData.crnVerification?.status && (
+              <a
+                href={`https://find-and-update.company-information.service.gov.uk/company/${formData.crn.replace(/\s/g, '').toUpperCase()}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: 'none' }}
+                title="View on Companies House (opens in new tab)"
+              >
+                <VerificationBadge companyStatus={formData.crnVerification.status} size="small" />
+              </a>
+            )}
+          />
+        )}
+        {formData.crnCharity && formData.supplierType === 'charity' && (
+          <ReviewItem
+            label="CRN"
+            value={formData.crnCharity}
+            badge={formData.crnVerification?.status && (
+              <a
+                href={`https://find-and-update.company-information.service.gov.uk/company/${formData.crnCharity.replace(/\s/g, '').toUpperCase()}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: 'none' }}
+                title="View on Companies House (opens in new tab)"
+              >
+                <VerificationBadge companyStatus={formData.crnVerification.status} size="small" />
+              </a>
+            )}
           />
         )}
         {formData.charityNumber && <ReviewItem label="Charity Number" value={formData.charityNumber} />}
         <ReviewItem label="Annual Value" value={formData.annualValue ? formatCurrency(formData.annualValue) : ''} />
-        <ReviewItem label="Employee Count" value={formData.employeeCount} />
+        <ReviewItem label="Employee Count" value={formatEmployeeCount(formData.employeeCount)} raw />
       </ReviewCard>
 
       {/* Section 4: Supplier Details */}
@@ -781,46 +808,67 @@ const ProcurementReviewPage = ({
                 style={{ marginTop: 'var(--space-16)' }}
               />
 
-              {approvalAction === 'approved' && (
-                <div className="form-group" style={{ marginTop: 'var(--space-16)' }}>
-                  <label style={{ fontWeight: '600', marginBottom: '8px', display: 'block' }}>
-                    Alemba Call Reference Number
-                    <span style={{ color: '#dc2626' }}> *</span>
-                  </label>
-                  <div className="info-box" style={{ marginBottom: '12px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                    <span className="info-icon" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                      <InfoIcon size={18} color="#3b82f6" />
-                    </span>
-                    <span style={{ color: '#1e40af' }}>
-                      Enter the Alemba call reference number for this supplier setup request.
-                      This will become the primary reference for tracking this supplier.
-                    </span>
+              {/* Custom Signature Section with Alemba Reference */}
+              <div className="signature-section">
+                {approvalAction === 'approved' && (
+                  <div className="form-group" style={{ marginBottom: 'var(--space-16)' }}>
+                    <label style={{ fontWeight: '600', marginBottom: '8px', display: 'block' }}>
+                      Alemba Call Reference Number
+                      <span style={{ color: '#dc2626' }}> *</span>
+                    </label>
+                    <div className="info-box" style={{ marginBottom: '12px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      <span className="info-icon" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                        <InfoIcon size={18} color="#3b82f6" />
+                      </span>
+                      <span style={{ color: '#1e40af' }}>
+                        Enter the Alemba call reference number for this supplier setup request.
+                        This will become the primary reference for tracking this supplier.
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      value={alembaReference}
+                      onChange={(e) => setAlembaReference(e.target.value)}
+                      placeholder="e.g., 3000545"
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '1rem'
+                      }}
+                    />
                   </div>
-                  <input
-                    type="text"
-                    value={alembaReference}
-                    onChange={(e) => setAlembaReference(e.target.value)}
-                    placeholder="e.g., 3000545"
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '1rem'
+                )}
+
+                <h4 className="signature-section-title">Digital Signature</h4>
+                <p className="signature-section-disclaimer">
+                  By entering your full name below, you are providing a legal electronic signature that is as valid as a handwritten signature.
+                </p>
+
+                <div className="signature-fields">
+                  <Input
+                    label="Full Name (Digital Signature)"
+                    name="signatureName"
+                    value={signatureName || ''}
+                    onChange={(e) => {
+                      setSignatureName(e.target.value);
                     }}
+                    required
+                    placeholder="Enter your full name"
+                  />
+
+                  <Input
+                    label="Date"
+                    name="signatureDate"
+                    type="date"
+                    value={signatureDate}
+                    onChange={(e) => setSignatureDate(e.target.value)}
+                    required
                   />
                 </div>
-              )}
-
-              <SignatureSection
-                signatureName={signatureName}
-                signatureDate={signatureDate}
-                onSignatureChange={({ signatureName: name, signatureDate: date }) => {
-                  setSignatureName(name);
-                  setSignatureDate(date);
-                }}
-              />
+              </div>
 
               <div style={{ display: 'flex', gap: 'var(--space-12)', marginTop: 'var(--space-16)' }}>
                 <Button

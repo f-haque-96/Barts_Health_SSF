@@ -162,19 +162,42 @@ app.use((req, res) => {
 
 // Initialize services and start server
 async function startServer() {
-  try {
-    // Initialize database connection
-    await initializeDatabase();
-    logger.info('Database connection established');
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
-    // Initialize SharePoint connection
-    await initializeSharePoint();
-    logger.info('SharePoint connection established');
+  try {
+    // Initialize database connection (optional in development)
+    try {
+      await initializeDatabase();
+      logger.info('Database connection established');
+    } catch (dbError) {
+      if (isDevelopment) {
+        logger.warn('Database connection failed (continuing in dev mode):', dbError.message);
+        logger.warn('Database-dependent features will not work');
+      } else {
+        throw dbError;
+      }
+    }
+
+    // Initialize SharePoint connection (optional in development)
+    try {
+      await initializeSharePoint();
+      logger.info('SharePoint connection established');
+    } catch (spError) {
+      if (isDevelopment) {
+        logger.warn('SharePoint connection failed (continuing in dev mode):', spError.message);
+        logger.warn('Document upload features will not work');
+      } else {
+        throw spError;
+      }
+    }
 
     // Start server
     app.listen(PORT, () => {
       logger.info(`NHS Supplier Form API running on port ${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV}`);
+      if (isDevelopment) {
+        logger.info('Development mode: CRN verification available, DB/SharePoint features may be limited');
+      }
     });
   } catch (error) {
     logger.error('Failed to start server:', error);

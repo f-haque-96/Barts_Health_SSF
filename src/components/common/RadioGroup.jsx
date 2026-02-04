@@ -48,13 +48,28 @@ const RadioGroup = ({
           const optionValue = typeof option === 'string' ? option : option.value;
           const optionLabel = typeof option === 'string' ? option : option.label;
           const optionTooltip = typeof option === 'object' ? option.tooltip : undefined;
+          const optionVariant = typeof option === 'object' ? option.variant : undefined;
           const isChecked = value === optionValue;
+
+          // Apply danger styling for destructive actions
+          const labelStyle = optionVariant === 'danger' ? {
+            color: '#dc2626',
+            borderColor: isChecked ? '#dc2626' : undefined,
+          } : undefined;
+
+          const textStyle = optionVariant === 'danger' ? {
+            color: '#dc2626',
+            fontWeight: isChecked ? '600' : '500',
+          } : undefined;
 
           // If option has a tooltip, wrap in tooltip container
           if (optionTooltip) {
             return (
               <div key={optionValue} className="radio-option-with-tooltip">
-                <label className={clsx('radio-label', disabled && 'disabled')}>
+                <label
+                  className={clsx('radio-label', disabled && 'disabled')}
+                  style={labelStyle}
+                >
                   <input
                     type="radio"
                     name={name}
@@ -64,7 +79,7 @@ const RadioGroup = ({
                     disabled={disabled}
                     {...props}
                   />
-                  <span className="radio-text">{optionLabel}</span>
+                  <span className="radio-text" style={textStyle}>{optionLabel}</span>
                 </label>
                 <div className="radio-tooltip">{optionTooltip}</div>
               </div>
@@ -76,6 +91,7 @@ const RadioGroup = ({
             <label
               key={optionValue}
               className={clsx('radio-label', disabled && 'disabled')}
+              style={labelStyle}
             >
               <input
                 type="radio"
@@ -86,7 +102,7 @@ const RadioGroup = ({
                 disabled={disabled}
                 {...props}
               />
-              <span className="radio-text">{optionLabel}</span>
+              <span className="radio-text" style={textStyle}>{optionLabel}</span>
             </label>
           );
         })}

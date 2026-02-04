@@ -243,56 +243,151 @@ GRANT EXECUTE ON SCHEMA::dbo TO SupplierFormAPI;
 
 ### 6.1 Configure Environment Variables
 
-Create `.env` on the server (or configure in Azure App Service):
-
 **⚠️ CRITICAL:** The API will NOT start if any required variables are missing. Environment validation runs on startup.
 
+#### Quick Reference: What Needs Replacing
+
+| Variable | Current Value | Action Required | Priority |
+|----------|---------------|-----------------|----------|
+| **Azure AD Configuration** | | | |
+| `AZURE_AD_CLIENT_ID` | `00000000-0000-0000-0000-000000000000` | ⚠️ Replace with your Azure AD App Registration Client ID | 🔴 REQUIRED |
+| `AZURE_AD_CLIENT_SECRET` | `placeholder_secret` | ⚠️ Replace with your Azure AD App Registration Secret | 🔴 REQUIRED |
+| `AZURE_AD_TENANT_ID` | `00000000-0000-0000-0000-000000000000` | ⚠️ Replace with your NHS Tenant ID | 🔴 REQUIRED |
+| **Database Configuration** | | | |
+| `DB_HOST` | `localhost` | ⚠️ Replace with SQL Server hostname (e.g., `sqlserver.bartshealth.nhs.uk`) | 🔴 REQUIRED |
+| `DB_NAME` | `SupplierSetupDB` | ✅ Keep as-is (matches database name) | 🟢 OK |
+| `DB_USER` | `dev_user` | ⚠️ Replace with SQL Server username (e.g., `SupplierFormAPI`) | 🔴 REQUIRED |
+| `DB_PASSWORD` | `dev_password_placeholder` | ⚠️ Replace with SQL Server password | 🔴 REQUIRED |
+| `DB_PORT` | `1433` | ✅ Keep as-is (standard SQL Server port) | 🟢 OK |
+| `DB_TRUSTED_CONNECTION` | `false` | ⚠️ Set to `true` if using Windows Authentication | 🟡 OPTIONAL |
+| **SharePoint Configuration** | | | |
+| `SP_SITE_URL` | `https://placeholder.sharepoint.com` | ⚠️ Replace with actual SharePoint site (e.g., `https://bartshealth.sharepoint.com/sites/NHS-Supplier-Forms`) | 🔴 REQUIRED |
+| `SP_CLIENT_ID` | `00000000-0000-0000-0000-000000000000` | ⚠️ Replace with SharePoint App Registration Client ID | 🔴 REQUIRED |
+| `SP_CLIENT_SECRET` | `placeholder_secret` | ⚠️ Replace with SharePoint App Registration Secret | 🔴 REQUIRED |
+| `SP_TENANT_ID` | `00000000-0000-0000-0000-000000000000` | ⚠️ Replace with your NHS Tenant ID (same as Azure AD) | 🔴 REQUIRED |
+| **Security** | | | |
+| `SESSION_SECRET` | `dev-secret-temp-replace-in-production-12345678901234567890` | ⚠️ **CRITICAL:** Generate random 32+ character string | 🔴 REQUIRED |
+| **Companies House API** | | | |
+| `CH_API_KEY` | `d1e356cc-2181-4704-ad76-d2784ca5c917` | ✅ **CONFIGURED** - Your API key is already set | 🟢 OK |
+| `CH_API_URL` | `https://api.company-information.service.gov.uk` | ✅ Keep as-is (official Companies House API) | 🟢 OK |
+| **Application Settings** | | | |
+| `NODE_ENV` | `development` | ⚠️ Change to `production` for deployment | 🔴 REQUIRED |
+| `API_PORT` | `3001` | ✅ Keep as-is (or change if port conflict) | 🟢 OK |
+| `CORS_ORIGIN` | `http://localhost:5173` | ⚠️ Change to production URL (e.g., `https://weshare.bartshealth.nhs.uk`) | 🔴 REQUIRED |
+
+---
+
+#### Full `.env` Configuration Template
+
+Create `.env` on the server (or configure in Azure App Service). Replace all values marked with ⚠️ below:
+
 ```env
-# ===== REQUIRED VARIABLES (API will not start without these) =====
+# ===========================================
+# NHS Supplier Setup Form API - PRODUCTION Configuration
+# Last Updated: February 4, 2026
+# ===========================================
 
-# Azure AD (REQUIRED)
-AZURE_AD_CLIENT_ID=your-client-id
-AZURE_AD_CLIENT_SECRET=your-client-secret
-AZURE_AD_TENANT_ID=your-tenant-id
+# ===========================================
+# AZURE AD AUTHENTICATION (REQUIRED)
+# ===========================================
+# ⚠️ Replace with your Azure AD App Registration details
+# Get these from: Azure Portal → Azure Active Directory → App Registrations
+AZURE_AD_TENANT_ID=<YOUR_NHS_TENANT_ID>                    # ⚠️ REPLACE THIS
+AZURE_AD_CLIENT_ID=<YOUR_APP_REGISTRATION_CLIENT_ID>       # ⚠️ REPLACE THIS
+AZURE_AD_CLIENT_SECRET=<YOUR_APP_REGISTRATION_SECRET>      # ⚠️ REPLACE THIS
 
-# SQL Server (REQUIRED)
-DB_HOST=your-sql-server.database.windows.net
-DB_NAME=NHSSupplierForms
-DB_USER=SupplierFormAPI
-DB_PASSWORD=YourSecurePassword
-DB_ENCRYPT=true
+# ===========================================
+# DATABASE CONFIGURATION (REQUIRED)
+# ===========================================
+# ⚠️ Replace with your SQL Server connection details
+DB_HOST=<YOUR_SQL_SERVER_HOSTNAME>                         # ⚠️ REPLACE THIS (e.g., sqlserver.bartshealth.nhs.uk)
+DB_PORT=1433                                               # ✅ Keep as-is
+DB_NAME=SupplierSetupDB                                    # ✅ Keep as-is (matches database name)
+DB_USER=<YOUR_SQL_USERNAME>                                # ⚠️ REPLACE THIS (e.g., SupplierFormAPI)
+DB_PASSWORD=<YOUR_SQL_PASSWORD>                            # ⚠️ REPLACE THIS (use secure password)
+DB_TRUSTED_CONNECTION=false                                # ⚠️ Set to true if using Windows Auth
 
-# SharePoint (REQUIRED)
-SP_SITE_URL=https://bartshealth.sharepoint.com/sites/NHS-Supplier-Forms
-SP_CLIENT_ID=sharepoint-app-client-id
-SP_CLIENT_SECRET=sharepoint-app-secret
-SP_TENANT_ID=your-tenant-id
+# ===========================================
+# SHAREPOINT CONFIGURATION (REQUIRED)
+# ===========================================
+# ⚠️ Replace with your SharePoint site and app registration
+SP_SITE_URL=<YOUR_SHAREPOINT_SITE_URL>                     # ⚠️ REPLACE THIS (e.g., https://bartshealth.sharepoint.com/sites/NHS-Supplier-Forms)
+SP_CLIENT_ID=<YOUR_SHAREPOINT_APP_CLIENT_ID>               # ⚠️ REPLACE THIS
+SP_CLIENT_SECRET=<YOUR_SHAREPOINT_APP_SECRET>              # ⚠️ REPLACE THIS
+SP_TENANT_ID=<YOUR_NHS_TENANT_ID>                          # ⚠️ REPLACE THIS (same as AZURE_AD_TENANT_ID)
+SP_DOCS_LIBRARY=SupplierDocuments                          # ✅ Keep as-is
+SP_SENSITIVE_DOCS_LIBRARY=SensitiveDocuments               # ✅ Keep as-is
+SP_STATUS_LIST=SubmissionStatus                            # ✅ Keep as-is
 
-# Session Secret (REQUIRED - NO DEFAULT)
+# ===========================================
+# SESSION SECRET (REQUIRED - MUST GENERATE)
+# ===========================================
+# ⚠️ CRITICAL: Generate a random 32+ character string
+# DO NOT use the development value in production!
+#
 # Generate using one of these methods:
 #   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 #   openssl rand -hex 32
-SESSION_SECRET=<GENERATE_RANDOM_32_CHAR_STRING>
+#   PowerShell: -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 32 | % {[char]$_})
+SESSION_SECRET=<GENERATE_RANDOM_32_CHAR_STRING>            # ⚠️ REPLACE THIS - NEVER use default!
 
-# ===== OPTIONAL VARIABLES =====
+# ===========================================
+# COMPANIES HOUSE API (CONFIGURED)
+# ===========================================
+# ✅ Your API key is already configured and working
+CH_API_KEY=d1e356cc-2181-4704-ad76-d2784ca5c917            # ✅ ALREADY CONFIGURED
+CH_API_URL=https://api.company-information.service.gov.uk  # ✅ Keep as-is
 
-# Companies House (Optional - for CRN verification)
-CH_API_KEY=your-companies-house-api-key
-CH_API_URL=https://api.company-information.service.gov.uk
+# ===========================================
+# SERVER CONFIGURATION
+# ===========================================
+NODE_ENV=production                                         # ⚠️ Change from 'development' to 'production'
+API_PORT=3001                                              # ✅ Keep as-is (or change if port conflict)
+CORS_ORIGIN=<YOUR_FRONTEND_URL>                            # ⚠️ REPLACE THIS (e.g., https://weshare.bartshealth.nhs.uk)
 
-# Application
-NODE_ENV=production
-API_PORT=3001
-CORS_ORIGIN=https://weshare.bartshealth.nhs.uk
+# ===========================================
+# SECURITY SETTINGS
+# ===========================================
+RATE_LIMIT_MAX=100                                         # ✅ Keep as-is (100 requests/minute per IP)
+MAX_FILE_SIZE=10485760                                     # ✅ Keep as-is (10MB file upload limit)
+ALLOWED_FILE_TYPES=.pdf,.png,.jpg,.jpeg,.doc,.docx         # ✅ Keep as-is
 
-# Security
-RATE_LIMIT_MAX=100
-MAX_FILE_SIZE=10485760
+# ===========================================
+# LOGGING
+# ===========================================
+LOG_LEVEL=info                                             # ✅ Keep as-is (or use 'debug' for troubleshooting)
+LOG_FILE_PATH=./logs/app.log                               # ✅ Keep as-is
 
-# Logging
-LOG_LEVEL=info
-LOG_FILE_PATH=./logs/app.log
+# ===========================================
+# ALEMBA INTEGRATION (OPTIONAL - Configure later if needed)
+# ===========================================
+# ALEMBA_API_URL=https://servicedeskbartshealth.alembacloud.com/api
+# ALEMBA_API_KEY=<your_alemba_api_key>
+# ALEMBA_CLOSURE_STATUS=Closed
+# ALEMBA_RESOLUTION_CODE=Resolved
+
+# ===========================================
+# NOTIFICATIONS (OPTIONAL - Configure later if needed)
+# ===========================================
+# PA_NOTIFICATION_WEBHOOK=<power_automate_webhook_url>
 ```
+
+---
+
+#### Development vs Production Configuration
+
+**For Development (Current `.env`):**
+- ✅ Companies House API key configured
+- ✅ Placeholder values for database/SharePoint (allows server to start)
+- ✅ `NODE_ENV=development` (bypasses DB/SharePoint requirements)
+- ✅ Authentication optional for testing
+
+**For Production Deployment:**
+- 🔴 Replace ALL placeholder values marked with ⚠️
+- 🔴 Set `NODE_ENV=production`
+- 🔴 Generate new `SESSION_SECRET`
+- 🔴 Update `CORS_ORIGIN` to production URL
+- 🔴 Configure real database and SharePoint connections
 
 **Generate SESSION_SECRET:**
 

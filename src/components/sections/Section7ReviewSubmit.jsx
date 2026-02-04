@@ -42,13 +42,23 @@ const CRNStatusBadge = ({ crn, verificationData }) => {
   // Get company status from verification data
   const companyStatus = verificationData?.status || null;
 
-  // If we have verification data with a status, show the verification badge
-  if (companyStatus) {
-    return <VerificationBadge companyStatus={companyStatus} size="small" showLabel={true} />;
-  }
+  // Companies House URL
+  const companiesHouseUrl = `https://find-and-update.company-information.service.gov.uk/company/${crn.replace(/\s/g, '').toUpperCase()}`;
 
-  // No verification data - show amber badge
-  return <VerificationBadge companyStatus={null} size="small" showLabel={true} />;
+  // Wrap badge in link to Companies House
+  const badge = <VerificationBadge companyStatus={companyStatus} size="small" showLabel={true} />;
+
+  return (
+    <a
+      href={companiesHouseUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ textDecoration: 'none', cursor: 'pointer' }}
+      title="View on Companies House (opens in new tab)"
+    >
+      {badge}
+    </a>
+  );
 };
 
 const ReviewCard = ({ title, children, sectionNumber }) => {
@@ -223,7 +233,7 @@ const Section7ReviewSubmit = () => {
         submissionDate,
         status: 'pending_review',
         formData: allData.formData,
-        uploadedFiles: Object.keys(allData.uploadedFiles),
+        uploadedFiles: allData.uploadedFiles,
         submittedBy: allData.formData.nhsEmail,
       };
 
@@ -495,12 +505,21 @@ const Section7ReviewSubmit = () => {
         <ReviewItem label="Companies House Registered" value={formData.companiesHouseRegistered} />
         <ReviewItem label="Supplier Type" value={formatSupplierType(formData.supplierType)} raw />
 
-        {/* CRN - Only show if applicable (not for sole traders, individuals) */}
-        {formData.crn && !['sole_trader', 'individual'].includes(formData.supplierType) && (
+        {/* CRN - Limited Company */}
+        {formData.crn && formData.supplierType === 'limited_company' && (
           <ReviewItem
             label="CRN"
             value={formData.crn}
             badge={<CRNStatusBadge crn={formData.crn} verificationData={formData.crnVerification} />}
+          />
+        )}
+
+        {/* CRN - Charity (registered with Companies House) */}
+        {formData.crnCharity && formData.supplierType === 'charity' && (
+          <ReviewItem
+            label="CRN"
+            value={formData.crnCharity}
+            badge={<CRNStatusBadge crn={formData.crnCharity} verificationData={formData.crnVerification} />}
           />
         )}
 
@@ -544,6 +563,9 @@ const Section7ReviewSubmit = () => {
       <ReviewCard title="Financial & Accounts" sectionNumber={6}>
         <ReviewItem label="Overseas Supplier" value={formData.overseasSupplier} />
         {formData.iban && <ReviewItem label="IBAN" value={formData.iban} />}
+        {formData.nameOnAccount && <ReviewItem label="Name on Account" value={formData.nameOnAccount} />}
+        {formData.sortCode && <ReviewItem label="Sort Code" value={formData.sortCode} />}
+        {formData.accountNumber && <ReviewItem label="Account Number" value={formData.accountNumber} />}
         <ReviewItem label="Accounts Address Same" value={formData.accountsAddressSame} />
         <ReviewItem label="GHX/DUNS Known" value={formData.ghxDunsKnown} />
         {formData.ghxDunsNumber && <ReviewItem label="GHX/DUNS Number" value={formData.ghxDunsNumber} />}

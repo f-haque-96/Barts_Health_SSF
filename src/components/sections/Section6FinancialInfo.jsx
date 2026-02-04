@@ -45,6 +45,7 @@ const Section6FinancialInfo = () => {
       bankRouting: formData.bankRouting || '',
       sortCode: formData.sortCode || '',
       accountNumber: formData.accountNumber || '',
+      nameOnAccount: formData.nameOnAccount || '',
       accountsAddressSame: formData.accountsAddressSame || '',
       accountsAddress: formData.accountsAddress || '',
       accountsCity: formData.accountsCity || '',
@@ -188,47 +189,62 @@ const Section6FinancialInfo = () => {
         )}
 
         {watchOverseas === 'no' && (
-          <div className="form-row">
+          <>
             <Input
-              label={<QuestionLabel section="6" question="4">UK Sort Code</QuestionLabel>}
-              name="sortCode"
-              {...register('sortCode')}
+              label={<QuestionLabel section="6" question="4">Name on Account</QuestionLabel>}
+              name="nameOnAccount"
+              {...register('nameOnAccount')}
               onChange={(e) => {
-                const formatted = formatSortCode(e.target.value.replace(/\D/g, ''));
-                setValue('sortCode', formatted);
-                register('sortCode').onChange(e);
-                handleFieldChange('sortCode', formatted);
-                if (validationErrors.sortCode) {
-                  setValidationErrors((prev) => ({ ...prev, sortCode: null }));
-                }
+                register('nameOnAccount').onChange(e);
+                handleFieldChange('nameOnAccount', e.target.value);
               }}
-              onBlur={handleFieldBlur('sortCode', financialValidators.sortCode)}
-              error={validationErrors.sortCode || errors.sortCode?.message}
+              error={errors.nameOnAccount?.message}
               required
-              placeholder="e.g., 12-34-56"
-              maxLength={8}
+              placeholder="e.g., ABC Limited"
             />
 
-            <Input
-              label={<QuestionLabel section="6" question="5">UK Account Number</QuestionLabel>}
-              name="accountNumber"
-              {...register('accountNumber')}
-              onChange={(e) => {
-                const formatted = formatAccountNumber(e.target.value);
-                setValue('accountNumber', formatted);
-                register('accountNumber').onChange(e);
-                handleFieldChange('accountNumber', formatted);
-                if (validationErrors.accountNumber) {
-                  setValidationErrors((prev) => ({ ...prev, accountNumber: null }));
-                }
-              }}
-              onBlur={handleFieldBlur('accountNumber', financialValidators.accountNumber)}
-              error={validationErrors.accountNumber || errors.accountNumber?.message}
-              required
-              placeholder="e.g., 12345678"
-              maxLength={8}
-            />
-          </div>
+            <div className="form-row">
+              <Input
+                label={<QuestionLabel section="6" question="5">UK Sort Code</QuestionLabel>}
+                name="sortCode"
+                {...register('sortCode')}
+                onChange={(e) => {
+                  const formatted = formatSortCode(e.target.value.replace(/\D/g, ''));
+                  setValue('sortCode', formatted);
+                  register('sortCode').onChange(e);
+                  handleFieldChange('sortCode', formatted);
+                  if (validationErrors.sortCode) {
+                    setValidationErrors((prev) => ({ ...prev, sortCode: null }));
+                  }
+                }}
+                onBlur={handleFieldBlur('sortCode', financialValidators.sortCode)}
+                error={validationErrors.sortCode || errors.sortCode?.message}
+                required
+                placeholder="e.g., 12-34-56"
+                maxLength={8}
+              />
+
+              <Input
+                label={<QuestionLabel section="6" question="6">UK Account Number</QuestionLabel>}
+                name="accountNumber"
+                {...register('accountNumber')}
+                onChange={(e) => {
+                  const formatted = formatAccountNumber(e.target.value);
+                  setValue('accountNumber', formatted);
+                  register('accountNumber').onChange(e);
+                  handleFieldChange('accountNumber', formatted);
+                  if (validationErrors.accountNumber) {
+                    setValidationErrors((prev) => ({ ...prev, accountNumber: null }));
+                  }
+                }}
+                onBlur={handleFieldBlur('accountNumber', financialValidators.accountNumber)}
+                error={validationErrors.accountNumber || errors.accountNumber?.message}
+                required
+                placeholder="e.g., 12345678"
+                maxLength={8}
+              />
+            </div>
+          </>
         )}
 
         {/* Accounts Address */}

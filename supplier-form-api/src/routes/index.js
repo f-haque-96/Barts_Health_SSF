@@ -214,8 +214,16 @@ router.get('/audit/:id', requireAuth, canAccessSubmission, async (req, res, next
 /**
  * GET /api/companies-house/:crn
  * Proxy Companies House lookup (keeps API key server-side)
+ * Note: Authentication optional in development mode for testing
  */
-router.get('/companies-house/:crn', requireAuth, validateCRNLookup, async (req, res, next) => {
+const optionalAuthInDev = (req, res, next) => {
+  if (process.env.NODE_ENV === 'development') {
+    return next();
+  }
+  return requireAuth(req, res, next);
+};
+
+router.get('/companies-house/:crn', optionalAuthInDev, validateCRNLookup, async (req, res, next) => {
   try {
     const { crn } = req.params;
     const apiKey = process.env.CH_API_KEY;

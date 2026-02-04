@@ -85,6 +85,7 @@ const Section3Classification = () => {
   const watchCH = watch('companiesHouseRegistered');
   const watchSupplierType = watch('supplierType');
   const watchCRN = watch('crn');
+  const watchCRNCharity = watch('crnCharity');
   const watchIdType = watch('idType');
 
   // Update states when form values change
@@ -118,18 +119,33 @@ const Section3Classification = () => {
     }
   }, [watchCRN, watchSupplierType, verify]);
 
-  // Auto-populate company name and address if CRN is verified
+  // Verify CRN when it changes (for charity with Companies House registration)
   useEffect(() => {
-    if (isValid && companyData && companyData.name) {
+    if (watchSupplierType === 'charity' && companiesHouseValue === 'yes' && watchCRNCharity && watchCRNCharity.length >= 7) {
+      const timer = setTimeout(() => {
+        verify(watchCRNCharity);
+      }, 500); // Debounce
+
+      return () => clearTimeout(timer);
+    }
+  }, [watchCRNCharity, watchSupplierType, companiesHouseValue, verify]);
+
+  // Auto-populate company name and address if CRN is verified
+  // CRITICAL: Save verification data for ALL statuses (active, dissolved, liquidated, etc.)
+  useEffect(() => {
+    if (companyData && companyData.name) {
       // Save verified company data for Section 4 auto-population
       updateFormData('_verifiedCompanyName', companyData.name);
       updateFormData('_verifiedAddress', companyData.registeredAddress || '');
       updateFormData('_verifiedCity', companyData.city || '');
       updateFormData('_verifiedPostcode', companyData.postcode || '');
       updateFormData('_verifiedCounty', companyData.county || '');
+
+      // CRITICAL: Always save verification data with status (active, dissolved, liquidated, etc.)
+      // This ensures Section 7, review pages, and PDF display the correct badge
       updateFormData('crnVerification', companyData);
     }
-  }, [isValid, companyData, updateFormData]);
+  }, [companyData, updateFormData]);
 
   const onSubmit = (data) => {
     // Validate required files based on supplier type
@@ -342,13 +358,21 @@ const Section3Classification = () => {
                 </div>
               )}
 
-              {isValid && companyData && (
+              {isValid && companyData && watchCRN && (
                 <NoticeBox type="success" style={{ marginTop: 'var(--space-8)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
                     <div>
                       <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><CheckIcon size={14} color="#22c55e" /> Verified:</strong> {companyData.name}
                     </div>
-                    <VerificationBadge companyStatus={companyData.status} size="medium" />
+                    <a
+                      href={`https://find-and-update.company-information.service.gov.uk/company/${watchCRN.replace(/\s/g, '').toUpperCase()}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: 'none' }}
+                      title="View on Companies House"
+                    >
+                      <VerificationBadge companyStatus={companyData.status} size="medium" />
+                    </a>
                   </div>
                 </NoticeBox>
               )}
@@ -375,7 +399,7 @@ const Section3Classification = () => {
                 </NoticeBox>
               )}
 
-              {crnStatus === 'dissolved' && companyData && (
+              {crnStatus === 'dissolved' && companyData && watchCRN && (
                 <NoticeBox type="warning" style={{ marginTop: 'var(--space-8)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
                     <div>
@@ -383,7 +407,15 @@ const Section3Classification = () => {
                       <br />
                       <small>This company is dissolved. Please verify with Procurement before proceeding.</small>
                     </div>
-                    <VerificationBadge companyStatus={companyData.status} size="medium" />
+                    <a
+                      href={`https://find-and-update.company-information.service.gov.uk/company/${watchCRN.replace(/\s/g, '').toUpperCase()}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: 'none' }}
+                      title="View on Companies House"
+                    >
+                      <VerificationBadge companyStatus={companyData.status} size="medium" />
+                    </a>
                   </div>
                 </NoticeBox>
               )}
@@ -395,19 +427,78 @@ const Section3Classification = () => {
         {selectedSupplierType === 'charity' && (
           <>
             {companiesHouseValue === 'yes' && (
-              <Input
-                label="Company Registration Number (CRN)"
-                name="crnCharity"
-                {...register('crnCharity')}
-                onChange={(e) => {
-                  register('crnCharity').onChange(e);
-                  handleFieldChange('crnCharity', e.target.value);
-                }}
-                error={errors.crnCharity?.message}
-                required
-                placeholder="e.g., 12345678"
-                maxLength={8}
-              />
+              <div style={{ marginBottom: 'var(--space-16)' }}>
+                <Input
+                  label="Company Registration Number (CRN)"
+                  name="crnCharity"
+                  {...register('crnCharity')}
+                  onChange={(e) => {
+                    register('crnCharity').onChange(e);
+                    handleFieldChange('crnCharity', e.target.value);
+                  }}
+                  error={errors.crnCharity?.message}
+                  required
+                  placeholder="e.g., 12345678"
+                  maxLength={8}
+                />
+
+                {/* CRN Verification Status - Same as Limited Company */}
+                {isValid && companyData && watchCRNCharity && watchCRNCharity.length >= 7 && (
+                  <NoticeBox type="success" style={{ marginTop: 'var(--space-8)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                      <div>
+                        <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><CheckIcon size={14} color="#22c55e" /> Verified:</strong> {companyData.name}
+                      </div>
+                      <a
+                        href={`https://find-and-update.company-information.service.gov.uk/company/${watchCRNCharity.replace(/\s/g, '').toUpperCase()}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ textDecoration: 'none' }}
+                        title="View on Companies House"
+                      >
+                        <VerificationBadge companyStatus={companyData.status} size="medium" />
+                      </a>
+                    </div>
+                  </NoticeBox>
+                )}
+
+                {isCorsBlocked && watchCRNCharity && watchCRNCharity.length >= 7 && (
+                  <NoticeBox type="info" style={{ marginTop: 'var(--space-8)' }}>
+                    <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><InfoIcon size={14} color="#3b82f6" /> Verification Unavailable:</strong> Unable to verify CRN due to browser restrictions.
+                    <br />
+                    <small>You can proceed by entering company details manually in the next section. The CRN will still be recorded.</small>
+                  </NoticeBox>
+                )}
+
+                {isNotFound && watchCRNCharity && watchCRNCharity.length >= 7 && (
+                  <NoticeBox type="warning" style={{ marginTop: 'var(--space-8)' }}>
+                    <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><WarningIcon size={14} color="#f59e0b" /> Company Not Found:</strong> {crnError || 'CRN not found on Companies House.'}
+                    <br />
+                    <small>Please verify the CRN number is correct. You can proceed by entering company details manually in the next section.</small>
+                  </NoticeBox>
+                )}
+
+                {crnStatus === 'dissolved' && companyData && watchCRNCharity && watchCRNCharity.length >= 7 && (
+                  <NoticeBox type="warning" style={{ marginTop: 'var(--space-8)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                      <div>
+                        <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><WarningIcon size={14} color="#f59e0b" /> Company Status:</strong> {companyData.name}
+                        <br />
+                        <small>This company is dissolved. Please verify with Procurement before proceeding.</small>
+                      </div>
+                      <a
+                        href={`https://find-and-update.company-information.service.gov.uk/company/${watchCRNCharity.replace(/\s/g, '').toUpperCase()}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ textDecoration: 'none' }}
+                        title="View on Companies House"
+                      >
+                        <VerificationBadge companyStatus={companyData.status} size="medium" />
+                      </a>
+                    </div>
+                  </NoticeBox>
+                )}
+              </div>
             )}
 
             <Input

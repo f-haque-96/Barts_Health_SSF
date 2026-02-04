@@ -90,15 +90,17 @@ const ExchangeThread = ({ exchanges, onPreviewDocument }) => {
                 </span>
               </div>
 
-              {/* Message */}
-              <div style={{
-                padding: 'var(--space-12)',
-                backgroundColor: 'white',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--color-border)',
-              }}>
-                <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{exchange.message}</p>
-              </div>
+              {/* Message - Only show if there's content */}
+              {exchange.message && exchange.message.trim() && (
+                <div style={{
+                  padding: 'var(--space-12)',
+                  backgroundColor: 'white',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--color-border)',
+                }}>
+                  <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{exchange.message}</p>
+                </div>
+              )}
 
               {/* Attachments */}
               {exchange.attachments && Object.keys(exchange.attachments).length > 0 && (
@@ -439,44 +441,61 @@ const PBPReviewPage = ({
         let letterhead = null;
         let procurementApproval = null;
 
-        // Check uploadedFiles object
-        if (parsed.uploadedFiles) {
+        console.log('[PBP] Loading documents for submission:', submissionId);
+        console.log('[PBP] Parsed submission uploadedFiles:', parsed.uploadedFiles);
+
+        // Check uploadedFiles object (skip if it's an array from old bug)
+        if (parsed.uploadedFiles && !Array.isArray(parsed.uploadedFiles)) {
           letterhead = parsed.uploadedFiles.letterhead || null;
           procurementApproval = parsed.uploadedFiles.procurementApproval || null;
+          console.log('[PBP] Found in uploadedFiles - letterhead:', !!letterhead, 'procurement:', !!procurementApproval);
+        } else if (Array.isArray(parsed.uploadedFiles)) {
+          console.warn('[PBP] uploadedFiles is an array (old bug format), skipping...');
         }
 
         // Check formData.uploadedFiles
         if (!letterhead && parsed.formData?.uploadedFiles?.letterhead) {
           letterhead = parsed.formData.uploadedFiles.letterhead;
+          console.log('[PBP] Found letterhead in formData.uploadedFiles');
         }
         if (!procurementApproval && parsed.formData?.uploadedFiles?.procurementApproval) {
           procurementApproval = parsed.formData.uploadedFiles.procurementApproval;
+          console.log('[PBP] Found procurement in formData.uploadedFiles');
         }
 
         // Check uploads object
         if (!letterhead && parsed.uploads?.letterhead) {
           letterhead = parsed.uploads.letterhead;
+          console.log('[PBP] Found letterhead in uploads');
         }
         if (!procurementApproval && parsed.uploads?.procurementApproval) {
           procurementApproval = parsed.uploads.procurementApproval;
+          console.log('[PBP] Found procurement in uploads');
         }
 
-        // Also check supplier-form-uploads in localStorage
-        const storedFormUploads = localStorage.getItem('supplier-form-uploads');
+        // Also check localStorage for uploads (try both possible keys)
+        const storedFormUploads = localStorage.getItem('supplier-form-uploads') || localStorage.getItem('formUploads');
+        console.log('[PBP] Checking localStorage for uploads...');
         if (storedFormUploads) {
           try {
             const formUploads = JSON.parse(storedFormUploads);
+            console.log('[PBP] localStorage uploads:', Object.keys(formUploads));
             if (!letterhead && formUploads.letterhead) {
               letterhead = formUploads.letterhead;
+              console.log('[PBP] Found letterhead in localStorage');
             }
             if (!procurementApproval && formUploads.procurementApproval) {
               procurementApproval = formUploads.procurementApproval;
+              console.log('[PBP] Found procurement in localStorage');
             }
           } catch (e) {
-            console.error('Error parsing form uploads:', e);
+            console.error('[PBP] Error parsing form uploads:', e);
           }
+        } else {
+          console.warn('[PBP] No uploads found in localStorage');
         }
 
+        console.log('[PBP] Final result - letterhead:', !!letterhead, 'procurement:', !!procurementApproval);
         setAllUploads({
           letterhead,
           procurementApproval
@@ -982,6 +1001,37 @@ const PBPReviewPage = ({
           label="Q2.2 - Letterhead with Bank Details"
           value={formatYesNo(submission.section2Summary?.letterheadAvailable || formData.letterheadAvailable)}
         />
+        {/* Letterhead Preview Button */}
+        {allUploads.letterhead && (
+          <div style={{ gridColumn: '1 / -1', marginTop: 'var(--space-8)' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-12)',
+              padding: 'var(--space-12)',
+              backgroundColor: '#f0fdf4',
+              borderRadius: 'var(--radius-base)',
+              border: '1px solid #86efac',
+            }}>
+              <ClipboardIcon size={20} color="#16a34a" />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 'var(--font-weight-semibold)', color: '#166534', fontSize: 'var(--font-size-sm)' }}>
+                  {allUploads.letterhead.name}
+                </div>
+                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>
+                  {Math.round((allUploads.letterhead.size || 0) / 1024)} KB
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePreviewDocument(allUploads.letterhead)}
+              >
+                Preview Letterhead
+              </Button>
+            </div>
+          </div>
+        )}
         <ReviewField
           label="Q2.3 - Justification"
           value={submission.section2Summary?.justification || formData.justification}

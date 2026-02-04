@@ -8,7 +8,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { Button, NoticeBox, ApprovalStamp, Checkbox, Textarea, SignatureSection, Input, CheckIcon, XIcon, WarningIcon, ClockIcon, DocumentIcon, DownloadIcon, LockIcon, CircleXIcon, VerificationBadge } from '../components/common';
 import { formatDate, formatCurrency } from '../utils/helpers';
-import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes } from '../utils/formatters';
+import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes, formatEmployeeCount } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
 import { sendApprovalNotification, notifyDepartment, closeAlembaOnCompletion, sendRejectionNotification } from '../services/notificationService';
 
@@ -48,13 +48,23 @@ const CRNStatusBadge = ({ crn, verificationData }) => {
   // Get company status from verification data
   const companyStatus = verificationData?.status || null;
 
-  // If we have verification data with a status, show the verification badge
-  if (companyStatus) {
-    return <VerificationBadge companyStatus={companyStatus} size="small" showLabel={true} />;
-  }
+  // Companies House URL
+  const companiesHouseUrl = `https://find-and-update.company-information.service.gov.uk/company/${crn.replace(/\s/g, '').toUpperCase()}`;
 
-  // No verification data - show amber badge
-  return <VerificationBadge companyStatus={null} size="small" showLabel={true} />;
+  // Wrap badge in link to Companies House
+  const badge = <VerificationBadge companyStatus={companyStatus} size="small" showLabel={true} />;
+
+  return (
+    <a
+      href={companiesHouseUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ textDecoration: 'none', cursor: 'pointer' }}
+      title="View on Companies House (opens in new tab)"
+    >
+      {badge}
+    </a>
+  );
 };
 
 const ReviewCard = ({ title, children, highlight }) => {
@@ -92,6 +102,7 @@ const APControlReviewPage = ({
   const [bankDetailsVerified, setBankDetailsVerified] = useState(false);
   const [companyDetailsVerified, setCompanyDetailsVerified] = useState(false);
   const [vatVerified, setVatVerified] = useState(false);
+  const [cisVerified, setCisVerified] = useState(false);
   const [insuranceVerified, setInsuranceVerified] = useState(false);
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -101,6 +112,8 @@ const APControlReviewPage = ({
   const [supplierNumber, setSupplierNumber] = useState('');
   const [additionalInfo, setAdditionalInfo] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
+  const [showRejectionSection, setShowRejectionSection] = useState(false);
+  const [actionType, setActionType] = useState(null); // null, 'complete', 'reject'
 
   // Function to get full submission with ALL authorisations for PDF
   const getFullSubmissionForPDF = () => {
@@ -143,6 +156,7 @@ const APControlReviewPage = ({
       bankDetailsVerified,
       companyDetailsVerified,
       vatVerified,
+      cisVerified,
       insuranceVerified,
       notes,
       submittedAt: new Date().toISOString()
@@ -272,8 +286,9 @@ const APControlReviewPage = ({
       if (propSubmission.apReview) {
         setBankDetailsVerified(propSubmission.apReview.bankDetailsVerified);
         setCompanyDetailsVerified(propSubmission.apReview.companyDetailsVerified);
-        setVatVerified(propSubmission.apReview.vatVerified);
-        setInsuranceVerified(propSubmission.apReview.insuranceVerified);
+        setVatVerified(propSubmission.apReview.vatVerified || false);
+        setCisVerified(propSubmission.apReview.cisVerified || false);
+        setInsuranceVerified(propSubmission.apReview.insuranceVerified || false);
         setNotes(propSubmission.apReview.notes || '');
         setSupplierName(propSubmission.apReview.supplierName || propSubmission.formData?.companyName || '');
         setSupplierNumber(propSubmission.apReview.supplierNumber || '');
@@ -299,8 +314,9 @@ const APControlReviewPage = ({
         if (parsed.apReview) {
           setBankDetailsVerified(parsed.apReview.bankDetailsVerified);
           setCompanyDetailsVerified(parsed.apReview.companyDetailsVerified);
-          setVatVerified(parsed.apReview.vatVerified);
-          setInsuranceVerified(parsed.apReview.insuranceVerified);
+          setVatVerified(parsed.apReview.vatVerified || false);
+          setCisVerified(parsed.apReview.cisVerified || false);
+          setInsuranceVerified(parsed.apReview.insuranceVerified || false);
           setNotes(parsed.apReview.notes || '');
           setSupplierName(parsed.apReview.supplierName || parsed.formData?.companyName || '');
           setSupplierNumber(parsed.apReview.supplierNumber || '');
@@ -349,6 +365,7 @@ const APControlReviewPage = ({
           bankDetailsVerified,
           companyDetailsVerified,
           vatVerified,
+          cisVerified,
           insuranceVerified,
           notes,
           supplierName,
@@ -703,12 +720,20 @@ const APControlReviewPage = ({
         <ReviewItem label="Company Name" value={formData.companyName?.toUpperCase()} highlight raw />
         {formData.tradingName && <ReviewItem label="Trading Name" value={formData.tradingName?.toUpperCase()} raw />}
         <ReviewItem label="Supplier Type" value={formatSupplierType(formData.supplierType)} raw />
-        {formData.crn && (
+        {formData.crn && formData.supplierType === 'limited_company' && (
           <ReviewItem
             label="CRN"
             value={formData.crn}
             highlight
             badge={<CRNStatusBadge crn={formData.crn} verificationData={formData.crnVerification} />}
+          />
+        )}
+        {formData.crnCharity && formData.supplierType === 'charity' && (
+          <ReviewItem
+            label="CRN"
+            value={formData.crnCharity}
+            highlight
+            badge={<CRNStatusBadge crn={formData.crnCharity} verificationData={formData.crnVerification} />}
           />
         )}
         {formData.charityNumber && <ReviewItem label="Charity Number" value={formData.charityNumber} />}
@@ -733,6 +758,7 @@ const APControlReviewPage = ({
           </>
         ) : (
           <>
+            {formData.nameOnAccount && <ReviewItem label="Name on Account" value={formData.nameOnAccount} highlight />}
             {formData.sortCode && <ReviewItem label="Sort Code" value={formData.sortCode} highlight />}
             {formData.accountNumber && <ReviewItem label="Account Number" value={formData.accountNumber} highlight />}
           </>
@@ -815,7 +841,7 @@ const APControlReviewPage = ({
       {/* Financial Context */}
       <ReviewCard title="Financial Context">
         <ReviewItem label="Annual Value" value={formData.annualValue ? formatCurrency(formData.annualValue) : ''} />
-        <ReviewItem label="Employee Count" value={formData.employeeCount} />
+        <ReviewItem label="Employee Count" value={formatEmployeeCount(formData.employeeCount)} raw />
         <ReviewItem label="Service Types" value={formatServiceTypes(formData.serviceType)} raw />
       </ReviewCard>
 
@@ -1441,19 +1467,35 @@ const APControlReviewPage = ({
               style={{ marginBottom: 'var(--space-12)' }}
             />
 
-            <Checkbox
-              label="VAT number verified (if applicable)"
-              checked={vatVerified}
-              onChange={setVatVerified}
-              style={{ marginBottom: 'var(--space-12)' }}
-            />
+            {/* VAT Verification - Only show if VAT registered */}
+            {submission?.formData?.vatRegistered === 'yes' && submission?.formData?.vatNumber && (
+              <Checkbox
+                label="VAT number verified"
+                checked={vatVerified}
+                onChange={setVatVerified}
+                style={{ marginBottom: 'var(--space-12)' }}
+              />
+            )}
 
-            <Checkbox
-              label="Insurance details verified (coverage and expiry dates)"
-              checked={insuranceVerified}
-              onChange={setInsuranceVerified}
-              style={{ marginBottom: 'var(--space-12)' }}
-            />
+            {/* CIS/UTR Verification - Only show if CIS registered */}
+            {submission?.formData?.cisRegistered === 'yes' && submission?.formData?.utrNumber && (
+              <Checkbox
+                label="CIS/UTR number verified"
+                checked={cisVerified}
+                onChange={setCisVerified}
+                style={{ marginBottom: 'var(--space-12)' }}
+              />
+            )}
+
+            {/* Insurance Verification - Only show if has insurance */}
+            {submission?.formData?.publicLiability === 'yes' && submission?.formData?.plCoverage && (
+              <Checkbox
+                label="Insurance details verified (coverage and expiry dates)"
+                checked={insuranceVerified}
+                onChange={setInsuranceVerified}
+                style={{ marginBottom: 'var(--space-12)' }}
+              />
+            )}
           </div>
 
           <Textarea
@@ -1467,63 +1509,102 @@ const APControlReviewPage = ({
             style={{ marginBottom: 'var(--space-16)' }}
           />
 
-          <SignatureSection
-            signatureName={signatureName}
-            signatureDate={signatureDate}
-            onSignatureChange={({ signatureName: name, signatureDate: date }) => {
-              setSignatureName(name);
-              setSignatureDate(date);
-            }}
-          />
+          {/* Initial Action Buttons - Only shown before decision */}
+          {!actionType && (
+            <div style={{ display: 'flex', gap: 'var(--space-12)', marginTop: 'var(--space-24)' }}>
+              <Button
+                variant="primary"
+                onClick={() => setActionType('complete')}
+                disabled={!bankDetailsVerified || !companyDetailsVerified}
+                style={{ backgroundColor: 'var(--color-success)' }}
+              >
+                Complete AP Verification
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => setActionType('reject')}
+              >
+                Reject Request
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => window.close()}
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
 
-          {/* Rejection Section */}
-          <div style={{
-            marginTop: 'var(--space-24)',
-            padding: 'var(--space-16)',
-            border: '2px solid var(--color-danger)',
-            borderRadius: 'var(--radius-base)',
-            backgroundColor: '#fff5f5'
-          }}>
-            <h4 style={{ margin: '0 0 var(--space-12) 0', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CircleXIcon size={20} />
-              Reject This Request
-            </h4>
-            <p style={{ margin: '0 0 var(--space-12) 0', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-              If bank details cannot be verified or there are compliance issues, reject the supplier request below.
-            </p>
-            <Textarea
-              label="Rejection Reason"
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-              rows={4}
-              placeholder="Explain why this supplier request is being rejected (e.g., bank details do not match, invalid account number, VAT number mismatch, failed compliance checks)..."
-              style={{ marginBottom: 'var(--space-12)' }}
-            />
-            <Button
-              variant="danger"
-              onClick={handleReject}
-              disabled={isSubmitting || !rejectionReason.trim() || !signatureName.trim()}
-            >
-              {isSubmitting ? 'Rejecting...' : 'Reject Request'}
-            </Button>
-          </div>
+          {/* Rejection Section - Shown when reject action is selected */}
+          {actionType === 'reject' && (
+            <div style={{
+              marginTop: 'var(--space-16)',
+              padding: 'var(--space-16)',
+              border: '2px solid var(--color-danger)',
+              borderRadius: 'var(--radius-base)',
+              backgroundColor: '#fff5f5'
+            }}>
+              <h4 style={{ margin: '0 0 var(--space-12) 0', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CircleXIcon size={20} />
+                Reject This Request
+              </h4>
+              <p style={{ margin: '0 0 var(--space-12) 0', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                If bank details cannot be verified or there are compliance issues, provide a rejection reason below.
+              </p>
+              <Textarea
+                label="Rejection Reason"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={4}
+                placeholder="Explain why this supplier request is being rejected (e.g., bank details do not match, invalid account number, VAT number mismatch, failed compliance checks)..."
+                style={{ marginBottom: 'var(--space-12)' }}
+                required
+              />
+            </div>
+          )}
 
-          <div style={{ display: 'flex', gap: 'var(--space-12)', marginTop: 'var(--space-16)' }}>
-            <Button
-              variant="primary"
-              onClick={handleSubmitVerification}
-              disabled={isSubmitting || !bankDetailsVerified || !companyDetailsVerified}
-              style={{ backgroundColor: 'var(--color-success)' }}
-            >
-              {isSubmitting ? 'Submitting...' : 'Complete AP Verification'}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => window.close()}
-            >
-              Cancel
-            </Button>
-          </div>
+          {/* Digital Signature Section - Only shown after action is selected */}
+          {actionType && (
+            <>
+              <SignatureSection
+                signatureName={signatureName}
+                signatureDate={signatureDate}
+                onSignatureChange={({ signatureName: name, signatureDate: date }) => {
+                  setSignatureName(name);
+                  setSignatureDate(date);
+                }}
+              />
+
+              {/* Confirmation Buttons */}
+              <div style={{ display: 'flex', gap: 'var(--space-12)', marginTop: 'var(--space-16)' }}>
+                <Button
+                  variant={actionType === 'reject' ? 'danger' : 'primary'}
+                  onClick={actionType === 'reject' ? handleReject : handleSubmitVerification}
+                  disabled={
+                    isSubmitting ||
+                    !signatureName.trim() ||
+                    (actionType === 'reject' && !rejectionReason.trim())
+                  }
+                  style={actionType === 'complete' ? { backgroundColor: 'var(--color-success)' } : undefined}
+                >
+                  {isSubmitting
+                    ? (actionType === 'reject' ? 'Rejecting...' : 'Submitting...')
+                    : (actionType === 'reject' ? 'Confirm Rejection' : 'Confirm AP Verification')}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setActionType(null);
+                    setRejectionReason('');
+                    setSignatureName('');
+                  }}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       )}
 

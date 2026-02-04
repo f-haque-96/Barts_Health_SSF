@@ -14,7 +14,7 @@ import {
   Font,
 } from '@react-pdf/renderer';
 import { formatDate, formatCurrency } from '../../utils/helpers';
-import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes, formatOrganisationType } from '../../utils/formatters';
+import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes, formatOrganisationType, formatEmployeeCount } from '../../utils/formatters';
 
 // Register fonts (optional - can use default fonts)
 // Font.register({
@@ -323,15 +323,16 @@ const styles = StyleSheet.create({
 
   // Verification Badge styles
   verificationBadge: {
-    display: 'inline-block',
-    paddingTop: 4,
-    paddingBottom: 4,
-    paddingLeft: 8,
-    paddingRight: 8,
-    borderRadius: 4,
-    fontSize: 8,
-    fontWeight: 'bold',
+    paddingTop: 3,
+    paddingBottom: 3,
+    paddingLeft: 6,
+    paddingRight: 6,
+    borderRadius: 3,
+    fontSize: 7,
     marginLeft: 8,
+    flexShrink: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   verifiedBadge: {
     backgroundColor: '#d1fae5',
@@ -402,11 +403,23 @@ const PDFVerificationBadge = ({ companyStatus }) => {
     ? [styles.verificationBadge, styles.verifiedBadge]
     : [styles.verificationBadge, styles.needsVerificationBadge];
 
-  const badgeText = isVerified
-    ? 'Verified'
-    : `Verification Needed${companyStatus ? ` (${formatStatus(companyStatus)})` : ''}`;
+  if (isVerified) {
+    return (
+      <View style={badgeStyle}>
+        <Text style={{ fontWeight: 'bold' }}>Verified</Text>
+      </View>
+    );
+  }
 
-  return <Text style={badgeStyle}>{badgeText}</Text>;
+  // For non-verified: bold text + normal weight status in parentheses
+  return (
+    <View style={badgeStyle}>
+      <Text style={{ fontWeight: 'bold' }}>Verify Required</Text>
+      {companyStatus && (
+        <Text style={{ fontWeight: 'normal' }}> ({formatStatus(companyStatus)})</Text>
+      )}
+    </View>
+  );
 };
 
 // Field display component
@@ -419,7 +432,7 @@ const Field = ({ label, value, raw = false, badge = null }) => {
       <Text style={styles.fieldLabel}>{label}:</Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', width: '60%', paddingLeft: 8 }}>
         <Text style={styles.fieldValue}>{displayValue}</Text>
-        {badge}
+        {badge && <View>{badge}</View>}
       </View>
     </View>
   );
@@ -586,15 +599,25 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submissionDate
         <Field label="Companies House Registered" value={normalizedData.section3?.companiesHouseRegistered || normalizedData.companiesHouseRegistered} />
         <Field label="Supplier Type" value={formatSupplierType(normalizedData.section3?.supplierType || normalizedData.supplierType)} raw />
 
-        {/* CRN - Only show if not sole trader/individual */}
-        {(normalizedData.section3?.crn || normalizedData.crn) && !['sole_trader', 'individual'].includes(normalizedData.section3?.supplierType || normalizedData.supplierType) && (
+        {/* CRN - Limited Company */}
+        {(normalizedData.section3?.crn || normalizedData.crn) && (normalizedData.section3?.supplierType || normalizedData.supplierType) === 'limited_company' && (
           <>
             <Field
               label="CRN"
               value={normalizedData.section3?.crn || normalizedData.crn}
-              badge={(normalizedData.section3?.crnVerification || normalizedData.crnVerification)?.status && (
-                <PDFVerificationBadge companyStatus={(normalizedData.section3?.crnVerification || normalizedData.crnVerification)?.status} />
-              )}
+            />
+            {(normalizedData.section3?.crnVerification || normalizedData.crnVerification)?.name && (
+              <Field label="Verified Company Name" value={(normalizedData.section3?.crnVerification || normalizedData.crnVerification)?.name} />
+            )}
+          </>
+        )}
+
+        {/* CRN - Charity (registered with Companies House) */}
+        {(normalizedData.section3?.crnCharity || normalizedData.crnCharity) && (normalizedData.section3?.supplierType || normalizedData.supplierType) === 'charity' && (
+          <>
+            <Field
+              label="CRN"
+              value={normalizedData.section3?.crnCharity || normalizedData.crnCharity}
             />
             {(normalizedData.section3?.crnVerification || normalizedData.crnVerification)?.name && (
               <Field label="Verified Company Name" value={(normalizedData.section3?.crnVerification || normalizedData.crnVerification)?.name} />
@@ -613,7 +636,7 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submissionDate
         )}
 
         <Field label="Annual Value" value={(normalizedData.section3?.annualValue || normalizedData.annualValue) ? formatCurrency(normalizedData.section3?.annualValue || normalizedData.annualValue) : ''} />
-        <Field label="Employee Count" value={normalizedData.section3?.employeeCount || normalizedData.employeeCount} />
+        <Field label="Employee Count" value={formatEmployeeCount(normalizedData.section3?.employeeCount || normalizedData.employeeCount)} raw />
         {(normalizedData.section3?.interestDeclaration || normalizedData.interestDeclaration) && (
           <TextBlock label="Interest Declaration" content={normalizedData.section3?.interestDeclaration || normalizedData.interestDeclaration} />
         )}
@@ -654,6 +677,7 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submissionDate
           </>
         ) : (
           <>
+            <Field label="Name on Account" value={normalizedData.section6?.nameOnAccount || normalizedData.nameOnAccount} />
             <Field label="Sort Code" value={normalizedData.section6?.sortCode || normalizedData.sortCode} />
             <Field label="Account Number" value={normalizedData.section6?.accountNumber || normalizedData.accountNumber} />
           </>

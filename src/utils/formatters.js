@@ -139,3 +139,18 @@ export const formatOrganisationType = (value) => {
   const lower = value.toLowerCase();
   return mappings[lower] || value;
 };
+
+/**
+ * Format employee count with range description
+ */
+export const formatEmployeeCount = (value) => {
+  if (!value) return 'Not specified';
+  const mappings = {
+    'micro': 'Micro (1-9 employees)',
+    'small': 'Small (10-49 employees)',
+    'medium': 'Medium (50-249 employees)',
+    'large': 'Large (250+ employees)',
+  };
+  const lower = value.toLowerCase();
+  return mappings[lower] || value;
+};

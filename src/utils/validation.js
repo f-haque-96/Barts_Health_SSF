@@ -227,6 +227,10 @@ export const getSection6Schema = (formData) => {
   } else if (formData.overseasSupplier === 'no') {
     // UK supplier fields
     schema = schema.extend({
+      nameOnAccount: z
+        .string()
+        .min(1, 'Name on Account is required')
+        .min(2, 'Name must be at least 2 characters'),
       sortCode: z
         .string()
         .min(1, 'Sort Code is required')

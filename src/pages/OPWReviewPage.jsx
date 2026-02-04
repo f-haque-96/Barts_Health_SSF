@@ -72,6 +72,7 @@ const OPWReviewPage = ({
   const [contractUploadedBy, setContractUploadedBy] = useState('');
   const [isSavingContract, setIsSavingContract] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [actionSelected, setActionSelected] = useState(false); // Track if user clicked proceed to sign
 
   // Handle document preview
   const handlePreviewDocument = (file) => {
@@ -607,8 +608,19 @@ const OPWReviewPage = ({
       {/* Section 3: Supplier Classification */}
       <ReviewCard title="Section 3: Supplier Classification">
         <ReviewItem label="Companies House Registered" value={formData.companiesHouseRegistered} />
-        {formData.companiesHouseRegistered === 'yes' && formData.crn && (
-          <ReviewItem label="Company Registration Number" value={formData.crn} />
+        {formData.crn && formData.supplierType === 'limited_company' && (
+          <ReviewItem
+            label="Company Registration Number"
+            value={formData.crn}
+            badge={formData.crnVerification?.status && <VerificationBadge companyStatus={formData.crnVerification.status} size="small" />}
+          />
+        )}
+        {formData.crnCharity && formData.supplierType === 'charity' && (
+          <ReviewItem
+            label="Company Registration Number"
+            value={formData.crnCharity}
+            badge={formData.crnVerification?.status && <VerificationBadge companyStatus={formData.crnVerification.status} size="small" />}
+          />
         )}
         <ReviewItem label="Supplier Type" value={formatSupplierType(formData.supplierType)} raw />
         {(formData.supplierType === 'sole_trader' || formData.supplierType === 'individual') && (
@@ -915,7 +927,8 @@ const OPWReviewPage = ({
                 {
                   value: 'rejected',
                   label: 'Reject Request',
-                  description: 'Insufficient evidence, non-compliance, or other issues prevent approval'
+                  description: 'Insufficient evidence, non-compliance, or other issues prevent approval',
+                  variant: 'danger'
                 },
               ]}
               value={ir35Determination}
@@ -990,39 +1003,67 @@ const OPWReviewPage = ({
             />
           )}
 
-          <SignatureSection
-            signatureName={signatureName}
-            signatureDate={signatureDate}
-            onSignatureChange={({ signatureName: name, signatureDate: date }) => {
-              setSignatureName(name);
-              setSignatureDate(date);
-            }}
-          />
+          {/* Initial "Proceed to Sign" Button - Only shown before signing */}
+          {!actionSelected && (
+            <div style={{ display: 'flex', gap: 'var(--space-12)', marginTop: 'var(--space-16)' }}>
+              <Button
+                variant={ir35Determination === 'rejected' ? 'danger' : 'primary'}
+                onClick={() => setActionSelected(true)}
+                disabled={
+                  !ir35Determination ||
+                  (ir35Determination === 'rejected' && !rejectionReason.trim()) ||
+                  ((ir35Determination === 'inside' || ir35Determination === 'outside') && !rationale.trim())
+                }
+              >
+                {ir35Determination === 'rejected' ? 'Proceed to Sign Rejection' : 'Proceed to Sign Determination'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => window.close()}
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
 
-          <div style={{ display: 'flex', gap: 'var(--space-12)', marginTop: 'var(--space-16)' }}>
-            <Button
-              variant={ir35Determination === 'rejected' ? 'danger' : 'primary'}
-              onClick={handleSubmitDetermination}
-              disabled={
-                isSubmitting ||
-                !ir35Determination ||
-                (ir35Determination === 'rejected' && !rejectionReason.trim()) ||
-                ((ir35Determination === 'inside' || ir35Determination === 'outside') && !rationale.trim())
-              }
-            >
-              {isSubmitting
-                ? 'Submitting...'
-                : ir35Determination === 'rejected'
-                ? 'Submit Rejection'
-                : 'Submit Determination'}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => window.close()}
-            >
-              Cancel
-            </Button>
-          </div>
+          {/* Digital Signature Section - Only shown after clicking Proceed */}
+          {actionSelected && (
+            <>
+              <SignatureSection
+                signatureName={signatureName}
+                signatureDate={signatureDate}
+                onSignatureChange={({ signatureName: name, signatureDate: date }) => {
+                  setSignatureName(name);
+                  setSignatureDate(date);
+                }}
+              />
+
+              {/* Final Confirmation Buttons */}
+              <div style={{ display: 'flex', gap: 'var(--space-12)', marginTop: 'var(--space-16)' }}>
+                <Button
+                  variant={ir35Determination === 'rejected' ? 'danger' : 'primary'}
+                  onClick={handleSubmitDetermination}
+                  disabled={isSubmitting || !signatureName.trim()}
+                >
+                  {isSubmitting
+                    ? 'Submitting...'
+                    : ir35Determination === 'rejected'
+                    ? 'Confirm Rejection'
+                    : 'Confirm Determination'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setActionSelected(false);
+                    setSignatureName('');
+                  }}
+                  disabled={isSubmitting}
+                >
+                  Back
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
