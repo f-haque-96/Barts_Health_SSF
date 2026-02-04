@@ -220,6 +220,19 @@ const Section7ReviewSubmit = () => {
       // Prepare form data for submission
       const allData = getAllFormData();
 
+      // Retrieve questionnaire uploads from localStorage (if they exist)
+      let questionnaireUploads = {};
+      try {
+        const storedQuestionnaire = localStorage.getItem('questionnaireSubmission');
+        if (storedQuestionnaire) {
+          const parsedQuestionnaire = JSON.parse(storedQuestionnaire);
+          questionnaireUploads = parsedQuestionnaire.uploads || parsedQuestionnaire.uploadedFiles || {};
+          console.log('[Section7] Found questionnaire uploads:', Object.keys(questionnaireUploads));
+        }
+      } catch (error) {
+        console.error('[Section7] Error loading questionnaire uploads:', error);
+      }
+
       // Mock API submission - simulate network delay
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
@@ -234,6 +247,12 @@ const Section7ReviewSubmit = () => {
         status: 'pending_review',
         formData: allData.formData,
         uploadedFiles: allData.uploadedFiles,
+        // Include questionnaire uploads from the modal
+        questionnaireUploads: questionnaireUploads,
+        questionnaireData: {
+          uploads: questionnaireUploads,
+          uploadedFiles: questionnaireUploads,
+        },
         submittedBy: allData.formData.nhsEmail,
       };
 
