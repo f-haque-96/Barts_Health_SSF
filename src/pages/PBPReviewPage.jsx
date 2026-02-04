@@ -501,26 +501,15 @@ const PBPReviewPage = ({
           procurementApproval
         });
 
-        // Load questionnaire uploads with multiple fallback paths
-        let qUploads = {};
-        if (parsed.questionnaireUploads) {
-          qUploads = parsed.questionnaireUploads;
-        } else if (parsed.questionnaireData?.uploads) {
-          qUploads = parsed.questionnaireData.uploads;
-        } else if (parsed.questionnaireData?.uploadedFiles) {
-          qUploads = parsed.questionnaireData.uploadedFiles;
-        } else if (parsed.formData?.section2?.questionnaireUploads) {
-          qUploads = parsed.formData.section2.questionnaireUploads;
-        } else if (parsed.formData?.section2?.questionnaireData?.uploads) {
-          qUploads = parsed.formData.section2.questionnaireData.uploads;
-        } else {
-          // Try localStorage directly as last resort
-          const storedQuestionnaire = localStorage.getItem('questionnaireSubmission');
-          if (storedQuestionnaire) {
-            const parsedQ = JSON.parse(storedQuestionnaire);
-            qUploads = parsedQ.uploads || parsedQ.uploadedFiles || {};
-          }
-        }
+        // Questionnaire uploads are in submission.uploadedFiles
+        // Extract files that aren't letterhead or procurementApproval (those are displayed separately)
+        const allFiles = parsed.uploadedFiles || parsed.uploads || {};
+        const qUploads = Object.keys(allFiles)
+          .filter(key => key !== 'letterhead' && key !== 'procurementApproval')
+          .reduce((acc, key) => {
+            acc[key] = allFiles[key];
+            return acc;
+          }, {});
 
         setQuestionnaireUploads(qUploads);
       } catch (error) {
@@ -1147,50 +1136,58 @@ const PBPReviewPage = ({
             </div>
           )}
 
-          {/* Questionnaire Uploads */}
-          {Object.entries(questionnaireUploads).map(([key, file]) => (
-            <div key={key} style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--space-12)',
-              padding: 'var(--space-12)',
-              backgroundColor: 'var(--color-background)',
-              borderRadius: 'var(--radius-base)',
-              border: '1px solid var(--color-border)',
-              marginBottom: 'var(--space-8)',
-            }}>
-              <span style={{
-                display: 'inline-flex',
+          {/* Questionnaire Uploads (other than letterhead and procurement approval) */}
+          {(() => {
+            // Get all uploaded files, excluding letterhead and procurementApproval which are shown separately
+            const allFiles = submission?.uploadedFiles || submission?.uploads || {};
+            const otherFiles = Object.entries(allFiles).filter(
+              ([key]) => key !== 'letterhead' && key !== 'procurementApproval'
+            );
+
+            return otherFiles.map(([key, file]) => (
+              <div key={key} style={{
+                display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                width: '32px',
-                height: '32px',
-                background: '#eff6ff',
-                borderRadius: '6px',
-                color: '#005EB8',
-                fontSize: '0.75rem',
-                fontWeight: '600'
-              }}>PDF</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 'var(--font-weight-semibold)' }}>
-                  {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                gap: 'var(--space-12)',
+                padding: 'var(--space-12)',
+                backgroundColor: 'var(--color-background)',
+                borderRadius: 'var(--radius-base)',
+                border: '1px solid var(--color-border)',
+                marginBottom: 'var(--space-8)',
+              }}>
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '32px',
+                  height: '32px',
+                  background: '#eff6ff',
+                  borderRadius: '6px',
+                  color: '#005EB8',
+                  fontSize: '0.75rem',
+                  fontWeight: '600'
+                }}>PDF</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 'var(--font-weight-semibold)' }}>
+                    {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                  </div>
+                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                    {file?.name} • {Math.round((file?.size || 0) / 1024)} KB
+                  </div>
                 </div>
-                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-                  {file.name} • {Math.round((file.size || 0) / 1024)} KB
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePreviewDocument(file)}
+                >
+                  Preview
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePreviewDocument(file)}
-              >
-                Preview
-              </Button>
-            </div>
-          ))}
+            ));
+          })()}
 
           {/* Show message if no uploads at all */}
-          {!submission?.uploadedFiles && !submission?.uploads && Object.keys(questionnaireUploads).length === 0 && (
+          {!submission?.uploadedFiles && !submission?.uploads && (
             <p style={{ color: '#6b7280', fontStyle: 'italic', margin: 0 }}>
               No documents were uploaded with this submission.
             </p>
