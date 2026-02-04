@@ -8,16 +8,29 @@
 
 ---
 
+## ⚠️ Security Update (February 2026)
+
+Power Automate flows now integrate with enhanced security features:
+- **CSRF tokens** protect against fake email triggers
+- **Audit logging** tracks every notification sent (who, what, when)
+- **Validation checks** prevent unauthorized notifications
+- **Error handling** logs failed emails for investigation
+
+These security features were added in February 2026 and work automatically once the backend is deployed.
+
+---
+
 ## Prerequisites
 
 Before starting this guide, you must have completed:
 
-- [ ] Step 1: SQL Server Setup (database created)
+- [ ] **Step 0: Environment Setup** (SESSION_SECRET generated)
+- [ ] Step 1: SQL Server Setup (database created with AuditTrail table)
 - [ ] Step 2: SharePoint Libraries Setup (site created)
 - [ ] Azure AD setup from IT (App Registration details received)
 - [ ] Backend API deployed and working
 
-**Why?** Power Automate will watch the SharePoint NotificationQueue list. The API writes to this list when stage changes occur.
+**Why?** Power Automate will watch the SharePoint NotificationQueue list. The API writes to this list when stage changes occur. The backend now includes security validation before adding items to the queue.
 
 ---
 
@@ -650,6 +663,8 @@ The backend API will generate these email bodies, but here are the templates for
 - [ ] Flow 2 (DailyReminder) created
 - [ ] Test email received successfully
 - [ ] All flows are turned ON
+- [ ] **Security check:** Verify emails are only sent for valid notification types
+- [ ] **Security check:** Confirm AuditTrail logs every email sent (check database)
 
 ---
 

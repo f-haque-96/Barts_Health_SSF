@@ -1,5 +1,39 @@
 # Alemba Integration Guide - Automatic Ticket Management
 
+## 📚 For Complete Beginners: What Is Alemba?
+
+**Alemba** is a ticketing system (like a digital helpdesk) used by Barts Health NHS Trust. Think of it like email, but for tracking work requests from start to finish.
+
+**What this integration does:**
+- When someone submits a supplier setup form, Alemba **automatically creates a ticket**
+- As the supplier request moves through different teams (Procurement → AP Control), the ticket **automatically updates**
+- When the supplier is set up, the ticket **automatically closes**
+
+**Why is this useful?**
+- No manual copying of information between systems
+- Everyone can see the status of a supplier request
+- Managers can track how long approvals take
+- Creates an audit trail for compliance
+
+**Who needs this guide?**
+- IT staff setting up the integration
+- System administrators
+- Power Automate developers
+
+**If you're a regular user (requester), you don't need to read this guide** - the integration works automatically in the background.
+
+---
+
+## ⚠️ Security Update (February 2026)
+
+The Alemba integration now includes enhanced security features:
+- **Sensitive documents NOT attached** - Passport/driving licence copies are kept in SharePoint only (data protection)
+- **Audit logging** - Every ticket creation/update is logged in the database
+- **Validation checks** - Only validated submissions create tickets (prevents spam)
+- **Access control** - Only authorized teams can update tickets
+
+---
+
 ## Overview
 
 This guide details how to integrate Alemba with the NHS Supplier Setup Form for:
@@ -212,6 +246,14 @@ Ask your Alemba admin to create these custom fields for the Supplier Setup servi
 | **Passport copy** | Sensitive personal ID - stored in SharePoint only |
 | **Driving Licence copy** | Sensitive personal ID - stored in SharePoint only |
 | **Other ID documents** | Data protection compliance |
+
+> **📖 For Beginners - Why Not Attach ID Documents?**
+>
+> **The Problem:** Alemba tickets can be viewed by many people across different teams. If we attached passport copies to tickets, too many people would have access to sensitive personal information - this violates GDPR (data protection law).
+>
+> **The Solution (Feb 2026 Security Update):** ID documents are stored in a special SharePoint folder that ONLY AP Control and Admin can access. The Alemba ticket includes a link to the SharePoint folder, so authorized people can still view the documents when needed.
+>
+> **Bonus:** Every time someone views a sensitive document, it's logged in the audit trail (who viewed what, when). This is a GDPR requirement.
 
 > **Note:** ID documents for sole traders are stored securely in SharePoint SensitiveDocuments library but are NOT attached to Alemba tickets to comply with data protection requirements. AP Control can access these documents directly via the SharePoint link in the ticket.
 

@@ -1,9 +1,28 @@
 # Standard Operating Procedure: Requester Guide
 
-**Document Version:** 1.0
-**Last Updated:** January 2026
-**Author and Developer** Fahimul Haque - Systems & Data
+**Document Version:** 2.0
+**Last Updated:** February 2026 - Security Updates Added
+**Author and Developer:** Fahimul Haque - Systems & Data
 **Audience:** NHS Staff submitting supplier setup requests
+
+---
+
+## ⚠️ What's New (February 2026 Security Updates)
+
+The NHS Supplier Setup Form has been enhanced with critical security improvements to protect your data and prevent fraud:
+
+**You won't notice most of these changes** - they work automatically in the background:
+- ✅ Enhanced protection against cyber attacks
+- ✅ Automatic duplicate supplier detection (prevents fraud)
+- ✅ All your actions are now securely logged (audit trail for compliance)
+- ✅ Uploaded documents are validated to prevent fake files
+- ✅ Bank details and sensitive information are encrypted
+
+**What this means for you:**
+- The form is now **more secure**
+- Your submissions are **better protected**
+- The approval process is **faster** (automatic checks replace manual ones)
+- You'll get **clearer notifications** when your request is reviewed
 
 ---
 
@@ -23,7 +42,9 @@
 This guide explains how to submit a new supplier setup request through the NHS Supplier Setup Form. The process ensures all suppliers are properly vetted and registered before being added to the system.
 
 **Total Time Required:** 20-30 minutes
-**Prerequisites:** NHS email address, supplier information, required documents - Bank details of supplier on their official letterhead. 
+**Prerequisites:** NHS email address, supplier information, required documents - Bank details of supplier on their official letterhead.
+
+**Security Note:** All information you submit is encrypted, validated, and securely stored. Your submission is protected by multiple layers of security added in February 2026. 
 
 ---
 
@@ -61,12 +82,18 @@ This guide explains how to submit a new supplier setup request through the NHS S
 - Official supplier Letterhead with bank details (PDF, max 3MB)
 
 **Required if applicable:**
-- Procurement approval certificate (You can obtain this by completing the clinical/ non clinical questionaire on the form Q2.7)
+- Procurement approval certificate (You can obtain this by completing the clinical/ non clinical questionnaire on the form Q2.7)
 - CEST form (for sole traders/contractors)
 - Photo ID (passport or driving licence for sole traders)
 
 **Format:** PDF only
 **Max File Size:** 3MB per file
+
+**🔒 Security Note (Feb 2026):** All uploaded files are now:
+- Scanned for viruses
+- Validated to ensure they're really PDFs (not fake files renamed to .pdf)
+- Encrypted when stored
+- Access-logged (we track who views sensitive documents like passports for GDPR compliance)
 
 ---
 
@@ -441,6 +468,34 @@ A: You'll receive an email with rejection reasons. Address the issues and submit
 
 **Q: Can I expedite an urgent request?**
 A: Indicate urgency in the questionnaire. However, all requests follow the standard review process. Plan ahead for new suppliers.
+
+### Security Questions (New - Feb 2026)
+
+**Q: Is my data secure?**
+A: Yes! The system now includes multiple security layers added in February 2026:
+- All data is encrypted
+- All actions are logged (audit trail)
+- Sensitive documents (passports, driving licences) are stored separately and auto-deleted after 30 days
+- Bank details are protected with enhanced encryption
+
+**Q: Will I be notified if something goes wrong with security?**
+A: Yes. If any security validation fails (e.g., suspicious file upload, duplicate supplier detected), you'll be notified immediately via email.
+
+**Q: What happens to sensitive documents like my passport copy?**
+A: For sole traders:
+- Passport/driving licence copies are stored in a secure, restricted SharePoint library
+- Only AP Control and Admin can access these documents
+- They are automatically deleted 30 days after your supplier is set up
+- Every access is logged for GDPR compliance
+
+**Q: How do I know my submission wasn't tampered with?**
+A: The system now creates an audit trail showing:
+- When you submitted
+- What you submitted
+- Who reviewed it
+- What decisions were made
+- When changes occurred
+This cannot be altered or deleted, ensuring full transparency.
 
 ---
 

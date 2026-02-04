@@ -8,6 +8,17 @@
 
 ---
 
+## ⚠️ Security Update (February 2026)
+
+This data export feeds into the **duplicate vendor detection** feature, which is one of the security enhancements added to prevent:
+- Duplicate supplier creation (fraud risk)
+- Multiple vendor numbers for the same company (audit issues)
+- Payment fraud through fake duplicates
+
+The system now uses **fuzzy matching** and exact matching on CRN/VAT numbers to catch duplicates automatically.
+
+---
+
 ## Why Do This?
 
 When a new supplier request comes in, AP Control needs to check:
@@ -15,6 +26,8 @@ When a new supplier request comes in, AP Control needs to check:
 - "Does this VAT number already belong to another vendor?"
 
 By importing your existing suppliers into the database, the system can **automatically** flag potential duplicates.
+
+**What changed in Feb 2026:** The backend now actually implements the duplicate checking logic (previously it was a TODO). Your export will now be actively used by the system.
 
 ---
 
@@ -335,6 +348,16 @@ WITH (
 ```
 
 **You don't need to do this now** - it will be done when the full system is deployed.
+
+### How Duplicate Detection Works (Feb 2026 Update)
+
+Once imported, the backend API will:
+1. **Exact Match on CRN:** If Companies House number matches exactly → flag as duplicate
+2. **Exact Match on VAT:** If VAT number matches exactly → flag as duplicate
+3. **Fuzzy Match on Name:** If company name is very similar → flag as potential duplicate
+4. **Manual Review:** AP Control sees flagged duplicates and decides whether to proceed
+
+This prevents creating multiple vendor records for the same supplier (fraud prevention).
 
 ---
 

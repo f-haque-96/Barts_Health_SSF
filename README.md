@@ -2,6 +2,17 @@
 
 A React-based web application for NHS supplier onboarding and setup. This form collects supplier information, validates company details against Companies House, and routes submissions through various authorization workflows.
 
+## 🔒 Security Updates (February 2026)
+
+**This project is now production-ready with critical security enhancements:**
+
+✅ **All critical vulnerabilities fixed** (SQL injection, CSRF protection, file validation)
+✅ **Enhanced data protection** (encryption, audit logging, GDPR compliance)
+✅ **Automatic duplicate detection** (prevents fraud)
+✅ **Server-side validation** (protects against malicious input)
+
+**For complete details of all security fixes, see:** [CHANGES_IMPLEMENTED.md](./CHANGES_IMPLEMENTED.md)
+
 ---
 
 ## Table of Contents
@@ -33,13 +44,16 @@ This application provides:
 
 **Yes!** Anyone with a computer can download and run this project locally. Here's what you need:
 
+**📖 Complete Beginner?** Don't worry! This section explains everything step-by-step. You don't need to be a programmer.
+
 ### Requirements
 
-| Requirement | Details |
-|-------------|---------|
-| **Node.js** | Version 18 or higher - Download free from [nodejs.org](https://nodejs.org/) |
-| **A code editor** | Optional but recommended - [VS Code](https://code.visualstudio.com/) is free |
-| **Internet connection** | Only needed for initial setup (downloading packages) |
+| Requirement | Details | Do I Need This? |
+|-------------|---------|-----------------|
+| **Node.js** | Version 18 or higher - Download free from [nodejs.org](https://nodejs.org/) | ✅ Yes - This is what runs the application |
+| **A code editor** | Optional but recommended - [VS Code](https://code.visualstudio.com/) is free | ⚠️ Optional - Only if you want to view/edit code |
+| **Internet connection** | For initial setup (downloading packages) | ✅ Yes - Only once during setup |
+| **A modern web browser** | Chrome, Edge, Firefox, or Safari | ✅ Yes - To view the form |
 
 ### Steps to Run
 
@@ -69,15 +83,22 @@ npm run dev
 
 ### What Works Without a Backend?
 
-| Feature | Works Locally? |
-|---------|---------------|
-| Viewing and filling out the form | Yes |
-| Navigation between sections | Yes |
-| Form validation | Yes |
-| PDF generation and download | Yes |
-| Saving progress (localStorage) | Yes |
-| CRN verification | No - needs backend API |
-| Form submission to database | No - uses mock (localStorage) |
+**"Backend" = The server part that stores data in a database. "Frontend" = The form you see and fill out.**
+
+| Feature | Works Locally? | Explanation |
+|---------|---------------|-------------|
+| Viewing and filling out the form | ✅ Yes | The form displays and you can type in it |
+| Navigation between sections | ✅ Yes | Moving between Section 1-7 works |
+| Form validation | ✅ Yes | Error messages if you enter invalid data |
+| PDF generation and download | ✅ Yes | Can download a PDF of your submission |
+| Saving progress (localStorage) | ✅ Yes | Data saves in your browser automatically |
+| **Security features (Feb 2026)** | ✅ Partial | Basic validation works; advanced features need backend |
+| CRN verification | ❌ No | Needs backend API to check Companies House |
+| Form submission to database | ❌ No | Uses mock (localStorage) instead of real database |
+| Duplicate detection | ❌ No | Needs backend and database |
+| Audit logging | ❌ No | Needs backend to record actions |
+
+**In simple terms:** You can see and test the form on your laptop, but the security features and database connections only work when fully deployed with the backend.
 
 ---
 
@@ -364,12 +385,22 @@ VITE_INTRANET_URL=https://intranet.nhs.uk
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Complete deployment guide (Azure AD, SQL, SharePoint, API) |
-| [docs/CHECKLIST.md](./docs/CHECKLIST.md) | Production deployment checklist |
-| [docs/ALEMBA.md](./docs/ALEMBA.md) | Alemba ticketing integration guide |
-| [docs/USER_GUIDE.md](./docs/USER_GUIDE.md) | User guide for requesters |
+### 🆕 Start Here (February 2026)
+
+| Document | Who It's For | What You'll Learn |
+|----------|--------------|-------------------|
+| **[CHANGES_IMPLEMENTED.md](./CHANGES_IMPLEMENTED.md)** | **Everyone** | **All security fixes and what changed in Feb 2026** |
+| [next-steps/README.md](./next-steps/README.md) | Beginners | Step-by-step setup guides (SQL, SharePoint, Power Automate) |
+| [next-steps/00-ENVIRONMENT-SETUP.md](./next-steps/00-ENVIRONMENT-SETUP.md) | Beginners | How to generate SESSION_SECRET (required before deployment) |
+
+### Deployment & Technical Guides
+
+| Document | Who It's For | What You'll Learn |
+|----------|--------------|-------------------|
+| [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | IT Staff | Complete deployment guide (Azure AD, SQL, SharePoint, API) |
+| [docs/CHECKLIST.md](./docs/CHECKLIST.md) | Deployers | Production deployment checklist (includes security testing) |
+| [docs/ALEMBA.md](./docs/ALEMBA.md) | System Admins | Alemba ticketing integration (with security updates) |
+| [docs/USER_GUIDE.md](./docs/USER_GUIDE.md) | Requesters | User guide for NHS staff submitting supplier requests |
 
 ### External Documentation
 
@@ -394,8 +425,21 @@ VITE_INTRANET_URL=https://intranet.nhs.uk
 
 ## Support
 
-For issues or questions, contact the development team or raise an issue on GitHub.
+For issues or questions:
+- **Technical issues:** Raise an issue on [GitHub](https://github.com/f-haque-96/Barts_Health_SSF/issues)
+- **Security concerns:** Contact the development team directly
+- **General questions:** See [docs/USER_GUIDE.md](./docs/USER_GUIDE.md) FAQ section
 
 ---
 
-*Last updated: January 2026*
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 2.0 | February 2026 | **Major security update** - Fixed all critical vulnerabilities, added CSRF protection, server-side validation, duplicate detection. See [CHANGES_IMPLEMENTED.md](./CHANGES_IMPLEMENTED.md) |
+| 1.0 | January 2026 | Initial release with core functionality |
+
+---
+
+*Last updated: February 4, 2026*
+*Project Status: ✅ Production Ready (all security fixes implemented)*

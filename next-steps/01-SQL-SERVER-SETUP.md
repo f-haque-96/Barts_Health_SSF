@@ -29,6 +29,15 @@ Check these boxes before proceeding:
 
 ## Part A: Find Out Your SQL Server Details
 
+### ⚠️ Important Note About Security Updates
+
+Before starting this guide, make sure you've completed **Step 0: Environment Setup** where you generated your SESSION_SECRET. The database you create here will store secure information including:
+- Submission audit logs (who did what, when)
+- Document access tracking (GDPR compliance)
+- Security validation records
+
+These security features were added in February 2026 and require proper environment configuration.
+
 ### You Need to Know:
 
 | Information Needed | Where to Get It | Write It Here |
@@ -231,11 +240,11 @@ On the LEFT side panel:
 
 You should see these 5 tables:
 
-- [ ] `dbo.Submissions`
-- [ ] `dbo.SubmissionDocuments`
-- [ ] `dbo.AuditTrail`
-- [ ] `dbo.VendorsReference`
-- [ ] `dbo.NotificationQueue`
+- [ ] `dbo.Submissions` - Stores all supplier form data
+- [ ] `dbo.SubmissionDocuments` - Stores document information and governance rules (which documents can sync to Alemba)
+- [ ] `dbo.AuditTrail` - **Security feature (Feb 2026)** - Records who accessed what, when (GDPR compliance)
+- [ ] `dbo.VendorsReference` - Stores existing suppliers for duplicate detection
+- [ ] `dbo.NotificationQueue` - Queue for email notifications via Power Automate
 
 ### Step 3: Quick Test
 
@@ -310,10 +319,16 @@ Before moving to the next step, verify:
 1. Created the main database for the Supplier Setup Form
 2. Created all the tables to store:
    - Form submissions
-   - Uploaded document metadata
-   - Audit trail (who did what, when)
+   - Uploaded document metadata with security flags
+   - **Audit trail (NEW security feature - Feb 2026)** - Tracks all actions for compliance
    - Existing vendors (for duplicate checking)
    - Notification queue (for email triggers)
+
+**Security Update:** The database now includes enhanced security features:
+- Audit logging for all data changes
+- Document access tracking for GDPR compliance
+- Validation history for security checks
+- Session data storage (works with SESSION_SECRET from Step 0)
 
 ---
 
