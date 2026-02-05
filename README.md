@@ -10,8 +10,9 @@ A React-based web application for NHS supplier onboarding and setup. This form c
 ✅ **Enhanced data protection** (encryption, audit logging, GDPR compliance)
 ✅ **Automatic duplicate detection** (prevents fraud)
 ✅ **Server-side validation** (protects against malicious input)
+✅ **Test features secured** (automatic in dev, never in production)
 
-**For complete details of all security fixes, see:** [CHANGES_IMPLEMENTED.md](./CHANGES_IMPLEMENTED.md)
+**For complete details of all security fixes, see:** [docs/PRODUCTION_FIXES_2026-02-04.md](./docs/PRODUCTION_FIXES_2026-02-04.md)
 
 ---
 
@@ -383,26 +384,44 @@ VITE_INTRANET_URL=https://intranet.nhs.uk
 
 ---
 
-## Documentation
+## 📚 Documentation
 
-### 🆕 Start Here (February 2026)
+**📍 Complete Documentation Index:** [docs/README.md](./docs/README.md)
 
-| Document | Who It's For | What You'll Learn |
-|----------|--------------|-------------------|
-| **[CHANGES_IMPLEMENTED.md](./CHANGES_IMPLEMENTED.md)** | **Everyone** | **All security fixes and what changed in Feb 2026** |
-| [next-steps/README.md](./next-steps/README.md) | Beginners | Step-by-step setup guides (SQL, SharePoint, Power Automate) |
-| [next-steps/00-ENVIRONMENT-SETUP.md](./next-steps/00-ENVIRONMENT-SETUP.md) | Beginners | How to generate SESSION_SECRET (required before deployment) |
+### 🎓 For Beginners (Start Here!)
 
-### Deployment & Technical Guides
+**New to the project?** Read these guides in order:
 
-| Document | Who It's For | What You'll Learn |
-|----------|--------------|-------------------|
-| [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | IT Staff | Complete deployment guide (Azure AD, SQL, SharePoint, API) |
-| [docs/CHECKLIST.md](./docs/CHECKLIST.md) | Deployers | Production deployment checklist (includes security testing) |
-| [docs/ALEMBA.md](./docs/ALEMBA.md) | System Admins | Alemba ticketing integration (with security updates) |
-| [docs/USER_GUIDE.md](./docs/USER_GUIDE.md) | Requesters | User guide for NHS staff submitting supplier requests |
+| Document | Purpose | Read This If... |
+|----------|---------|-----------------|
+| **[docs/START_HERE.md](./docs/START_HERE.md)** 👈 | **Complete beginner's guide** | **This is your first time** |
+| [docs/DEVELOPMENT_MODE_GUIDE.md](./docs/DEVELOPMENT_MODE_GUIDE.md) | How development vs production works | You want to develop locally |
+| [docs/CRN_SETUP_GUIDE.md](./docs/CRN_SETUP_GUIDE.md) | Company lookup setup | You want to test or set up CRN verification |
 
-### External Documentation
+### 🚀 For Deployment
+
+| Document | Purpose | Read This If... |
+|----------|---------|-----------------|
+| [docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md](./docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md) | Complete deployment checklist | You're deploying to production |
+| [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Detailed deployment guide | You need step-by-step deployment instructions |
+| [next-steps/README.md](./next-steps/README.md) | Step-by-step setup guides | You need to set up SQL, SharePoint, Power Automate |
+
+### 📖 For Users & Administrators
+
+| Document | Purpose | Read This If... |
+|----------|---------|-----------------|
+| [docs/USER_GUIDE.md](./docs/USER_GUIDE.md) | How to use the form | You're a requester or reviewer |
+| [docs/ALEMBA.md](./docs/ALEMBA.md) | Alemba ITSM integration | You're integrating with service desk |
+
+### 🔧 Technical Documentation
+
+| Document | Purpose | Read This If... |
+|----------|---------|-----------------|
+| [docs/PRODUCTION_FIXES_2026-02-04.md](./docs/PRODUCTION_FIXES_2026-02-04.md) | February 2026 security updates | You want to know what was fixed |
+| [docs/ROADMAP.md](./docs/ROADMAP.md) | Future features and planning | You want to see what's coming next |
+| [docs/CHECKLIST.md](./docs/CHECKLIST.md) | Quick deployment checklist | You prefer checklists over guides |
+
+### 🌐 External Documentation
 
 - **[Vite Documentation](https://vitejs.dev/)** - Build tool documentation
 - **[React Documentation](https://react.dev/)** - React framework documentation

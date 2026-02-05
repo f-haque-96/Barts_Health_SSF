@@ -125,13 +125,49 @@ LOG_LEVEL=info
 LOG_FILE_PATH=./logs/app.log
 ```
 
-- [ ] **Generate SESSION_SECRET** (CRITICAL - see methods in DEPLOYMENT.md)
+- [ ] **Generate SESSION_SECRET** (CRITICAL - see [00-ENVIRONMENT-SETUP.md Part C](../next-steps/00-ENVIRONMENT-SETUP.md) for 3 easy methods)
 - [ ] Deploy backend code
 - [ ] Test API endpoints
 - [ ] **NEW:** Test health check shows database and SharePoint connected
 - [ ] **NEW:** Test CSRF token endpoint returns valid token
 - [ ] Configure SSL certificate
 - [ ] Set up Application Insights (optional)
+
+### CSRF Token Integration (Beginner-Friendly)
+
+**What is CSRF?** Cross-Site Request Forgery protection prevents attackers from submitting forms on behalf of users.
+
+**How it works:**
+1. Frontend fetches a special token from the backend
+2. Includes this token with every form submission
+3. Backend verifies the token before processing
+
+**Frontend Example (JavaScript):**
+```javascript
+// Fetch CSRF token before submitting form
+async function submitForm(formData) {
+  // Step 1: Get CSRF token
+  const response = await fetch('/api/csrf-token', {
+    credentials: 'include' // Include cookies
+  });
+  const { csrfToken } = await response.json();
+
+  // Step 2: Include token in form submission
+  const submitResponse = await fetch('/api/submissions', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': csrfToken  // Include the token!
+    },
+    body: JSON.stringify(formData)
+  });
+
+  return submitResponse.json();
+}
+```
+
+**Backend receives:** Token is automatically validated by CSRF middleware before reaching your code.
 
 ### 6. Frontend Deployment (VerseOne)
 

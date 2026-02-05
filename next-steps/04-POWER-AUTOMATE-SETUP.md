@@ -18,6 +18,23 @@ Power Automate flows now integrate with enhanced security features:
 
 These security features were added in February 2026 and work automatically once the backend is deployed.
 
+### Backend Security Validation
+
+**Important:** The backend performs security validation BEFORE adding items to the NotificationQueue:
+
+1. **Request Authentication:** Only authenticated users can trigger workflows
+2. **Authorization Check:** User must have permission for the action (e.g., PBP approval)
+3. **Data Validation:** All input is validated before processing
+4. **Audit Logging:** Every notification trigger is logged to the AuditTrail table
+
+**This means:**
+- ✅ Power Automate only receives valid, authenticated requests
+- ✅ No unauthorized users can trigger notifications
+- ✅ All notification events are audited
+- ✅ Invalid data is rejected before reaching the notification queue
+
+**For IT:** When setting up Power Automate, you can trust that items in the NotificationQueue have already passed backend security validation.
+
 ---
 
 ## Prerequisites

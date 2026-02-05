@@ -475,7 +475,7 @@ A: Indicate urgency in the questionnaire. However, all requests follow the stand
 A: Yes! The system now includes multiple security layers added in February 2026:
 - All data is encrypted
 - All actions are logged (audit trail)
-- Sensitive documents (passports, driving licences) are stored separately and auto-deleted after 30 days
+- Sensitive documents (passports, driving licences) are stored separately and should be deleted by IT after 30 days (GDPR compliance)
 - Bank details are protected with enhanced encryption
 
 **Q: Will I be notified if something goes wrong with security?**
@@ -485,8 +485,17 @@ A: Yes. If any security validation fails (e.g., suspicious file upload, duplicat
 A: For sole traders:
 - Passport/driving licence copies are stored in a secure, restricted SharePoint library
 - Only AP Control and Admin can access these documents
-- They are automatically deleted 30 days after your supplier is set up
+- They should be deleted by IT within 30 days after your supplier is set up (GDPR data minimization)
 - Every access is logged for GDPR compliance
+
+**Q: How does document validation work?**
+
+A: All uploaded files are validated:
+- Files are checked to ensure they're really the type they claim to be
+- PDF files must actually be PDFs (not just renamed .txt files)
+- File size limits prevent extremely large uploads
+- Only approved file types are accepted (PDF, JPG, PNG, DOC, DOCX)
+- This prevents malicious file uploads
 
 **Q: How do I know my submission wasn't tampered with?**
 A: The system now creates an audit trail showing:

@@ -27,7 +27,7 @@ When a new supplier request comes in, AP Control needs to check:
 
 By importing your existing suppliers into the database, the system can **automatically** flag potential duplicates.
 
-**What changed in Feb 2026:** The backend now actually implements the duplicate checking logic (previously it was a TODO). Your export will now be actively used by the system.
+**What changed in Feb 2026:** The backend now actually implements the duplicate checking logic (added in February 2026 production readiness updates - see [PRODUCTION_FIXES_2026-02-04.md](../PRODUCTION_FIXES_2026-02-04.md)). Your export will now be actively used by the system.
 
 ---
 
