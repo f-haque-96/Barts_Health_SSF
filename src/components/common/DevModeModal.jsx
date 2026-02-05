@@ -7,12 +7,12 @@
 import { useState } from 'react';
 import { XIcon } from './Icons';
 import Button from '../ui/Button';
-import { useSupplierFormStore } from '../../stores/supplierFormStore';
+import { useFormStore } from '../../stores/formStore';
 import './DevModeModal.css';
 
 const DevModeModal = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState('pages');
-  const { setCurrentSection, currentSection } = useSupplierFormStore();
+  const { setCurrentSection, currentSection } = useFormStore();
 
   if (!isOpen) return null;
 
