@@ -845,6 +845,14 @@ const APControlReviewPage = ({
         <ReviewItem label="Service Types" value={formatServiceTypes(formData.serviceType)} raw />
       </ReviewCard>
 
+      {/* Section 7: Final Acknowledgement */}
+      <ReviewCard title="Section 7: Final Acknowledgement" highlight>
+        <ReviewItem
+          label="Final Acknowledgement"
+          value={formData.finalAcknowledgement ? 'Confirmed - All information is accurate and complete' : 'Not confirmed'}
+        />
+      </ReviewCard>
+
       {/* Previous Authorisations Section */}
       {(submission.procurementReview || submission.opwReview) && (
         <div style={{

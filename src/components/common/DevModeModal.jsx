@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { XIcon } from './Icons';
-import Button from '../ui/Button';
+import Button from './Button';
 import { useFormStore } from '../../stores/formStore';
 import './DevModeModal.css';
 

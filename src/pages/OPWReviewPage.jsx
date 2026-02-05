@@ -772,6 +772,14 @@ const OPWReviewPage = ({
         </ReviewCard>
       )}
 
+      {/* Section 7: Final Acknowledgement */}
+      <ReviewCard title="Section 7: Final Acknowledgement">
+        <ReviewItem
+          label="Final Acknowledgement"
+          value={formData.finalAcknowledgement ? 'Confirmed - All information is accurate and complete' : 'Not confirmed'}
+        />
+      </ReviewCard>
+
       {/* Previous Authorisations Section - Show before OPW decision */}
       <div className="previous-authorisations-section" style={{
         background: '#f0f7ff',
