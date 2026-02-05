@@ -156,26 +156,37 @@ npm run preview    # Preview production build
 
 ## Project Structure
 
+**📖 Complete Structure Guide:** [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)
+
+The project is organized into clear folders:
+
 ```
-nhs-supplier-form-react/
+Barts_Health_SSF/
+├── .github/              # GitHub templates (issue/PR templates)
+├── docs/                 # 📚 All documentation (organized by purpose)
+│   ├── getting-started/  # For new developers
+│   ├── deployment/       # For production deployment
+│   ├── user-guides/      # For end users
+│   ├── reference/        # Technical reference
+│   └── archive/          # Old docs (kept for reference)
 │
-├── docs/                       # Documentation
-│   ├── DEPLOYMENT.md          # Full deployment guide
-│   ├── CHECKLIST.md           # Production checklist
-│   ├── ALEMBA.md              # Alemba integration
-│   └── USER_GUIDE.md          # User guide for requesters
+├── public/               # Static assets (served as-is)
+├── src/                  # 💻 Frontend source code (React)
+│   ├── components/       # Reusable React components
+│   ├── pages/            # Full page components
+│   ├── hooks/            # Custom React hooks
+│   ├── stores/           # State management (Zustand)
+│   ├── utils/            # Helper functions & validation
+│   └── ...
 │
-├── supplier-form-api/          # Backend API (Express.js)
-│   ├── database/              # SQL schema scripts
-│   ├── src/
-│   │   ├── config/            # Database, auth, SharePoint config
-│   │   ├── middleware/        # Auth, RBAC, audit middleware
-│   │   ├── routes/            # API routes
-│   │   └── services/          # Business logic
-│   └── package.json
-│
-├── public/                     # Static assets served as-is
-│   └── barts-logo.png         # NHS Barts Health logo
+├── supplier-form-api/    # 🖥️ Backend API (Express.js)
+│   ├── database/         # SQL schema scripts
+│   ├── src/              # Backend source code
+│   │   ├── config/       # Database, auth, SharePoint config
+│   │   ├── middleware/   # Auth, RBAC, audit
+│   │   ├── routes/       # API endpoints
+│   │   └── services/     # Business logic
+│   └── ...
 │
 ├── src/                        # Frontend source code (React)
 │   ├── components/            # Reusable React components
