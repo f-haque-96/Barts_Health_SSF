@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { XIcon } from './Icons';
 import Button from './Button';
-import { useFormStore } from '../../stores/formStore';
+import useFormStore from '../../stores/formStore';
 import './DevModeModal.css';
 
 const DevModeModal = ({ isOpen, onClose }) => {
