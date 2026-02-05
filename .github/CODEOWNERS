@@ -1,0 +1,20 @@
+# Code Owners for NHS Supplier Setup Smart Form
+# These owners will be requested for review when someone opens a pull request.
+
+# Default owners for everything
+* @f-haque-96
+
+# Documentation
+/docs/ @f-haque-96
+README.md @f-haque-96
+PROJECT_STRUCTURE.md @f-haque-96
+
+# Frontend
+/src/ @f-haque-96
+
+# Backend API
+/supplier-form-api/ @f-haque-96
+
+# Configuration files
+*.config.js @f-haque-96
+.github/ @f-haque-96

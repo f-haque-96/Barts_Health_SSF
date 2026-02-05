@@ -1,6 +1,13 @@
-# NHS Supplier Setup Form
+# NHS Supplier Setup Smart Form
 
-A React-based web application for NHS supplier onboarding and setup. This form collects supplier information, validates company details against Companies House, and routes submissions through various authorization workflows.
+[![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen)](https://github.com/f-haque-96/Barts_Health_SSF)
+[![React](https://img.shields.io/badge/react-19-blue)](https://reactjs.org/)
+[![Node](https://img.shields.io/badge/node-%3E%3D18-green)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/license-NHS%20Internal-blue)](LICENSE)
+
+> **NHS Barts Health Trust** - Intelligent supplier onboarding system with automated validation, rejection handling, and multi-stage approval workflows.
+
+A comprehensive React-based web application for NHS supplier onboarding and setup. This form collects supplier information, validates company details against Companies House, implements fraud prevention, and routes submissions through various authorization workflows with role-based access control.
 
 ## 🔒 Security Updates (February 2026)
 

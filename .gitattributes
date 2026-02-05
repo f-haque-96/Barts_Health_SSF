@@ -1,0 +1,19 @@
+# Git attributes for better GitHub display
+
+# Mark documentation files
+*.md linguist-documentation
+
+# Mark config files as generated/vendored to reduce clutter
+package-lock.json linguist-generated=true
+*.config.js linguist-language=JavaScript
+
+# Proper diff handling for specific files
+*.jsx linguist-language=JavaScript
+*.tsx linguist-language=TypeScript
+
+# Ensure SQL files are detected correctly
+*.sql linguist-language=SQL
+
+# Mark vendor/generated files
+dist/** linguist-generated=true
+node_modules/** linguist-vendored=true
