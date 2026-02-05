@@ -5,10 +5,10 @@
  * SECURITY: All review routes are protected with RBAC
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider, ROLES } from './context/AuthContext';
-import { ProtectedRoute, SecureReviewPage } from './components/common';
+import { ProtectedRoute, SecureReviewPage, RejectionBanner } from './components/common';
 import { Header, Footer, ProgressIndicator } from './components/layout';
 import { HelpButton } from './components/common';
 import Section1RequesterInfo from './components/sections/Section1RequesterInfo';
@@ -31,7 +31,90 @@ import { getQueryParam } from './utils/helpers';
 
 // Main Form Component (Public - any authenticated user can submit)
 const MainForm = () => {
-  const { currentSection, setReviewerRole } = useFormStore();
+  const { currentSection, setReviewerRole, formData, resetForm } = useFormStore();
+  const [rejectionData, setRejectionData] = useState(null);
+  const [showRejectionBanner, setShowRejectionBanner] = useState(false);
+
+  // Check for rejected submissions by current user
+  useEffect(() => {
+    try {
+      const allSubmissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+      const userEmail = formData.nhsEmail;
+
+      if (userEmail) {
+        // Find most recent rejected submission by this user
+        const rejectedSubmissions = allSubmissions.filter(
+          (sub) =>
+            sub.submittedBy === userEmail &&
+            (sub.status === 'rejected' || sub.status?.toLowerCase().includes('rejected'))
+        );
+
+        if (rejectedSubmissions.length > 0) {
+          // Get the most recent rejection
+          const mostRecent = rejectedSubmissions.sort(
+            (a, b) => new Date(b.submissionDate) - new Date(a.submissionDate)
+          )[0];
+
+          // Load full submission data to get rejection details
+          const fullSubmission = JSON.parse(
+            localStorage.getItem(`submission_${mostRecent.submissionId}`) || '{}'
+          );
+
+          // Extract rejection info from the submission
+          let rejectionInfo = null;
+          if (fullSubmission.pbpReview?.decision === 'rejected') {
+            rejectionInfo = {
+              submissionId: mostRecent.submissionId,
+              rejectedBy: fullSubmission.pbpReview.reviewedBy || 'PBP Reviewer',
+              rejectedByRole: 'PBP',
+              rejectionReason: fullSubmission.pbpReview.finalComments || 'No reason provided',
+              rejectionDate: fullSubmission.pbpReview.reviewedAt || mostRecent.submissionDate,
+              supplierName: fullSubmission.formData?.supplierName || 'Unknown Supplier',
+            };
+          } else if (fullSubmission.procurementReview?.decision === 'rejected') {
+            rejectionInfo = {
+              submissionId: mostRecent.submissionId,
+              rejectedBy:
+                fullSubmission.procurementReview.reviewedBy || 'Procurement Reviewer',
+              rejectedByRole: 'Procurement',
+              rejectionReason:
+                fullSubmission.procurementReview.comments || 'No reason provided',
+              rejectionDate:
+                fullSubmission.procurementReview.reviewedAt || mostRecent.submissionDate,
+              supplierName: fullSubmission.formData?.supplierName || 'Unknown Supplier',
+            };
+          } else if (fullSubmission.opwReview?.decision === 'rejected') {
+            rejectionInfo = {
+              submissionId: mostRecent.submissionId,
+              rejectedBy: fullSubmission.opwReview.signature || 'OPW Panel Member',
+              rejectedByRole: 'OPW Panel',
+              rejectionReason:
+                fullSubmission.opwReview.rejectionReason || 'No reason provided',
+              rejectionDate: fullSubmission.opwReview.date || mostRecent.submissionDate,
+              supplierName: fullSubmission.formData?.supplierName || 'Unknown Supplier',
+            };
+          } else if (fullSubmission.apReview?.decision === 'rejected') {
+            rejectionInfo = {
+              submissionId: mostRecent.submissionId,
+              rejectedBy: fullSubmission.apReview.reviewedBy || 'AP Control',
+              rejectedByRole: 'AP Control',
+              rejectionReason:
+                fullSubmission.apReview.rejectionReason || 'No reason provided',
+              rejectionDate: fullSubmission.apReview.reviewedAt || mostRecent.submissionDate,
+              supplierName: fullSubmission.formData?.supplierName || 'Unknown Supplier',
+            };
+          }
+
+          if (rejectionInfo) {
+            setRejectionData(rejectionInfo);
+            setShowRejectionBanner(true);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking for rejections:', error);
+    }
+  }, [formData.nhsEmail]);
 
   // Check for reviewer role in URL
   useEffect(() => {
@@ -40,6 +123,13 @@ const MainForm = () => {
       setReviewerRole(role);
     }
   }, [setReviewerRole]);
+
+  // Handle Submit Another Supplier button click
+  const handleSubmitAnother = () => {
+    setShowRejectionBanner(false);
+    resetForm();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Render current section
   const renderSection = () => {
@@ -88,6 +178,15 @@ const MainForm = () => {
 
       <Footer />
       <HelpButton />
+
+      {/* Rejection Banner - Shows when user has rejected submissions */}
+      {showRejectionBanner && rejectionData && (
+        <RejectionBanner
+          rejection={rejectionData}
+          onDismiss={() => setShowRejectionBanner(false)}
+          onSubmitAnother={handleSubmitAnother}
+        />
+      )}
     </div>
   );
 };

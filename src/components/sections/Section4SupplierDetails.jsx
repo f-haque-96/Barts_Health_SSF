@@ -3,19 +3,20 @@
  * Company name, address, and contact information
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Input, Textarea, QuestionLabel } from '../common';
+import { Input, Textarea, QuestionLabel, NoticeBox } from '../common';
 import { FormNavigation } from '../layout';
 import { section4Schema } from '../../utils/validation';
-import { formatPostcode } from '../../utils/helpers';
+import { formatPostcode, checkRejectedSuppliers } from '../../utils/helpers';
 import useFormStore from '../../stores/formStore';
 import useFormNavigation from '../../hooks/useFormNavigation';
 
 const Section4SupplierDetails = () => {
   const { formData, updateFormData, updateMultipleFields } = useFormStore();
   const { handleNext, handlePrev } = useFormNavigation();
+  const [rejectionWarning, setRejectionWarning] = useState(null);
 
   const {
     register,
@@ -41,6 +42,33 @@ const Section4SupplierDetails = () => {
   });
 
   const postcode = watch('postcode');
+  const companyName = watch('companyName');
+
+  // Check for rejected suppliers when company name changes
+  useEffect(() => {
+    if (companyName && companyName.length > 3) {
+      // Debounce the check to avoid too many lookups
+      const timeoutId = setTimeout(() => {
+        const result = checkRejectedSuppliers(companyName, formData.nhsEmail);
+
+        if (result.isRejectedSupplier) {
+          setRejectionWarning({
+            similarity: result.highestSimilarity,
+            rejectedSupplierName: result.mostRecentRejection.name,
+            rejectionDate: result.mostRecentRejection.rejectionDate,
+            hasUserRejection: result.hasUserRejection,
+            matchCount: result.matches.length,
+          });
+        } else {
+          setRejectionWarning(null);
+        }
+      }, 500); // 500ms debounce
+
+      return () => clearTimeout(timeoutId);
+    } else {
+      setRejectionWarning(null);
+    }
+  }, [companyName, formData.nhsEmail]);
 
   // Auto-populate company name and address from CRN verification if available
   useEffect(() => {
@@ -97,6 +125,48 @@ const Section4SupplierDetails = () => {
           required
           placeholder="Enter company name"
         />
+
+        {/* Rejected Supplier Warning */}
+        {rejectionWarning && (
+          <NoticeBox type="error" style={{ marginBottom: 'var(--space-16)' }}>
+            <h4 style={{ marginTop: 0, fontSize: '1rem', fontWeight: '600' }}>
+              ⚠ Previously Rejected Supplier Detected
+            </h4>
+            <p style={{ marginBottom: '0.75rem' }}>
+              This supplier name is <strong>{rejectionWarning.similarity}% similar</strong> to{' '}
+              <strong>&quot;{rejectionWarning.rejectedSupplierName}&quot;</strong>, which was
+              previously rejected
+              {rejectionWarning.hasUserRejection ? ' by you' : ''}.
+            </p>
+            <p style={{ marginBottom: '0.75rem', fontSize: '0.9rem', color: '#991b1b' }}>
+              <strong>This supplier has been flagged in our system.</strong> Attempting to set up a
+              previously rejected supplier may require additional justification and will be subject
+              to heightened scrutiny during the approval process.
+            </p>
+            {rejectionWarning.matchCount > 1 && (
+              <p style={{ marginBottom: 0, fontSize: '0.9rem', fontStyle: 'italic' }}>
+                {rejectionWarning.matchCount} similar rejected supplier(s) found in total.
+              </p>
+            )}
+            {rejectionWarning.hasUserRejection && (
+              <p
+                style={{
+                  marginTop: '0.75rem',
+                  marginBottom: 0,
+                  padding: '0.75rem',
+                  backgroundColor: '#fef2f2',
+                  border: '1px solid #fca5a5',
+                  borderRadius: '6px',
+                  fontSize: '0.9rem',
+                }}
+              >
+                <strong>Note:</strong> Our records show you previously attempted to set up this or
+                a similar supplier. Please ensure you have addressed the issues from the previous
+                rejection before proceeding.
+              </p>
+            )}
+          </NoticeBox>
+        )}
 
         <Input
           label={<QuestionLabel section="4" question="2">Trading Name (if different)</QuestionLabel>}

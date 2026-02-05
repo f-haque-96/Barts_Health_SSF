@@ -547,3 +547,78 @@ export const checkSupplierWatchlist = (supplierName, watchlist = []) => {
     highestSimilarity: matches.length > 0 ? matches[0].similarity : 0
   };
 };
+
+/**
+ * Check if supplier matches any previously rejected suppliers
+ * @param {string} supplierName - Supplier name to check
+ * @param {string} currentUserEmail - Email of current user (to check their own rejections)
+ * @returns {object} - { isRejectedSupplier: boolean, matches: Array, mostRecentRejection: object }
+ */
+export const checkRejectedSuppliers = (supplierName, currentUserEmail = null) => {
+  if (!supplierName) {
+    return { isRejectedSupplier: false, matches: [], mostRecentRejection: null };
+  }
+
+  try {
+    // Get all submissions from localStorage
+    const allSubmissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+
+    // Filter rejected submissions
+    const rejectedSubmissions = allSubmissions.filter(
+      (sub) => sub.status === 'rejected' || sub.status?.toLowerCase().includes('rejected')
+    );
+
+    if (rejectedSubmissions.length === 0) {
+      return { isRejectedSupplier: false, matches: [], mostRecentRejection: null };
+    }
+
+    // Build list of rejected supplier names
+    const rejectedSuppliers = [];
+    for (const submission of rejectedSubmissions) {
+      const fullSubmission = JSON.parse(
+        localStorage.getItem(`submission_${submission.submissionId}`) || '{}'
+      );
+      const rejectedSupplierName = fullSubmission.formData?.supplierName;
+
+      if (rejectedSupplierName) {
+        rejectedSuppliers.push({
+          name: rejectedSupplierName,
+          submissionId: submission.submissionId,
+          rejectedBy: submission.submittedBy,
+          rejectionDate: submission.submissionDate,
+          rejectedByRole: submission.role || 'Unknown',
+        });
+      }
+    }
+
+    // Use fuzzy matching to find potential matches (70% threshold for rejected suppliers)
+    const matches = findPotentialDuplicates(
+      supplierName,
+      rejectedSuppliers,
+      70 // Lower threshold to catch similar variations
+    );
+
+    if (matches.length === 0) {
+      return { isRejectedSupplier: false, matches: [], mostRecentRejection: null };
+    }
+
+    // Get most recent rejection (highest similarity)
+    const mostRecent = matches[0];
+
+    // Check if ANY rejection is from current user
+    const hasUserRejection = matches.some((match) =>
+      currentUserEmail ? match.existingSupplier.rejectedBy === currentUserEmail : false
+    );
+
+    return {
+      isRejectedSupplier: true,
+      matches,
+      mostRecentRejection: mostRecent.existingSupplier,
+      highestSimilarity: mostRecent.similarity,
+      hasUserRejection, // True if current user already tried to submit this supplier
+    };
+  } catch (error) {
+    console.error('Error checking rejected suppliers:', error);
+    return { isRejectedSupplier: false, matches: [], mostRecentRejection: null };
+  }
+};

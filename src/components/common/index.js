@@ -20,5 +20,6 @@ export { default as HelpButton } from './HelpButton';
 export { default as ProtectedRoute } from './ProtectedRoute';
 export { default as SecureReviewPage } from './SecureReviewPage';
 export { default as VerificationBadge } from './VerificationBadge';
+export { default as RejectionBanner } from './RejectionBanner';
 export * from './Icons';
 export { default as Icons } from './Icons';
