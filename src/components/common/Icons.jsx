@@ -535,6 +535,43 @@ export const PaperclipIcon = ({ size = 16, color = 'currentColor', ...props }) =
   </svg>
 );
 
+// Rotate/Refresh Icon - for reset actions
+export const RotateIcon = ({ size = 16, color = 'currentColor', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+  </svg>
+);
+
+// Code Icon - for development mode
+export const CodeIcon = ({ size = 16, color = 'currentColor', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <polyline points="16 18 22 12 16 6" />
+    <polyline points="8 6 2 12 8 18" />
+  </svg>
+);
+
 // Export all icons as a named object for easy import
 export const Icons = {
   Check: CheckIcon,

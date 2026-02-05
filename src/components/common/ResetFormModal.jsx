@@ -49,8 +49,8 @@ const ResetFormModal = ({ isOpen, onClose }) => {
     <div className="reset-modal-overlay" onClick={onClose}>
       <div className="reset-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="reset-modal-header">
-          <h3 style={{ margin: 0, color: '#dc2626', fontWeight: 'bold' }}>
-            ⚠️ Reset Form
+          <h3 style={{ margin: 0, color: '#1f2937', fontWeight: '600', fontSize: '1.125rem' }}>
+            Reset Form
           </h3>
           <button className="reset-modal-close" onClick={onClose} aria-label="Close">
             <XIcon size={20} />

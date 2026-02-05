@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { XIcon, HelpCircleIcon, TicketIcon, InfoIcon, ExternalLinkIcon } from './Icons';
+import { XIcon, HelpCircleIcon, TicketIcon, InfoIcon, ExternalLinkIcon, RotateIcon, CodeIcon } from './Icons';
 import DevModeModal from './DevModeModal';
 import ResetFormModal from './ResetFormModal';
 import './HelpButton.css';
@@ -63,52 +63,37 @@ const HelpButton = () => {
             margin: '0.75rem 0',
           }} />
           <button
-            className="help-link reset-form-link"
+            className="help-link"
             onClick={() => {
               setIsResetModalOpen(true);
               setIsOpen(false);
             }}
             style={{
               border: 'none',
-              textAlign: 'left',
-              cursor: 'pointer',
-              background: '#fee2e2',
-              borderLeft: '3px solid #dc2626'
+              width: '100%',
+              background: 'transparent'
             }}
           >
-            <span className="help-icon">🔄</span>
-            <span style={{
-              color: '#dc2626',
-              fontWeight: 'bold'
-            }}>
-              Reset Form
-            </span>
+            <span className="help-icon"><RotateIcon size={16} color="#dc2626" /></span>
+            <span style={{ color: '#dc2626' }}>Reset Form</span>
           </button>
 
           {/* Development Mode Button - Only visible in dev mode */}
           {!import.meta.env.PROD && (
             <button
-              className="help-link dev-mode-link"
+              className="help-link"
               onClick={() => {
                 setIsDevModalOpen(true);
                 setIsOpen(false);
               }}
               style={{
                 border: 'none',
-                textAlign: 'left',
-                cursor: 'pointer',
-                background: '#e0f2fe',
-                borderLeft: '3px solid #005EB8',
-                marginTop: '0.5rem'
+                width: '100%',
+                background: 'transparent'
               }}
             >
-              <span className="help-icon">🛠️</span>
-              <span style={{
-                color: '#005EB8',
-                fontWeight: 'bold'
-              }}>
-                Dev Mode
-              </span>
+              <span className="help-icon"><CodeIcon size={16} color="#005EB8" /></span>
+              <span>Dev Mode</span>
             </button>
           )}
         </div>
