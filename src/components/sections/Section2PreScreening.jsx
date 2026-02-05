@@ -810,7 +810,7 @@ const Section2PreScreening = () => {
                   {rejectionData ? (
                     <NoticeBox type="error" style={{ marginTop: '12px' }}>
                       <h4 style={{ marginTop: 0, marginBottom: '12px', fontSize: '1rem', fontWeight: '700' }}>
-                        ❌ Submission Rejected by {rejectionData.rejectedByRole}
+                      Submission Rejected by {rejectionData.rejectedByRole}
                       </h4>
                       <p style={{ margin: '0 0 12px 0' }}>
                         Your submission for <strong>{rejectionData.supplierName}</strong> was rejected at the{' '}
@@ -847,9 +847,15 @@ const Section2PreScreening = () => {
                         marginBottom: '12px',
                         fontSize: '0.9rem'
                       }}>
-                        <strong>⚠ Supplier Flagged:</strong> This supplier has been flagged in our system.
-                        If you attempt to set up this supplier or a similar supplier in the future, it will be
-                        detected and may require additional justification or approval.
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                          <WarningIcon size={18} color="#78350f" />
+                          <strong>Supplier Flagged</strong>
+                        </div>
+                        <p style={{ margin: 0 }}>
+                          This supplier has been flagged in our system. If you attempt to set up this supplier
+                          or a similar supplier in the future, it will be detected and may require additional
+                          justification or approval.
+                        </p>
                       </div>
 
                       <p style={{ margin: 0, fontSize: '0.9rem', color: '#6b7280' }}>
@@ -923,18 +929,21 @@ const Section2PreScreening = () => {
           /* Custom navigation when rejected - lock form and show different buttons */
           <div className="form-navigation" style={{
             display: 'flex',
-            justifyContent: 'space-between',
+            justifyContent: rejectionData.rejectedByRole === 'PBP' ? 'space-between' : 'flex-end',
             marginTop: 'var(--space-32)',
             paddingTop: 'var(--space-24)',
             borderTop: '2px solid var(--color-border)'
           }}>
-            <Button
-              variant="secondary"
-              onClick={() => window.open(`/respond/${rejectionData.submissionId}`, '_blank')}
-              style={{ minWidth: '160px' }}
-            >
-              View Full Details
-            </Button>
+            {/* Only show View Full Details for PBP rejections */}
+            {rejectionData.rejectedByRole === 'PBP' && (
+              <Button
+                variant="secondary"
+                onClick={() => window.open(`/respond/${rejectionData.submissionId}`, '_blank')}
+                style={{ minWidth: '160px' }}
+              >
+                View Full Details
+              </Button>
+            )}
             <Button
               variant="primary"
               onClick={() => {

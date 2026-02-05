@@ -19,6 +19,7 @@ A React-based web application for NHS supplier onboarding and setup. This form c
 ## Table of Contents
 
 - [Overview](#overview)
+- [Rejection Handling System](#rejection-handling-system)
 - [Can Anyone Download and Run This?](#can-anyone-download-and-run-this)
 - [Quick Start](#quick-start)
 - [Project Structure](#project-structure)
@@ -38,6 +39,45 @@ This application provides:
 - **Multiple authorization workflows** - Routes submissions to AP Control, Procurement, OPW Panel, or PBP based on criteria
 - **PDF generation** - Creates downloadable PDF summaries of submissions
 - **File upload support** - Handles document uploads (letterheads, ID verification, etc.)
+- **Rejection handling system** - Automatically flags rejected suppliers, displays rejection notices to requesters, prevents resubmission of rejected suppliers with fuzzy matching (70% similarity threshold)
+
+---
+
+## Rejection Handling System
+
+The application includes a comprehensive rejection handling system that protects against resubmission of rejected suppliers:
+
+### How It Works
+
+1. **Rejection Detection**: When any reviewer (PBP, Procurement, OPW Panel, or AP Control) rejects a submission, the system:
+   - Records rejection details (reviewer, role, reason, date)
+   - Flags the supplier in the system
+   - Displays a rejection notice to the requester
+
+2. **Rejection Banner**: When a requester logs in after their submission is rejected, they see:
+   - **Rejection details**: Who rejected it, when, and why
+   - **Flagging warning**: Supplier is flagged and will be detected if resubmitted
+   - **Action buttons**:
+     - **PBP rejections**: "View Full Details" + "Submit Another Supplier"
+     - **Procurement/OPW/AP rejections**: "Submit Another Supplier" only
+
+3. **Real-Time Duplicate Detection**: As users type a company name in Section 4:
+   - System checks against all previously rejected suppliers
+   - Uses fuzzy matching algorithm (70% similarity threshold)
+   - Displays warning if similar name detected
+   - Shows: similarity percentage, original rejected supplier name, rejection details
+
+4. **Form Lock on Rejection**: If a user dismisses the rejection banner:
+   - Section 2 displays rejection message in place of "Awaiting PBP Approval"
+   - Form is locked with custom navigation buttons
+   - User can either view full details (PBP only) or submit a new supplier
+
+### Benefits
+
+- **Prevents fraud**: Users cannot simply rename a rejected supplier
+- **Increases transparency**: Requesters know exactly why their submission was rejected
+- **Improves data quality**: Reduces duplicate submissions and resubmission attempts
+- **Compliance**: Full audit trail of all rejected suppliers
 
 ---
 
@@ -268,6 +308,8 @@ The main form is divided into 7 sections. Each file handles one section.
 | File | Purpose |
 |------|---------|
 | `QuestionnaireModal.jsx` | Pop-up questionnaire for additional screening questions. |
+| `RejectionBanner.jsx` | **Rejection notice modal.** Displays when a submission is rejected by PBP/Procurement/OPW/AP Control. Shows rejection details, flags supplier, provides "Submit Another Supplier" button. |
+| `RejectionBanner.css` | Styles for rejection banner modal. |
 
 ---
 

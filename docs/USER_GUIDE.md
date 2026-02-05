@@ -17,12 +17,14 @@ The NHS Supplier Setup Form has been enhanced with critical security improvement
 - ✅ All your actions are now securely logged (audit trail for compliance)
 - ✅ Uploaded documents are validated to prevent fake files
 - ✅ Bank details and sensitive information are encrypted
+- ✅ **NEW: Rejection handling system** - Clear feedback when submissions are rejected, automatic flagging of rejected suppliers
 
 **What this means for you:**
 - The form is now **more secure**
 - Your submissions are **better protected**
 - The approval process is **faster** (automatic checks replace manual ones)
 - You'll get **clearer notifications** when your request is reviewed
+- **Rejected suppliers are flagged** - System prevents resubmission of rejected suppliers (detects similar names automatically)
 
 ---
 
@@ -386,10 +388,16 @@ You'll receive emails at each stage:
 
 **Cause:** Insufficient justification or compliance issues
 **Solution:**
-1. Read rejection comments carefully
-2. Address all concerns raised
-3. Gather additional supporting information
-4. Submit new request with updated justification
+1. **View Rejection Notice:** When you log in, you'll see a rejection banner with full details:
+   - Who rejected it (name and role)
+   - When it was rejected
+   - Detailed reason for rejection
+   - Warning that supplier has been flagged
+2. **Review Full Details:** For PBP rejections, click "View Full Details" to see the complete submission and feedback
+3. **Address All Concerns:** Read rejection comments carefully and address all issues raised
+4. **Submit New Request:** Click "Submit Another Supplier" to start a new submission with updated information
+
+**⚠️ Important:** The rejected supplier is now flagged in the system. If you attempt to submit the same or a similar supplier name, the system will detect it (using fuzzy matching) and display a warning. Flagged suppliers may require additional justification during review.
 
 ### Issue: Form Data Lost After Browser Refresh
 
@@ -464,7 +472,17 @@ A: Depends on supplier type:
 - All suppliers: AP Control (final setup)
 
 **Q: What happens if my request is rejected?**
-A: You'll receive an email with rejection reasons. Address the issues and submit a new request.
+A: When your submission is rejected by any reviewer (PBP, Procurement, OPW Panel, or AP Control):
+1. **Rejection Banner Appears:** Next time you open the form, you'll see a detailed rejection notice showing:
+   - Who rejected it and their role
+   - The date of rejection
+   - Specific reason for rejection
+   - Warning that the supplier has been flagged
+2. **Available Actions:**
+   - **PBP rejections:** You can view full details or submit another supplier
+   - **Other rejections (Procurement/OPW/AP):** You can submit another supplier
+3. **Supplier Flagging:** The rejected supplier is flagged in the system. If you try to submit the same or a similar supplier name in the future (even with slight spelling changes), the system will detect it and display a warning. Flagged suppliers may face additional scrutiny during the approval process.
+4. **Starting Fresh:** Click "Submit Another Supplier" to reset the form and begin a new submission. Make sure to address all concerns from the rejection before resubmitting.
 
 **Q: Can I expedite an urgent request?**
 A: Indicate urgency in the questionnaire. However, all requests follow the standard review process. Plan ahead for new suppliers.

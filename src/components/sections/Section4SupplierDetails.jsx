@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Input, Textarea, QuestionLabel, NoticeBox } from '../common';
+import { Input, Textarea, QuestionLabel, NoticeBox, WarningIcon } from '../common';
 import { FormNavigation } from '../layout';
 import { section4Schema } from '../../utils/validation';
 import { formatPostcode, checkRejectedSuppliers } from '../../utils/helpers';
@@ -129,8 +129,9 @@ const Section4SupplierDetails = () => {
         {/* Rejected Supplier Warning */}
         {rejectionWarning && (
           <NoticeBox type="error" style={{ marginBottom: 'var(--space-16)' }}>
-            <h4 style={{ marginTop: 0, fontSize: '1rem', fontWeight: '600' }}>
-              ⚠ Previously Rejected Supplier Detected
+            <h4 style={{ marginTop: 0, fontSize: '1rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <WarningIcon size={18} color="#dc2626" />
+              Previously Rejected Supplier Detected
             </h4>
             <p style={{ marginBottom: '0.75rem' }}>
               This supplier name is <strong>{rejectionWarning.similarity}% similar</strong> to{' '}

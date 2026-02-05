@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { XIcon } from './Icons';
+import { XIcon, WarningIcon } from './Icons';
 import Button from './Button';
 import './RejectionBanner.css';
 
@@ -69,9 +69,15 @@ const RejectionBanner = ({ rejection, onDismiss, onSubmitAnother }) => {
           </div>
 
           <div className="rejection-warning">
-            <strong>⚠ Supplier Flagged:</strong> This supplier has been flagged in our system.
-            If you attempt to set up this supplier or a similar supplier in the future, it will be
-            detected and may require additional justification or approval.
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <WarningIcon size={20} color="#78350f" />
+              <strong>Supplier Flagged</strong>
+            </div>
+            <p style={{ margin: 0 }}>
+              This supplier has been flagged in our system. If you attempt to set up this supplier
+              or a similar supplier in the future, it will be detected and may require additional
+              justification or approval.
+            </p>
           </div>
 
           <p className="rejection-next-steps">
@@ -80,12 +86,15 @@ const RejectionBanner = ({ rejection, onDismiss, onSubmitAnother }) => {
           </p>
 
           <div className="rejection-banner-actions">
-            <Button
-              variant="secondary"
-              onClick={() => window.open(`/respond/${submissionId}`, '_blank')}
-            >
-              View Full Details
-            </Button>
+            {/* PBP rejections show both buttons, others only show Submit Another Supplier */}
+            {rejectedByRole === 'PBP' && (
+              <Button
+                variant="secondary"
+                onClick={() => window.open(`/respond/${submissionId}`, '_blank')}
+              >
+                View Full Details
+              </Button>
+            )}
             <Button variant="primary" onClick={onSubmitAnother}>
               Submit Another Supplier
             </Button>
