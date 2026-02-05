@@ -35,7 +35,7 @@
   align-items: center;
   padding: 1.25rem 1.5rem;
   border-bottom: 2px solid #e5e7eb;
-  background: linear-gradient(135deg, #667eea11 0%, #764ba211 100%);
+  background: #e0f2fe;
 }
 
 .dev-modal-close {
@@ -81,8 +81,8 @@
 }
 
 .dev-tab.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
+  color: #005EB8;
+  border-bottom-color: #005EB8;
   background-color: white;
 }
 
@@ -139,15 +139,15 @@
 }
 
 .dev-section-button:hover {
-  border-color: #667eea;
-  background-color: #eef2ff;
+  border-color: #005EB8;
+  background-color: #e0f2fe;
   transform: translateY(-2px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .dev-section-button.current {
-  border-color: #667eea;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #005EB8;
+  background: #005EB8;
   color: white;
 }
 

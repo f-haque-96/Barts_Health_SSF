@@ -64,9 +64,7 @@ const DevModeModal = ({ isOpen, onClose }) => {
           <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '1.2em' }}>🛠️</span>
             <span style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              color: '#005EB8',
               fontWeight: 'bold'
             }}>
               Dev Mode

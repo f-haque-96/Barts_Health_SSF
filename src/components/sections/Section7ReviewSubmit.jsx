@@ -244,7 +244,11 @@ const Section7ReviewSubmit = () => {
         submissionId,
         submissionDate,
         status: 'pending_review',
-        formData: allData.formData,
+        formData: {
+          ...allData.formData,
+          // Include final acknowledgement from Section 7 form
+          finalAcknowledgement: finalAcknowledgement,
+        },
         uploadedFiles: allData.uploadedFiles,
         // Include questionnaire uploads from the modal
         questionnaireUploads: questionnaireUploads,
@@ -397,7 +401,11 @@ const Section7ReviewSubmit = () => {
       const newSubmission = {
         id: currentSubmissionId,
         submissionId: currentSubmissionId,
-        formData: allData.formData,
+        formData: {
+          ...allData.formData,
+          // Include final acknowledgement from Section 7 form
+          finalAcknowledgement: finalAcknowledgement,
+        },
         uploadedFiles: allData.uploadedFiles,
         questionnaireUploads: questionnaireUploads,
         questionnaireData: {
@@ -424,7 +432,11 @@ const Section7ReviewSubmit = () => {
         const parsed = JSON.parse(existing);
         const updated = {
           ...parsed,
-          formData: allData.formData,
+          formData: {
+            ...allData.formData,
+            // Include final acknowledgement from Section 7 form
+            finalAcknowledgement: finalAcknowledgement,
+          },
           uploadedFiles: allData.uploadedFiles,
           questionnaireUploads: questionnaireUploads,
           questionnaireData: {

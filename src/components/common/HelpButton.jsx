@@ -6,11 +6,13 @@
 import { useState } from 'react';
 import { XIcon, HelpCircleIcon, TicketIcon, InfoIcon, ExternalLinkIcon } from './Icons';
 import DevModeModal from './DevModeModal';
+import ResetFormModal from './ResetFormModal';
 import './HelpButton.css';
 
 const HelpButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDevModalOpen, setIsDevModalOpen] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
   const helpLinks = [
     {
@@ -55,41 +57,65 @@ const HelpButton = () => {
             </a>
           ))}
 
+          {/* Reset Form Button */}
+          <div style={{
+            borderTop: '1px solid #e5e7eb',
+            margin: '0.75rem 0',
+          }} />
+          <button
+            className="help-link reset-form-link"
+            onClick={() => {
+              setIsResetModalOpen(true);
+              setIsOpen(false);
+            }}
+            style={{
+              border: 'none',
+              textAlign: 'left',
+              cursor: 'pointer',
+              background: '#fee2e2',
+              borderLeft: '3px solid #dc2626'
+            }}
+          >
+            <span className="help-icon">🔄</span>
+            <span style={{
+              color: '#dc2626',
+              fontWeight: 'bold'
+            }}>
+              Reset Form
+            </span>
+          </button>
+
           {/* Development Mode Button - Only visible in dev mode */}
           {!import.meta.env.PROD && (
-            <>
-              <div style={{
-                borderTop: '1px solid #e5e7eb',
-                margin: '0.75rem 0',
-              }} />
-              <button
-                className="help-link dev-mode-link"
-                onClick={() => {
-                  setIsDevModalOpen(true);
-                  setIsOpen(false);
-                }}
-                style={{
-                  border: 'none',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  background: 'linear-gradient(135deg, #667eea11 0%, #764ba211 100%)',
-                  borderLeft: '3px solid #667eea'
-                }}
-              >
-                <span className="help-icon">🛠️</span>
-                <span style={{
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  fontWeight: 'bold'
-                }}>
-                  Dev Mode
-                </span>
-              </button>
-            </>
+            <button
+              className="help-link dev-mode-link"
+              onClick={() => {
+                setIsDevModalOpen(true);
+                setIsOpen(false);
+              }}
+              style={{
+                border: 'none',
+                textAlign: 'left',
+                cursor: 'pointer',
+                background: '#e0f2fe',
+                borderLeft: '3px solid #005EB8',
+                marginTop: '0.5rem'
+              }}
+            >
+              <span className="help-icon">🛠️</span>
+              <span style={{
+                color: '#005EB8',
+                fontWeight: 'bold'
+              }}>
+                Dev Mode
+              </span>
+            </button>
           )}
         </div>
       )}
+
+      {/* Reset Form Modal */}
+      <ResetFormModal isOpen={isResetModalOpen} onClose={() => setIsResetModalOpen(false)} />
 
       {/* Dev Mode Modal */}
       {!import.meta.env.PROD && (
