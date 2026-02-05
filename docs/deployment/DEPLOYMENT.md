@@ -21,7 +21,7 @@ This deployment guide has been updated to reflect critical security fixes implem
 - ✅ **Duplicate Vendor Detection** - Implemented using stored procedure
 - ✅ **Document Access Audit** - All document access logged for compliance
 
-**For complete details, see:** [CHANGES_IMPLEMENTED.md](../CHANGES_IMPLEMENTED.md)
+**For complete details, see:** [CHANGES_IMPLEMENTED.md](../archive/CHANGES_IMPLEMENTED.md)
 
 ---
 
@@ -734,7 +734,7 @@ For DLP compliance, use **SharePoint list triggers** (not HTTP triggers).
 See [CHANGES_IMPLEMENTED.md](../CHANGES_IMPLEMENTED.md) - Comprehensive summary of all fixes, testing checklist, and beginner-friendly explanations.
 
 **For beginner-friendly setup guides:**
-See [next-steps/](../next-steps/) folder for step-by-step instructions on database setup, SharePoint configuration, and Power Automate flows.
+See [setup/](setup/) folder for step-by-step instructions on database setup, SharePoint configuration, and Power Automate flows.
 
 ---
 

@@ -21,7 +21,7 @@
 - ✅ Duplicate vendor detection implemented
 - ✅ Document access audit logging
 
-**See [CHANGES_IMPLEMENTED.md](../CHANGES_IMPLEMENTED.md) for complete details.**
+**See [CHANGES_IMPLEMENTED.md](../archive/CHANGES_IMPLEMENTED.md) for complete details.**
 
 ---
 
@@ -125,7 +125,7 @@ LOG_LEVEL=info
 LOG_FILE_PATH=./logs/app.log
 ```
 
-- [ ] **Generate SESSION_SECRET** (CRITICAL - see [00-ENVIRONMENT-SETUP.md Part C](../next-steps/00-ENVIRONMENT-SETUP.md) for 3 easy methods)
+- [ ] **Generate SESSION_SECRET** (CRITICAL - see [01-environment.md Part C](setup/01-environment.md) for 3 easy methods)
 - [ ] Deploy backend code
 - [ ] Test API endpoints
 - [ ] **NEW:** Test health check shows database and SharePoint connected
@@ -339,13 +339,13 @@ The following files can be removed before final deployment:
 ## Additional Resources
 
 **For complete details on all fixes and implementation changes:**
-See [CHANGES_IMPLEMENTED.md](../CHANGES_IMPLEMENTED.md) - Comprehensive testing checklist, deployment steps, and beginner-friendly explanations.
+See [CHANGES_IMPLEMENTED.md](../archive/CHANGES_IMPLEMENTED.md) - Comprehensive testing checklist, deployment steps, and beginner-friendly explanations.
 
 **For deployment details:**
 See [DEPLOYMENT.md](DEPLOYMENT.md) - Step-by-step deployment guide with updated security configurations.
 
 **For beginner-friendly setup guides:**
-See [next-steps/](../next-steps/) folder for detailed setup instructions.
+See [setup/](setup/) folder for detailed setup instructions.
 
 ---
 
