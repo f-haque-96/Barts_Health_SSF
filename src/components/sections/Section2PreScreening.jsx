@@ -25,6 +25,7 @@ const Section2PreScreening = () => {
     prescreeningProgress,
     updatePrescreeningProgress,
     rejectionData,
+    setRejectionData,
     resetForm
   } = useFormStore();
   const { handleNext, handlePrev } = useFormNavigation();
@@ -947,6 +948,7 @@ const Section2PreScreening = () => {
             <Button
               variant="primary"
               onClick={() => {
+                setRejectionData(null); // Clear rejection data
                 resetForm();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
