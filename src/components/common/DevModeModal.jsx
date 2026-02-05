@@ -72,8 +72,9 @@ const DevModeModal = ({ isOpen, onClose }) => {
       alert('Please select a submission first or create a test submission in Section 7');
       return;
     }
+    // Open in new tab
+    window.open(`${path}/${selectedSubmission}`, '_blank');
     onClose();
-    navigate(`${path}/${selectedSubmission}`);
   };
 
   const sections = [

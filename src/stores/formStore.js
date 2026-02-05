@@ -69,6 +69,9 @@ const useFormStore = create(
         approvalDate: null,
       },
 
+      // ===== Rejection Data =====
+      rejectionData: null, // Stores rejection details when submission is rejected
+
       // ==================== ACTIONS ====================
 
       // ----- Navigation Actions -----
@@ -334,6 +337,15 @@ const useFormStore = create(
             ...updates,
           },
         }));
+      },
+
+      // ----- Rejection Actions -----
+      setRejectionData: (rejection) => {
+        set({ rejectionData: rejection });
+      },
+
+      clearRejectionData: () => {
+        set({ rejectionData: null });
       },
 
       // ----- Reset & Clear Actions -----

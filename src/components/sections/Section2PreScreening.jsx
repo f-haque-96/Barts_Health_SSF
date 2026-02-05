@@ -23,7 +23,9 @@ const Section2PreScreening = () => {
     setUploadedFile,
     removeUploadedFile,
     prescreeningProgress,
-    updatePrescreeningProgress
+    updatePrescreeningProgress,
+    rejectionData,
+    resetForm
   } = useFormStore();
   const { handleNext, handlePrev } = useFormNavigation();
   const [isQuestionnaireModalOpen, setIsQuestionnaireModalOpen] = useState(false);
@@ -803,16 +805,70 @@ const Section2PreScreening = () => {
                       Submitted for PBP review
                     </span>
                   </div>
-                  <NoticeBox type="warning" style={{ marginTop: '12px' }}>
-                    <strong>Awaiting PBP Approval</strong>
-                    <p style={{ margin: '8px 0 0 0' }}>
-                      Your questionnaire has been submitted to a Procurement Business Partner (PBP) for assessment.
-                      Once approved, you will receive an approval certificate via email.
-                    </p>
-                    <p style={{ margin: '8px 0 0 0', fontWeight: '500' }}>
-                      To proceed: Return to this form, select "Yes - I have procurement approval" above, and upload your approval certificate.
-                    </p>
-                  </NoticeBox>
+
+                  {/* Show rejection message if submission was rejected */}
+                  {rejectionData ? (
+                    <NoticeBox type="error" style={{ marginTop: '12px' }}>
+                      <h4 style={{ marginTop: 0, marginBottom: '12px', fontSize: '1rem', fontWeight: '700' }}>
+                        ❌ Submission Rejected by {rejectionData.rejectedByRole}
+                      </h4>
+                      <p style={{ margin: '0 0 12px 0' }}>
+                        Your submission for <strong>{rejectionData.supplierName}</strong> was rejected at the{' '}
+                        {rejectionData.rejectedByRole} Review stage and cannot proceed further.
+                      </p>
+
+                      <div style={{
+                        background: '#fef2f2',
+                        border: '1px solid #fca5a5',
+                        borderRadius: '6px',
+                        padding: '12px',
+                        marginBottom: '12px'
+                      }}>
+                        <div style={{ marginBottom: '8px' }}>
+                          <strong>Rejected by:</strong> {rejectionData.rejectedBy}
+                        </div>
+                        <div style={{ marginBottom: '8px' }}>
+                          <strong>Date:</strong> {new Date(rejectionData.rejectionDate).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'long',
+                            year: 'numeric',
+                          })}
+                        </div>
+                        <div>
+                          <strong>Reason:</strong> {rejectionData.rejectionReason}
+                        </div>
+                      </div>
+
+                      <div style={{
+                        background: '#fef3c7',
+                        border: '1px solid #fbbf24',
+                        borderRadius: '6px',
+                        padding: '12px',
+                        marginBottom: '12px',
+                        fontSize: '0.9rem'
+                      }}>
+                        <strong>⚠ Supplier Flagged:</strong> This supplier has been flagged in our system.
+                        If you attempt to set up this supplier or a similar supplier in the future, it will be
+                        detected and may require additional justification or approval.
+                      </div>
+
+                      <p style={{ margin: 0, fontSize: '0.9rem', color: '#6b7280' }}>
+                        Please review the feedback above and address the issues identified before attempting to
+                        resubmit. If you have questions, contact the Procurement Helpdesk.
+                      </p>
+                    </NoticeBox>
+                  ) : (
+                    <NoticeBox type="warning" style={{ marginTop: '12px' }}>
+                      <strong>Awaiting PBP Approval</strong>
+                      <p style={{ margin: '8px 0 0 0' }}>
+                        Your questionnaire has been submitted to a Procurement Business Partner (PBP) for assessment.
+                        Once approved, you will receive an approval certificate via email.
+                      </p>
+                      <p style={{ margin: '8px 0 0 0', fontWeight: '500' }}>
+                        To proceed: Return to this form, select "Yes - I have procurement approval" above, and upload your approval certificate.
+                      </p>
+                    </NoticeBox>
+                  )}
                 </div>
               ) : (
                 <div style={{ marginTop: '16px' }}>
@@ -863,10 +919,39 @@ const Section2PreScreening = () => {
         </div>
 
         {/* Navigation */}
-        <FormNavigation
-          onNext={handleSubmit(onSubmit)}
-          onPrev={handlePrev}
-        />
+        {rejectionData ? (
+          /* Custom navigation when rejected - lock form and show different buttons */
+          <div className="form-navigation" style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginTop: 'var(--space-32)',
+            paddingTop: 'var(--space-24)',
+            borderTop: '2px solid var(--color-border)'
+          }}>
+            <Button
+              variant="secondary"
+              onClick={() => window.open(`/respond/${rejectionData.submissionId}`, '_blank')}
+              style={{ minWidth: '160px' }}
+            >
+              View Full Details
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                resetForm();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              style={{ minWidth: '180px' }}
+            >
+              Submit Another Supplier
+            </Button>
+          </div>
+        ) : (
+          <FormNavigation
+            onNext={handleSubmit(onSubmit)}
+            onPrev={handlePrev}
+          />
+        )}
       </form>
 
       {/* Questionnaire Modal */}

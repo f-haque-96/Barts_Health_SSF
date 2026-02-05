@@ -31,12 +31,17 @@ import { getQueryParam } from './utils/helpers';
 
 // Main Form Component (Public - any authenticated user can submit)
 const MainForm = () => {
-  const { currentSection, setReviewerRole, formData, resetForm } = useFormStore();
-  const [rejectionData, setRejectionData] = useState(null);
+  const { currentSection, setReviewerRole, formData, resetForm, setRejectionData, rejectionData: storedRejectionData } = useFormStore();
   const [showRejectionBanner, setShowRejectionBanner] = useState(false);
 
   // Check for rejected submissions by current user
   useEffect(() => {
+    // If rejection data already exists in store, show banner
+    if (storedRejectionData) {
+      setShowRejectionBanner(true);
+      return;
+    }
+
     try {
       const allSubmissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
       const userEmail = formData.nhsEmail;
@@ -106,7 +111,7 @@ const MainForm = () => {
           }
 
           if (rejectionInfo) {
-            setRejectionData(rejectionInfo);
+            setRejectionData(rejectionInfo); // Store in formStore
             setShowRejectionBanner(true);
           }
         }
@@ -114,7 +119,7 @@ const MainForm = () => {
     } catch (error) {
       console.error('Error checking for rejections:', error);
     }
-  }, [formData.nhsEmail]);
+  }, [formData.nhsEmail, storedRejectionData, setRejectionData]);
 
   // Check for reviewer role in URL
   useEffect(() => {
@@ -127,6 +132,7 @@ const MainForm = () => {
   // Handle Submit Another Supplier button click
   const handleSubmitAnother = () => {
     setShowRejectionBanner(false);
+    setRejectionData(null); // Clear rejection data from store
     resetForm();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -180,9 +186,9 @@ const MainForm = () => {
       <HelpButton />
 
       {/* Rejection Banner - Shows when user has rejected submissions */}
-      {showRejectionBanner && rejectionData && (
+      {showRejectionBanner && storedRejectionData && (
         <RejectionBanner
-          rejection={rejectionData}
+          rejection={storedRejectionData}
           onDismiss={() => setShowRejectionBanner(false)}
           onSubmitAnother={handleSubmitAnother}
         />

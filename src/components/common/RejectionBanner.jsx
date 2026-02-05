@@ -82,7 +82,7 @@ const RejectionBanner = ({ rejection, onDismiss, onSubmitAnother }) => {
           <div className="rejection-banner-actions">
             <Button
               variant="secondary"
-              onClick={() => navigate(`/respond/${submissionId}`)}
+              onClick={() => window.open(`/respond/${submissionId}`, '_blank')}
             >
               View Full Details
             </Button>
