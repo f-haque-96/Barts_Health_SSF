@@ -25,12 +25,12 @@
 
 ### For Deployment (When Ready for Production)
 
-4. **[PRODUCTION_DEPLOYMENT_CHECKLIST.md](../PRODUCTION_DEPLOYMENT_CHECKLIST.md)** ✅
+4. **[PRODUCTION_DEPLOYMENT_CHECKLIST.md](../deployment/PRODUCTION_DEPLOYMENT_CHECKLIST.md)** ✅
    - Complete checklist before going live
    - Step-by-step instructions
    - What IT needs to configure
 
-5. **[PRODUCTION_FIXES_2026-02-04.md](../PRODUCTION_FIXES_2026-02-04.md)** 🔧
+5. **[PRODUCTION_FIXES_2026-02-04.md](../archive/PRODUCTION_FIXES_2026-02-04.md)** 🔧
    - What was fixed to make the app production-ready
    - Technical details of all changes
 
@@ -298,7 +298,7 @@ npm run dev
 
 ### Before Deploying to Production
 
-1. **Read** [PRODUCTION_DEPLOYMENT_CHECKLIST.md](../PRODUCTION_DEPLOYMENT_CHECKLIST.md)
+1. **Read** [PRODUCTION_DEPLOYMENT_CHECKLIST.md](../deployment/PRODUCTION_DEPLOYMENT_CHECKLIST.md)
 2. **Test everything** thoroughly
 3. **Get IT support** for server setup
 4. **Follow the checklist** step by step
