@@ -57,18 +57,10 @@ const HelpButton = () => {
             </a>
           ))}
 
-          {/* Reset Form Button */}
           <div style={{
             borderTop: '1px solid #e5e7eb',
             margin: '0.75rem 0',
           }} />
-          <button className="help-link help-link-button" onClick={() => {
-            setIsResetModalOpen(true);
-            setIsOpen(false);
-          }}>
-            <span className="help-icon"><RotateIcon size={16} color="#dc2626" /></span>
-            <span className="help-link-text-danger">Reset Form</span>
-          </button>
 
           {/* Development Mode Button - Only visible in dev mode */}
           {!import.meta.env.PROD && (
@@ -80,6 +72,15 @@ const HelpButton = () => {
               <span>Dev Mode</span>
             </button>
           )}
+
+          {/* Reset Form Button */}
+          <button className="help-link help-link-button help-link-danger" onClick={() => {
+            setIsResetModalOpen(true);
+            setIsOpen(false);
+          }}>
+            <span className="help-icon"><RotateIcon size={16} color="#dc2626" /></span>
+            <span className="help-link-text-danger">Reset Form</span>
+          </button>
         </div>
       )}
 

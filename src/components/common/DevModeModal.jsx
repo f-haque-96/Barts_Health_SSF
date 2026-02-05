@@ -61,14 +61,8 @@ const DevModeModal = ({ isOpen, onClose }) => {
     <div className="dev-modal-overlay" onClick={onClose}>
       <div className="dev-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="dev-modal-header">
-          <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '1.2em' }}>🛠️</span>
-            <span style={{
-              color: '#005EB8',
-              fontWeight: 'bold'
-            }}>
-              Dev Mode
-            </span>
+          <h3 style={{ margin: 0, color: '#1f2937', fontWeight: '600', fontSize: '1.125rem' }}>
+            Development Mode
           </h3>
           <button className="dev-modal-close" onClick={onClose} aria-label="Close">
             <XIcon size={20} />

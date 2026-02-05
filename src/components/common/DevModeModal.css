@@ -34,8 +34,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  border-bottom: 2px solid #e5e7eb;
-  background: #e0f2fe;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
 }
 
 .dev-modal-close {
@@ -104,7 +104,6 @@
   gap: 0.25rem;
   padding: 1rem;
   border: 1px solid #e5e7eb;
-  border-left: 4px solid;
   border-radius: 8px;
   text-decoration: none;
   transition: all 0.2s;
@@ -113,9 +112,8 @@
 
 .dev-page-link:hover {
   background-color: #f9fafb;
-  border-color: currentColor;
-  transform: translateX(4px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-color: #005EB8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .dev-section-grid {

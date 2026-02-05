@@ -94,6 +94,11 @@
   color: #dc2626;
 }
 
+/* Danger variant for reset button */
+.help-link-danger:hover {
+  background: #fee2e2 !important;
+}
+
 /* Mobile positioning */
 @media (max-width: 768px) {
   .help-button-container {
