@@ -14,7 +14,7 @@ const Modal = ({
   title,
   children,
   footer,
-  size = 'medium', // 'small' | 'medium' | 'large' | 'fullscreen'
+  size = 'medium', // 'small' | 'medium' | 'large' | 'xlarge' | 'fullscreen'
   closeOnBackdrop = true,
   closeOnEscape = true,
   className,
@@ -67,7 +67,7 @@ const Modal = ({
           backgroundColor: 'var(--color-surface)',
           borderRadius: size === 'fullscreen' ? '0' : 'var(--radius-lg)',
           boxShadow: 'var(--shadow-xl)',
-          maxWidth: size === 'small' ? '400px' : size === 'large' ? '900px' : size === 'fullscreen' ? '100vw' : '600px',
+          maxWidth: size === 'small' ? '400px' : size === 'large' ? '900px' : size === 'xlarge' ? '1200px' : size === 'fullscreen' ? '100vw' : '600px',
           width: '100%',
           maxHeight: size === 'fullscreen' ? '100vh' : '90vh',
           height: size === 'fullscreen' ? '100vh' : 'auto',

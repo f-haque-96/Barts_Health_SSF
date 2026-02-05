@@ -261,7 +261,7 @@ const QuestionnaireModal = ({ isOpen, onClose, onComplete, type = 'clinical', se
       isOpen={isOpen}
       onClose={handleClose}
       title={`${isClinical ? 'Clinical' : 'Non-Clinical'} Procurement Questionnaire`}
-      size="large"
+      size="xlarge"
       headerStyle="nhs-blue"
       closeOnBackdrop={!isSubmitting}
       closeOnEscape={!isSubmitting}
