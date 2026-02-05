@@ -79,6 +79,21 @@
   font-size: 1.1rem;
 }
 
+/* Button-specific help links */
+.help-link-button {
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left;
+}
+
+.help-link-text-danger {
+  color: #dc2626;
+}
+
 /* Mobile positioning */
 @media (max-width: 768px) {
   .help-button-container {
