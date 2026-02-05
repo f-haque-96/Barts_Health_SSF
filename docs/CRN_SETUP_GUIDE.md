@@ -1,4 +1,30 @@
-# Companies House CRN Lookup - Setup Guide
+# Companies House CRN Lookup - Beginner's Setup Guide
+
+## 🎓 What is CRN? (Simple Explanation)
+
+### What is a CRN?
+
+**CRN** stands for **Company Registration Number**. It's like a unique ID number for every UK company.
+
+**Example:**
+- Tesco's CRN: `00445790`
+- Your test company CRN: `12345678`
+
+### What does "CRN Lookup" mean?
+
+When someone enters a company's CRN in your form, the app:
+1. Checks if the company is real
+2. Gets the company's name and address automatically
+3. Fills in the form for the user (so they don't have to type everything!)
+
+**It's like autocomplete, but for company information!**
+
+### Do I need to set this up?
+
+**For Testing:** NO! We already have 4 test companies built-in.
+**For Production:** YES! But it's a simple one-time setup (takes 10 minutes).
+
+---
 
 ## Overview
 

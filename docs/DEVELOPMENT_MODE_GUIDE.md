@@ -1,41 +1,119 @@
-# Development vs Production Mode - Quick Reference Guide
+# Development vs Production Mode - Beginner's Guide
 
-## Overview
+## 🎓 What You Need to Know (Beginner-Friendly!)
 
-This guide explains how to switch between development and production modes for the NHS Supplier Setup Smart Form, including how to enable/disable test features.
+### What is "Development Mode"?
+
+**Development mode** is when you're working on the app on your own computer. Think of it like a "practice mode" where:
+- ✅ You can test features safely
+- ✅ Changes appear immediately when you save files
+- ✅ Special testing tools are available (like the test buttons)
+- ✅ It's just you - no one else can see what you're doing
+
+**How to use it:**
+Just type `npm run dev` in your terminal and press Enter!
+
+### What is "Production Mode"?
+
+**Production mode** is the final version that real users will see when the app is deployed to the hospital. Think of it like the "real thing" where:
+- ✅ Everything is optimized and fast
+- ✅ Test features are hidden (so users don't see them)
+- ✅ It's ready for real people to use
+- ✅ No mistakes or test stuff visible
+
+**How to create it:**
+Type `npm run build` in your terminal - this creates the final version!
+
+### The AUTOMATIC Magic ✨
+
+**Good news:** You don't need to configure anything!
+
+- When you run `npm run dev` → Test buttons **automatically appear** 🎉
+- When you run `npm run build` → Test buttons **automatically disappear** 🔒
+
+**No settings to remember, no files to edit** - it just works!
 
 ---
 
-## 🔄 Switching Between Modes
+## Overview
 
-### Development Mode (with Test Features)
+This guide explains how to switch between development and production modes for the NHS Supplier Setup Smart Form. Test features automatically appear in development mode and are automatically hidden in production builds.
 
-**Purpose:** Local development, testing workflows, debugging
+---
 
-**Configuration:**
+## ⚡ AUTOMATIC BEHAVIOR (No Configuration Needed!)
 
-1. **Create `.env` file** in project root:
-   ```bash
-   # .env (development with test features)
-   VITE_ENABLE_TEST_BUTTONS=true
-   VITE_ENABLE_DEBUG_LOGGING=false
-   VITE_ENABLE_MOCK_AUTH=false
+### Development Mode - Test Features Enabled Automatically
 
-   VITE_API_URL=http://localhost:3001/api
-   VITE_AZURE_CLIENT_ID=your-dev-client-id
-   VITE_AZURE_TENANT_ID=your-dev-tenant-id
-   ```
+**When you run:** `npm run dev`
 
-2. **Run development server:**
-   ```bash
-   npm run dev
-   ```
+**Test buttons automatically appear** - no configuration needed!
 
-3. **What you'll see:**
-   - ✅ Test Authorization buttons at bottom of Section 7
-   - ✅ Orange warning banner saying "Development Testing Mode"
-   - ✅ Can test all review workflows (PBP, Procurement, OPW, AP Control, Requester)
-   - ✅ Hot module reload (changes appear instantly)
+- ✅ Test Authorization buttons at bottom of Section 7
+- ✅ Blue banner saying "Development Testing Tools"
+- ✅ Can test all review workflows (PBP, Procurement, OPW, AP Control, Requester)
+- ✅ Hot module reload (changes appear instantly)
+
+**No `.env` configuration required** - just run `npm run dev` and test buttons are there!
+
+### Production Build - Test Features Automatically Hidden
+
+**When you run:** `npm run build`
+
+**Test buttons NEVER appear** - fail-safe production build!
+
+- ❌ No test authorization buttons (impossible to enable)
+- ❌ No debug logging
+- ❌ No development features
+- ✅ Optimized production bundle
+- ✅ Production-ready code
+
+**Safety:** Even if you accidentally set environment variables, test buttons will NEVER appear in production builds.
+
+---
+
+## 🔄 How It Works
+
+### The Magic Behind Automatic Behavior
+
+**Code uses:** `!import.meta.env.PROD`
+
+| Build Command | PROD Value | Test Buttons |
+|---------------|------------|--------------|
+| `npm run dev` | `false` | ✅ Always visible |
+| `npm run build` | `true` | ❌ Never visible |
+| `npm run preview` | `true` | ❌ Never visible |
+
+**Why this is safe:**
+- `PROD` is set by Vite based on build mode (not an environment variable)
+- Impossible to accidentally enable in production
+- Developers don't need to remember to set flags
+- Production builds are fail-safe
+
+---
+
+## 🚀 Quick Start
+
+### For Development (Test Buttons Enabled)
+
+**Just run:**
+```bash
+npm run dev
+```
+
+**That's it!** Test buttons will automatically appear at the bottom of Section 7.
+
+**No `.env` file needed** for test buttons to work!
+
+### For Production Preview (Test Buttons Disabled)
+
+**Build and preview:**
+```bash
+npm run build
+npm run preview
+```
+
+**Test buttons will NOT appear** - this is what production looks like.
 
 ### Production Mode (no Test Features)
 
@@ -76,19 +154,26 @@ This guide explains how to switch between development and production modes for t
 
 ### Test Authorization Buttons
 
-**Variable:** `VITE_ENABLE_TEST_BUTTONS`
+**Automatic Behavior:** Test buttons show/hide based on build mode
 
-| Value | Effect | Use Case |
-|-------|--------|----------|
-| `true` | Shows test buttons | Development, testing workflows |
-| `false` | Hides test buttons | Production, client demos |
+| Build Mode | Command | Test Buttons | Why |
+|------------|---------|--------------|-----|
+| Development | `npm run dev` | ✅ Always visible | For testing workflows |
+| Production | `npm run build` | ❌ Never visible | Safety (fail-safe) |
+
+**No environment variable needed!** The behavior is automatic.
+
+**How it works:**
+- Code checks: `!import.meta.env.PROD`
+- Vite sets `PROD` based on build command
+- Developer-friendly AND production-safe
 
 **Controls:**
 - Test buttons at bottom of Section 7 (Review & Submit)
 - "1. PBP Review", "2. Procurement", "3. OPW Panel", "4. AP Control", "5. Requester" buttons
-- Orange warning banner
+- Blue "Development Testing Tools" banner
 
-**File:** [src/components/sections/Section7ReviewSubmit.jsx](../src/components/sections/Section7ReviewSubmit.jsx#L643)
+**File:** [src/components/sections/Section7ReviewSubmit.jsx](../src/components/sections/Section7ReviewSubmit.jsx#L642)
 
 ### Debug Logging
 
@@ -145,25 +230,29 @@ project-root/
 
 ## 🧪 Common Development Scenarios
 
-### Scenario 1: Enable Test Buttons for Development
+### Scenario 1: Use Test Buttons for Development
 
-**Goal:** Show test authorization buttons while developing
+**Goal:** Test authorization workflows while developing
 
 **Steps:**
 
-1. Create `.env` file in project root (if it doesn't exist):
-   ```bash
-   VITE_ENABLE_TEST_BUTTONS=true
-   ```
-
-2. Restart dev server:
+1. **Just run the dev server** - test buttons appear automatically:
    ```bash
    npm run dev
    ```
 
-3. Navigate to Section 7 (Review & Submit)
+2. Navigate to Section 7 (Review & Submit)
 
-4. Scroll to bottom - you'll see orange warning banner and test buttons
+3. Scroll to bottom - you'll see blue "Development Testing Tools" banner and test buttons
+
+4. Click buttons to test workflows:
+   - "1. PBP Review" → Opens PBP review page
+   - "2. Procurement" → Opens Procurement classification page
+   - "3. OPW Panel" → Opens OPW/IR35 review page
+   - "4. AP Control" → Opens AP Control processing page
+   - "5. Requester" → Opens requester response page
+
+**That's it!** No configuration needed - test buttons are automatic in development mode.
 
 ### Scenario 2: Test Production Build Locally
 
@@ -188,32 +277,33 @@ project-root/
    - ❌ No debug output in console
    - ✅ Production-ready experience
 
-### Scenario 3: Quickly Toggle Test Buttons On/Off
+### Scenario 3: Hide Test Buttons Temporarily
 
-**Goal:** Switch between test mode and production mode during development
+**Goal:** See what the app looks like without test buttons (like production)
 
-**Option A: Environment Variable (Recommended)**
+**Steps:**
 
+1. Build the production version:
+   ```bash
+   npm run build
+   ```
+   *(This creates an optimized version without test features)*
+
+2. Preview the production version:
+   ```bash
+   npm run preview
+   ```
+   *(This lets you see the production version on your computer)*
+
+3. Open your browser to: http://localhost:4173
+
+4. Navigate to Section 7 - **test buttons will NOT appear**
+
+**To go back to development with test buttons:**
 ```bash
-# Terminal 1 - With test buttons
-VITE_ENABLE_TEST_BUTTONS=true npm run dev
-
-# Terminal 2 - Without test buttons
-VITE_ENABLE_TEST_BUTTONS=false npm run dev
-```
-
-**Option B: Multiple .env Files**
-
-```bash
-# .env.dev-testing
-VITE_ENABLE_TEST_BUTTONS=true
-
-# .env.dev-clean
-VITE_ENABLE_TEST_BUTTONS=false
-
-# Switch between them:
-cp .env.dev-testing .env && npm run dev
-cp .env.dev-clean .env && npm run dev
+# Stop the preview (press Ctrl+C in the terminal)
+npm run dev
+# Test buttons are back!
 ```
 
 ### Scenario 4: Client Demonstration

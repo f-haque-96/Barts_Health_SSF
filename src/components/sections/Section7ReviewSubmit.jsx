@@ -639,20 +639,20 @@ const Section7ReviewSubmit = () => {
         </Button>
       </div>
 
-      {/* Development Testing Tools - ONLY shown when explicitly enabled via VITE_ENABLE_TEST_BUTTONS=true */}
-      {import.meta.env.VITE_ENABLE_TEST_BUTTONS === 'true' && (
+      {/* Development Testing Tools - Automatically shown in dev mode, NEVER in production builds */}
+      {!import.meta.env.PROD && (
         <div style={{
           marginTop: 'var(--space-16)',
           padding: 'var(--space-16)',
-          backgroundColor: '#fef3c7',
+          backgroundColor: '#e0f2fe',
           borderRadius: 'var(--radius-base)',
-          border: '2px solid #f59e0b',
+          border: '2px solid #0284c7',
         }}>
-          <h4 style={{ margin: '0 0 var(--space-8) 0', fontSize: 'var(--font-size-md)', color: '#92400e', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            ⚠️ Development Testing Mode
+          <h4 style={{ margin: '0 0 var(--space-8) 0', fontSize: 'var(--font-size-md)', color: '#075985', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            🛠️ Development Testing Tools
           </h4>
-          <p style={{ fontSize: 'var(--font-size-sm)', color: '#92400e', marginBottom: 'var(--space-12)', fontWeight: '600' }}>
-            WARNING: Testing tools are enabled. This should NEVER be visible in production.
+          <p style={{ fontSize: 'var(--font-size-sm)', color: '#075985', marginBottom: 'var(--space-12)', fontWeight: '500' }}>
+            These buttons are automatically available in development mode. They will NOT appear in production builds.
           </p>
           {testSubmissionId && (
             <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-12)', display: 'flex', alignItems: 'center', gap: 'var(--space-8)' }}>
