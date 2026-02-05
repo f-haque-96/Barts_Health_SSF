@@ -12,7 +12,7 @@ A React-based web application for NHS supplier onboarding and setup. This form c
 ✅ **Server-side validation** (protects against malicious input)
 ✅ **Test features secured** (automatic in dev, never in production)
 
-**For complete details of all security fixes, see:** [docs/PRODUCTION_FIXES_2026-02-04.md](./docs/PRODUCTION_FIXES_2026-02-04.md)
+**For complete details of all security fixes, see:** [docs/archive/PRODUCTION_FIXES_2026-02-04.md](./docs/archive/PRODUCTION_FIXES_2026-02-04.md)
 
 ---
 
@@ -436,32 +436,31 @@ VITE_INTRANET_URL=https://intranet.nhs.uk
 
 | Document | Purpose | Read This If... |
 |----------|---------|-----------------|
-| **[docs/START_HERE.md](./docs/START_HERE.md)** 👈 | **Complete beginner's guide** | **This is your first time** |
-| [docs/DEVELOPMENT_MODE_GUIDE.md](./docs/DEVELOPMENT_MODE_GUIDE.md) | How development vs production works | You want to develop locally |
-| [docs/CRN_SETUP_GUIDE.md](./docs/CRN_SETUP_GUIDE.md) | Company lookup setup | You want to test or set up CRN verification |
+| **[docs/getting-started/START_HERE.md](./docs/getting-started/START_HERE.md)** 👈 | **Complete beginner's guide** | **This is your first time** |
+| [docs/getting-started/DEVELOPMENT_MODE_GUIDE.md](./docs/getting-started/DEVELOPMENT_MODE_GUIDE.md) | How development vs production works | You want to develop locally |
+| [docs/getting-started/CRN_SETUP_GUIDE.md](./docs/getting-started/CRN_SETUP_GUIDE.md) | Company lookup setup | You want to test or set up CRN verification |
 
 ### 🚀 For Deployment
 
 | Document | Purpose | Read This If... |
 |----------|---------|-----------------|
-| [docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md](./docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md) | Complete deployment checklist | You're deploying to production |
-| [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Detailed deployment guide | You need step-by-step deployment instructions |
-| [next-steps/README.md](./next-steps/README.md) | Step-by-step setup guides | You need to set up SQL, SharePoint, Power Automate |
+| [docs/deployment/CHECKLIST.md](./docs/deployment/CHECKLIST.md) | Complete deployment checklist | You're deploying to production |
+| [docs/deployment/DEPLOYMENT.md](./docs/deployment/DEPLOYMENT.md) | Detailed deployment guide | You need step-by-step deployment instructions |
+| [docs/deployment/setup/](./docs/deployment/setup/) | Step-by-step setup guides | You need to set up SQL, SharePoint, Power Automate |
 
 ### 📖 For Users & Administrators
 
 | Document | Purpose | Read This If... |
 |----------|---------|-----------------|
-| [docs/USER_GUIDE.md](./docs/USER_GUIDE.md) | How to use the form | You're a requester or reviewer |
-| [docs/ALEMBA.md](./docs/ALEMBA.md) | Alemba ITSM integration | You're integrating with service desk |
+| [docs/user-guides/USER_GUIDE.md](./docs/user-guides/USER_GUIDE.md) | How to use the form | You're a requester or reviewer |
+| [docs/user-guides/ALEMBA.md](./docs/user-guides/ALEMBA.md) | Alemba ITSM integration | You're integrating with service desk |
 
 ### 🔧 Technical Documentation
 
 | Document | Purpose | Read This If... |
 |----------|---------|-----------------|
-| [docs/PRODUCTION_FIXES_2026-02-04.md](./docs/PRODUCTION_FIXES_2026-02-04.md) | February 2026 security updates | You want to know what was fixed |
-| [docs/ROADMAP.md](./docs/ROADMAP.md) | Future features and planning | You want to see what's coming next |
-| [docs/CHECKLIST.md](./docs/CHECKLIST.md) | Quick deployment checklist | You prefer checklists over guides |
+| [docs/archive/PRODUCTION_FIXES_2026-02-04.md](./docs/archive/PRODUCTION_FIXES_2026-02-04.md) | February 2026 security updates | You want to know what was fixed |
+| [docs/reference/ROADMAP.md](./docs/reference/ROADMAP.md) | Future features and planning | You want to see what's coming next |
 
 ### 🌐 External Documentation
 
@@ -489,7 +488,7 @@ VITE_INTRANET_URL=https://intranet.nhs.uk
 For issues or questions:
 - **Technical issues:** Raise an issue on [GitHub](https://github.com/f-haque-96/Barts_Health_SSF/issues)
 - **Security concerns:** Contact the development team directly
-- **General questions:** See [docs/USER_GUIDE.md](./docs/USER_GUIDE.md) FAQ section
+- **General questions:** See [docs/user-guides/USER_GUIDE.md](./docs/user-guides/USER_GUIDE.md) FAQ section
 
 ---
 
@@ -497,7 +496,7 @@ For issues or questions:
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 2.0 | February 2026 | **Major security update** - Fixed all critical vulnerabilities, added CSRF protection, server-side validation, duplicate detection. See [CHANGES_IMPLEMENTED.md](./CHANGES_IMPLEMENTED.md) |
+| 2.0 | February 2026 | **Major security update** - Fixed all critical vulnerabilities, added CSRF protection, server-side validation, duplicate detection. See [docs/archive/CHANGES_IMPLEMENTED.md](./docs/archive/CHANGES_IMPLEMENTED.md) |
 | 1.0 | January 2026 | Initial release with core functionality |
 
 ---
