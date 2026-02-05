@@ -4,7 +4,8 @@
  * NEVER appears in production builds (!import.meta.env.PROD)
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { XIcon } from './Icons';
 import Button from './Button';
 import useFormStore from '../../stores/formStore';
@@ -12,7 +13,26 @@ import './DevModeModal.css';
 
 const DevModeModal = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState('pages');
+  const [submissions, setSubmissions] = useState([]);
+  const [selectedSubmission, setSelectedSubmission] = useState('');
   const { setCurrentSection, currentSection } = useFormStore();
+  const navigate = useNavigate();
+
+  // Load submissions from localStorage
+  useEffect(() => {
+    if (isOpen) {
+      try {
+        const allSubmissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+        setSubmissions(allSubmissions);
+        // Auto-select the first submission if available
+        if (allSubmissions.length > 0 && !selectedSubmission) {
+          setSelectedSubmission(allSubmissions[0].submissionId);
+        }
+      } catch (error) {
+        console.error('Error loading submissions:', error);
+      }
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -40,12 +60,21 @@ const DevModeModal = ({ isOpen, onClose }) => {
   };
 
   const authPages = [
-    { name: 'PBP Review', path: '/review/pbp', color: '#005EB8' },
-    { name: 'Procurement Review', path: '/review/procurement', color: '#007F3B' },
-    { name: 'OPW/IR35 Review', path: '/review/opw', color: '#7C2855' },
-    { name: 'AP Control', path: '/review/ap-control', color: '#ED8B00' },
+    { name: 'PBP Review', path: '/pbp-review', color: '#005EB8' },
+    { name: 'Procurement Review', path: '/procurement-review', color: '#007F3B' },
+    { name: 'OPW/IR35 Review', path: '/opw-review', color: '#7C2855' },
+    { name: 'AP Control', path: '/ap-review', color: '#ED8B00' },
     { name: 'Requester Response', path: '/respond', color: '#8A1538' },
   ];
+
+  const handleNavigateToReview = (path) => {
+    if (!selectedSubmission) {
+      alert('Please select a submission first or create a test submission in Section 7');
+      return;
+    }
+    onClose();
+    navigate(`${path}/${selectedSubmission}`);
+  };
 
   const sections = [
     { num: 1, name: 'Requester Information' },
@@ -90,31 +119,70 @@ const DevModeModal = ({ isOpen, onClose }) => {
               <p style={{ marginTop: 0, color: '#6b7280', fontSize: '0.875rem' }}>
                 Quick access to all authorization review pages for testing workflows
               </p>
+
+              {/* Submission Selector */}
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                  Select Submission:
+                </label>
+                <select
+                  value={selectedSubmission}
+                  onChange={(e) => setSelectedSubmission(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '6px',
+                    fontSize: '0.875rem',
+                    backgroundColor: 'white'
+                  }}
+                >
+                  {submissions.length === 0 ? (
+                    <option value="">No submissions found - create one in Section 7</option>
+                  ) : (
+                    submissions.map((sub) => (
+                      <option key={sub.submissionId} value={sub.submissionId}>
+                        {sub.submissionId} - {sub.status} ({new Date(sub.submissionDate).toLocaleDateString()})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+
+              {/* Review Page Buttons */}
               <div className="dev-page-links">
                 {authPages.map((page) => (
-                  <a
+                  <button
                     key={page.path}
-                    href={page.path}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    onClick={() => handleNavigateToReview(page.path)}
                     className="dev-page-link"
-                    style={{ borderLeftColor: page.color }}
+                    style={{
+                      borderLeft: `4px solid ${page.color}`,
+                      cursor: 'pointer',
+                      textAlign: 'left'
+                    }}
+                    disabled={!selectedSubmission}
                   >
                     <span style={{ fontWeight: '600', color: page.color }}>{page.name}</span>
-                    <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{page.path}</span>
-                  </a>
+                    <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+                      {selectedSubmission ? `${page.path}/${selectedSubmission}` : 'Select a submission first'}
+                    </span>
+                  </button>
                 ))}
               </div>
+
               <div style={{
                 marginTop: '1rem',
                 padding: '0.75rem',
-                backgroundColor: '#fef3c7',
-                border: '1px solid #fbbf24',
+                backgroundColor: submissions.length === 0 ? '#fee2e2' : '#fef3c7',
+                border: `1px solid ${submissions.length === 0 ? '#ef4444' : '#fbbf24'}`,
                 borderRadius: '6px',
                 fontSize: '0.875rem',
-                color: '#92400e'
+                color: submissions.length === 0 ? '#991b1b' : '#92400e'
               }}>
-                <strong>Note:</strong> These pages require test submissions to display data. Use the Development Testing Tools in Section 7 to create test submissions first.
+                <strong>{submissions.length === 0 ? 'No Submissions Found:' : 'Note:'}</strong> {submissions.length === 0
+                  ? 'Use the Development Testing Tools in Section 7 to create test submissions first.'
+                  : 'These pages require test submissions to display data. Select a submission above to navigate.'}
               </div>
             </>
           ) : (

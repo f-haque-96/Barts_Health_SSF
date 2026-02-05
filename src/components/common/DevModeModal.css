@@ -108,12 +108,20 @@
   text-decoration: none;
   transition: all 0.2s;
   background: white;
+  width: 100%;
+  font-family: inherit;
+  font-size: inherit;
 }
 
-.dev-page-link:hover {
+.dev-page-link:hover:not(:disabled) {
   background-color: #f9fafb;
   border-color: #005EB8;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dev-page-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .dev-section-grid {
