@@ -483,11 +483,75 @@ const Section7ReviewSubmit = () => {
           </p>
         </NoticeBox>
 
-        <div style={{ textAlign: 'center', marginTop: 'var(--space-32)' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-12)', justifyContent: 'center', marginTop: 'var(--space-32)', flexWrap: 'wrap' }}>
           <Button variant="primary" onClick={handleSubmitAnother}>
             Submit Another Form
           </Button>
+          {!import.meta.env.PROD && (
+            <Button variant="outline" onClick={() => window.close()}>
+              Close
+            </Button>
+          )}
         </div>
+
+        {/* Development Testing Tools - Automatically shown in dev mode after submission */}
+        {!import.meta.env.PROD && (
+          <div style={{
+            marginTop: 'var(--space-24)',
+            padding: 'var(--space-16)',
+            backgroundColor: '#e0f2fe',
+            borderRadius: 'var(--radius-base)',
+            border: '2px solid #0284c7',
+          }}>
+            <h4 style={{ margin: '0 0 var(--space-8) 0', fontSize: 'var(--font-size-md)', color: '#075985', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              🛠️ Development Testing Tools
+            </h4>
+            <p style={{ fontSize: 'var(--font-size-sm)', color: '#075985', marginBottom: 'var(--space-12)', fontWeight: '500' }}>
+              These buttons are automatically available in development mode. They will NOT appear in production builds.
+            </p>
+            {testSubmissionId && (
+              <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-12)', display: 'flex', alignItems: 'center', gap: 'var(--space-8)' }}>
+                Current test submission: <code style={{ backgroundColor: 'var(--color-background)', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace' }}>{testSubmissionId}</code>
+                <button
+                  onClick={handleResetTestSubmission}
+                  style={{
+                    color: 'var(--color-danger)',
+                    background: 'none',
+                    border: 'none',
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                    fontSize: 'var(--font-size-sm)'
+                  }}
+                >
+                  Reset
+                </button>
+              </p>
+            )}
+            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-12)' }}>
+              Test authorization workflow: PBP → Procurement → OPW → AP Control
+            </p>
+            <div style={{ display: 'flex', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
+              <Button variant="outline" onClick={() => handlePreviewAuthorisation('pbp')} style={{ color: 'var(--nhs-blue)' }}>
+                1. PBP Review
+              </Button>
+              <Button variant="outline" onClick={() => handlePreviewAuthorisation('procurement')} style={{ color: 'var(--nhs-blue)' }}>
+                2. Procurement
+              </Button>
+              <Button variant="outline" onClick={() => handlePreviewAuthorisation('opw')} style={{ color: 'var(--nhs-blue)' }}>
+                3. OPW Panel
+              </Button>
+              <Button variant="outline" onClick={() => handlePreviewAuthorisation('ap')} style={{ color: 'var(--nhs-blue)' }}>
+                4. AP Control
+              </Button>
+              <Button variant="outline" onClick={() => handlePreviewAuthorisation('respond')} style={{ color: '#ca8a04', borderColor: '#ca8a04', backgroundColor: '#fefce8' }}>
+                5. Requester
+              </Button>
+            </div>
+            <p style={{ fontSize: 'var(--font-size-xs)', color: '#6b7280', marginTop: 'var(--space-8)', marginBottom: 0 }}>
+              Use "5. Requester" to view the requester's perspective when PBP requests more information
+            </p>
+          </div>
+        )}
       </section>
     );
   }
