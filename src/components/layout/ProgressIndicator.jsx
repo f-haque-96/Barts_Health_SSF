@@ -86,9 +86,25 @@ const ProgressIndicator = () => {
               aria-label={`Step ${step.number}: ${step.label}`}
               aria-current={status === 'active' ? 'step' : undefined}
               onKeyDown={(e) => {
+                // ACC-01: Enhanced keyboard navigation
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
                   handleStepClick(step.number);
+                }
+                // Arrow key navigation for accessibility
+                else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                  e.preventDefault();
+                  const nextStep = steps.find(s => s.number === step.number + 1);
+                  if (nextStep && canNavigateTo(nextStep.number)) {
+                    handleStepClick(nextStep.number);
+                  }
+                }
+                else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                  e.preventDefault();
+                  const prevStep = steps.find(s => s.number === step.number - 1);
+                  if (prevStep) {
+                    handleStepClick(prevStep.number);
+                  }
                 }
               }}
             >
