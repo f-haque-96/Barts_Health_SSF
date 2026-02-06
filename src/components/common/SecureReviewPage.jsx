@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect, cloneElement } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import storage from '../../services/StorageProvider';
 
@@ -17,7 +17,6 @@ const SecureReviewPage = ({
   errorComponent
 }) => {
   const { submissionId, id } = useParams();
-  const navigate = useNavigate();
   const { user, hasRole, canAccessSubmission, loading: authLoading } = useAuth();
   const [submission, setSubmission] = useState(null);
   const [loading, setLoading] = useState(true);

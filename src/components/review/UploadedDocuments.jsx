@@ -39,28 +39,6 @@ const FILE_METADATA = {
   },
 };
 
-// Format file size to KB/MB
-const formatFileSize = (bytes) => {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-};
-
-// Format upload date
-const formatUploadDate = (isoString) => {
-  if (!isoString) return 'Unknown';
-  const date = new Date(isoString);
-  return date.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
-
 const UploadedDocuments = () => {
   const { uploadedFiles, removeUploadedFile, formData } = useFormStore();
   const [confirmDelete, setConfirmDelete] = useState(null);

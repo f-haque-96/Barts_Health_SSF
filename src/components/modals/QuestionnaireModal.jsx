@@ -61,7 +61,7 @@ const QuestionnaireModal = ({ isOpen, onClose, onComplete, type = 'clinical', se
     control,
     register,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors },
     reset,
   } = useForm({
     mode: 'onChange',
@@ -128,7 +128,7 @@ const QuestionnaireModal = ({ isOpen, onClose, onComplete, type = 'clinical', se
 
   // Remove uploaded file
   const handleRemoveUpload = (fileName) => {
-    const { [fileName]: removed, ...rest } = questionnaireUploads;
+    const { [fileName]: _removed, ...rest } = questionnaireUploads;
     setQuestionnaireUploads(rest);
   };
 

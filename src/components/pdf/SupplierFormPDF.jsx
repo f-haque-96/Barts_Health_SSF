@@ -14,7 +14,7 @@ import {
   Font,
 } from '@react-pdf/renderer';
 import { formatDate, formatCurrency } from '../../utils/helpers';
-import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes, formatOrganisationType, formatEmployeeCount } from '../../utils/formatters';
+import { formatFieldValue, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes, formatOrganisationType, formatEmployeeCount } from '../../utils/formatters';
 
 // Register fonts (optional - can use default fonts)
 // Font.register({
@@ -355,32 +355,6 @@ const formatFileSize = (bytes) => {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 };
 
-// Status badge color helper
-const getStatusStyle = (status) => {
-  switch(status) {
-    case 'approved': return { backgroundColor: '#22c55e' };
-    case 'rejected': return { backgroundColor: '#ef4444' };
-    case 'info_required': return { backgroundColor: '#f59e0b' };
-    default: return { backgroundColor: '#9ca3af' };
-  }
-};
-
-// Helper function to safely get nested values
-const safeGet = (obj, path, defaultValue = '') => {
-  try {
-    const keys = path.split('.');
-    let result = obj;
-    for (const key of keys) {
-      if (result === null || result === undefined) {
-        return defaultValue;
-      }
-      result = result[key];
-    }
-    return result ?? defaultValue;
-  } catch (e) {
-    return defaultValue;
-  }
-};
 
 // Helper to get section data with fallbacks
 const getSectionData = (submission, formData, sectionNum) => {
@@ -450,7 +424,8 @@ const TextBlock = ({ label, content }) => {
 };
 
 // Main PDF Document Component
-const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submissionDate, submission, isAPControlPDF = false }) => {
+// Note: submissionDate prop removed as it was unused
+const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission, isAPControlPDF = false }) => {
   // Return empty document if no data
   if (!submission && !formData) {
     return (
@@ -495,22 +470,6 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submissionDate
     month: 'long',
     year: 'numeric',
   });
-
-  // Convert file objects to base64 for images
-  const getImageBase64 = async (file) => {
-    if (!file?.file) return null;
-
-    // Check if it's an image
-    const isImage = file.type?.startsWith('image/');
-    if (!isImage) return null;
-
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(file.file);
-    });
-  };
 
   return (
     <Document

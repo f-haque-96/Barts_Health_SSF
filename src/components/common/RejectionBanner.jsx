@@ -5,13 +5,11 @@
  */
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { XIcon, WarningIcon } from './Icons';
 import Button from './Button';
 import './RejectionBanner.css';
 
 const RejectionBanner = ({ rejection, onDismiss, onSubmitAnother }) => {
-  const navigate = useNavigate();
 
   if (!rejection) return null;
 

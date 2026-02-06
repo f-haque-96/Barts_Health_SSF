@@ -3,7 +3,7 @@
  * Shows current progress through the 7-section form
  */
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import clsx from 'clsx';
 import useFormStore from '../../stores/formStore';
 import { CheckIcon } from '../common';
@@ -19,22 +19,14 @@ const steps = [
 ];
 
 const ProgressIndicator = () => {
-  // Force re-render trigger
-  const [, forceUpdate] = useState({});
-
   // Subscribe to ALL relevant state changes
+  // Zustand automatically triggers re-renders when these values change
   const currentSection = useFormStore((state) => state.currentSection);
   const formData = useFormStore((state) => state.formData);
-  const uploadedFiles = useFormStore((state) => state.uploadedFiles);
   const visitedSections = useFormStore((state) => state.visitedSections);
   const getMissingFields = useFormStore((state) => state.getMissingFields);
   const goToSection = useFormStore((state) => state.goToSection);
   const canNavigateTo = useFormStore((state) => state.canNavigateTo);
-
-  // Force update when section or data changes
-  useEffect(() => {
-    forceUpdate({});
-  }, [currentSection, formData, uploadedFiles, visitedSections]);
 
   const getStepStatus = (section) => {
     // Current section is always active

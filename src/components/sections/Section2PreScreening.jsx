@@ -36,7 +36,6 @@ const Section2PreScreening = () => {
 
   const {
     control,
-    register,
     handleSubmit,
     watch,
     formState: { errors },

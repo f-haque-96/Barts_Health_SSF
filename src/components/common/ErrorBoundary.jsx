@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import { WarningIcon, RotateIcon, HomeIcon } from './Icons';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -18,8 +18,9 @@ class ErrorBoundary extends React.Component {
     };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError() {
     // Update state so the next render will show the fallback UI
+    // Note: error parameter intentionally not used, but required by React
     return { hasError: true };
   }
 
@@ -35,7 +36,7 @@ class ErrorBoundary extends React.Component {
     }));
 
     // TODO: In production, send error to monitoring service (e.g., Sentry, Application Insights)
-    if (process.env.NODE_ENV === 'production') {
+    if (import.meta.env.PROD) {
       // Example: logErrorToService(error, errorInfo);
     }
   }
@@ -58,7 +59,7 @@ class ErrorBoundary extends React.Component {
       return (
         <div style={styles.container}>
           <div style={styles.card}>
-            <AlertTriangle size={48} color="#dc2626" style={styles.icon} />
+            <WarningIcon size={48} color="#dc2626" style={styles.icon} />
 
             <h1 style={styles.title}>Something Went Wrong</h1>
 
@@ -66,7 +67,7 @@ class ErrorBoundary extends React.Component {
               We apologize for the inconvenience. An unexpected error has occurred.
             </p>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <details style={styles.details}>
                 <summary style={styles.summary}>Error Details (Development Only)</summary>
                 <pre style={styles.errorText}>
@@ -78,12 +79,12 @@ class ErrorBoundary extends React.Component {
 
             <div style={styles.actions}>
               <button onClick={this.handleReset} style={styles.primaryButton}>
-                <RefreshCw size={16} style={styles.buttonIcon} />
+                <RotateIcon size={16} style={styles.buttonIcon} />
                 Try Again
               </button>
 
               <button onClick={this.handleGoHome} style={styles.secondaryButton}>
-                <Home size={16} style={styles.buttonIcon} />
+                <HomeIcon size={16} style={styles.buttonIcon} />
                 Go to Home
               </button>
             </div>

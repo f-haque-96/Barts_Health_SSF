@@ -5,7 +5,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { XIcon } from './Icons';
 import Button from './Button';
 import useFormStore from '../../stores/formStore';
@@ -16,23 +15,22 @@ const DevModeModal = ({ isOpen, onClose }) => {
   const [submissions, setSubmissions] = useState([]);
   const [selectedSubmission, setSelectedSubmission] = useState('');
   const { setCurrentSection, currentSection } = useFormStore();
-  const navigate = useNavigate();
 
   // Load submissions from localStorage
   useEffect(() => {
-    if (isOpen) {
-      try {
-        const allSubmissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
-        setSubmissions(allSubmissions);
-        // Auto-select the first submission if available
-        if (allSubmissions.length > 0 && !selectedSubmission) {
-          setSelectedSubmission(allSubmissions[0].submissionId);
-        }
-      } catch (error) {
-        console.error('Error loading submissions:', error);
+    if (!isOpen) return;
+
+    try {
+      const allSubmissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+      // Batch state updates to avoid cascading renders
+      setSubmissions(allSubmissions);
+      if (allSubmissions.length > 0 && !selectedSubmission) {
+        setSelectedSubmission(allSubmissions[0].submissionId);
       }
+    } catch (error) {
+      console.error('Error loading submissions:', error);
     }
-  }, [isOpen]);
+  }, [isOpen, selectedSubmission]);
 
   if (!isOpen) return null;
 

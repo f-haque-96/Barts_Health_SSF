@@ -23,7 +23,6 @@ import {
   PUBLIC_SECTOR_TYPES,
   FILE_UPLOAD_CONFIG,
 } from '../../utils/constants';
-import { formatCurrency, parseCurrency } from '../../utils/helpers';
 import useFormStore from '../../stores/formStore';
 import useFormNavigation from '../../hooks/useFormNavigation';
 import useCRNVerification from '../../hooks/useCRNVerification';
@@ -32,7 +31,7 @@ import clsx from 'clsx';
 const Section3Classification = () => {
   const { formData, updateFormData, updateMultipleFields, uploadedFiles, setUploadedFile, removeUploadedFile } = useFormStore();
   const { handleNext, handlePrev } = useFormNavigation();
-  const { verify, status: crnStatus, companyData, error: crnError, isVerifying, isValid, isCorsBlocked, isNotFound, canProceedManually } = useCRNVerification();
+  const { verify, status: crnStatus, companyData, error: crnError, isVerifying, isValid, isCorsBlocked, isNotFound } = useCRNVerification();
 
   const [selectedSupplierType, setSelectedSupplierType] = useState(formData.supplierType || '');
   const [companiesHouseValue, setCompaniesHouseValue] = useState(formData.companiesHouseRegistered || '');

@@ -87,8 +87,8 @@ export const PublicSectorIcon = ({ size = 48, color = 'currentColor' }) => (
   </svg>
 );
 
-// Icon map for easy access
-export const SupplierIcons = {
+// Icon map for internal use (not exported to avoid Fast Refresh issues)
+const SupplierIcons = {
   limited_company: LimitedCompanyIcon,
   charity: CharityIcon,
   sole_trader: SoleTraderIcon,

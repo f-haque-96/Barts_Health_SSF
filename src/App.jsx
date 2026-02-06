@@ -36,12 +36,15 @@ const MainForm = () => {
 
   // Check for rejected submissions by current user
   useEffect(() => {
-    // If rejection data already exists in store, show banner
+    // Early return if modal should already be shown
     if (storedRejectionData) {
-      setShowRejectionBanner(true);
+      if (!showRejectionBanner) {
+        setShowRejectionBanner(true);
+      }
       return;
     }
 
+    // Synchronize with external state (localStorage)
     try {
       const allSubmissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
       const userEmail = formData.nhsEmail;
