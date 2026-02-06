@@ -640,8 +640,8 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission, is
             </Text>
           </View>
 
-          {/* Badge 2: Verified status (AP Control only) */}
-          {isAPControlPDF && (
+          {/* Badge 2: Verified status (shows when AP Control has verified) */}
+          {submission?.apReview?.bankDetailsVerified && (
             <View style={[styles.authBadge, styles.badgeGreen, { display: 'flex', flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start' }]}>
               <Text style={styles.badgeText}>BANK DETAILS VERIFIED</Text>
             </View>
