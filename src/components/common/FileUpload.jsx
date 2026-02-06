@@ -255,9 +255,42 @@ const FileUpload = ({
         </div>
       ) : (
         <div className="uploaded-file">
-          <span className="file-icon">
-            {uploadType === 'image' ? '🖼️' : '[PDF]'}
-          </span>
+          {/* UI-02: Show image thumbnail for image uploads */}
+          {uploadType === 'image' && (currentFile.base64 || currentFile.file) ? (
+            <div
+              style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '6px',
+                overflow: 'hidden',
+                flexShrink: 0,
+                backgroundColor: '#f3f4f6',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid var(--color-border)',
+              }}
+            >
+              <img
+                src={currentFile.base64 || (currentFile.file ? URL.createObjectURL(currentFile.file) : '')}
+                alt={`Preview of ${currentFile.name}`}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+                onError={(e) => {
+                  // Fallback to icon if image fails to load
+                  e.target.style.display = 'none';
+                  e.target.parentElement.innerHTML = '<span style="font-size: 24px;">🖼️</span>';
+                }}
+              />
+            </div>
+          ) : (
+            <span className="file-icon">
+              {uploadType === 'image' ? '🖼️' : '[PDF]'}
+            </span>
+          )}
           <div className="file-info">
             <div className="file-name">{currentFile.name}</div>
             <div className="file-size">{formatFileSize(currentFile.size)}</div>
