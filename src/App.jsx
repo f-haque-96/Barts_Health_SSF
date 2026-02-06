@@ -33,18 +33,15 @@ import { getQueryParam } from './utils/helpers';
 // Main Form Component (Public - any authenticated user can submit)
 const MainForm = () => {
   const { currentSection, setReviewerRole, formData, resetForm, setRejectionData, rejectionData: storedRejectionData } = useFormStore();
-  const [showRejectionBanner, setShowRejectionBanner] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   // UX-01: Warn users before leaving with unsaved changes
   useUnsavedChanges(true);
 
   // Check for rejected submissions by current user
   useEffect(() => {
-    // Early return if modal should already be shown
+    // Early return if data is already loaded - avoid redundant localStorage reads
     if (storedRejectionData) {
-      if (!showRejectionBanner) {
-        setShowRejectionBanner(true);
-      }
       return;
     }
 
@@ -119,7 +116,6 @@ const MainForm = () => {
 
           if (rejectionInfo) {
             setRejectionData(rejectionInfo); // Store in formStore
-            setShowRejectionBanner(true);
           }
         }
       }
@@ -138,7 +134,7 @@ const MainForm = () => {
 
   // Handle Submit Another Supplier button click
   const handleSubmitAnother = () => {
-    setShowRejectionBanner(false);
+    setBannerDismissed(true);
     setRejectionData(null); // Clear rejection data from store
     resetForm();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -193,10 +189,10 @@ const MainForm = () => {
       <HelpButton />
 
       {/* Rejection Banner - Shows when user has rejected submissions */}
-      {showRejectionBanner && storedRejectionData && (
+      {storedRejectionData && !bannerDismissed && (
         <RejectionBanner
           rejection={storedRejectionData}
-          onDismiss={() => setShowRejectionBanner(false)}
+          onDismiss={() => setBannerDismissed(true)}
           onSubmitAnother={handleSubmitAnother}
         />
       )}

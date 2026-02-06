@@ -8,9 +8,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { Button, NoticeBox, ApprovalStamp, Checkbox, Textarea, SignatureSection, Input, CheckIcon, XIcon, WarningIcon, ClockIcon, DocumentIcon, DownloadIcon, LockIcon, CircleXIcon, VerificationBadge } from '../components/common';
 import { formatDate, formatCurrency } from '../utils/helpers';
-import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes, formatEmployeeCount } from '../utils/formatters';
+import { formatFieldValue, formatSupplierType, formatServiceTypes, formatEmployeeCount } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
-import { sendApprovalNotification, notifyDepartment, closeAlembaOnCompletion, sendRejectionNotification } from '../services/notificationService';
+import { closeAlembaOnCompletion, sendRejectionNotification } from '../services/notificationService';
 
 const ReviewItem = ({ label, value, highlight, raw = false, badge }) => {
   if (!value && value !== 0) return null;
@@ -89,7 +89,6 @@ const ReviewCard = ({ title, children, highlight }) => {
 const APControlReviewPage = ({
   submission: propSubmission,
   setSubmission: propSetSubmission,
-  user,
   readOnly = false
 }) => {
   const { submissionId } = useParams();

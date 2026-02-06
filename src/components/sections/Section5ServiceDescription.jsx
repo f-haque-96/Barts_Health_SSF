@@ -19,7 +19,6 @@ const Section5ServiceDescription = () => {
 
   const {
     control,
-    register,
     handleSubmit,
     watch,
     setValue,

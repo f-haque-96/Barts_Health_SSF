@@ -8,9 +8,8 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input, Textarea, RadioGroup, QuestionLabel } from '../common';
 import { FormNavigation } from '../layout';
-import { section6BaseSchema, getSection6Schema } from '../../utils/validation';
+import { getSection6Schema } from '../../utils/validation';
 import {
-  formatPostcode,
   formatSortCode,
   formatIBAN,
   formatAccountNumber,

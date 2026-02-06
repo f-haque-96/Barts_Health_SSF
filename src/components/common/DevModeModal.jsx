@@ -16,21 +16,24 @@ const DevModeModal = ({ isOpen, onClose }) => {
   const [selectedSubmission, setSelectedSubmission] = useState('');
   const { setCurrentSection, currentSection } = useFormStore();
 
-  // Load submissions from localStorage
+  // Load submissions from localStorage when modal opens
   useEffect(() => {
     if (!isOpen) return;
 
     try {
       const allSubmissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
-      // Batch state updates to avoid cascading renders
       setSubmissions(allSubmissions);
-      if (allSubmissions.length > 0 && !selectedSubmission) {
+
+      // Set default selection only if no selection exists and submissions are available
+      if (allSubmissions.length > 0 && selectedSubmission === '') {
         setSelectedSubmission(allSubmissions[0].submissionId);
       }
     } catch (error) {
       console.error('Error loading submissions:', error);
     }
-  }, [isOpen, selectedSubmission]);
+    // Only re-run when modal opens, not when selection changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

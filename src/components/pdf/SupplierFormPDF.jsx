@@ -424,8 +424,8 @@ const TextBlock = ({ label, content }) => {
 };
 
 // Main PDF Document Component
-// Note: submissionDate prop removed as it was unused
-const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission, isAPControlPDF = false }) => {
+// Note: submissionDate and isAPControlPDF props removed as they were unused
+const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) => {
   // Return empty document if no data
   if (!submission && !formData) {
     return (

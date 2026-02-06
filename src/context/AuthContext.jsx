@@ -11,6 +11,7 @@ import storage from '../services/StorageProvider';
 const AuthContext = createContext(null);
 
 // Role definitions matching AD security groups
+// eslint-disable-next-line react-refresh/only-export-components
 export const ROLES = {
   REQUESTER: 'requester',
   PBP: 'pbp',
@@ -181,6 +182,7 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
