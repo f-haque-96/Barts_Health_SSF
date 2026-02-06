@@ -1,12 +1,14 @@
 /**
  * Modal Component
- * Accessible modal dialog
+ * Accessible modal dialog with focus trap
+ * ACC-03: Prevents users from tabbing out of modal
  */
 
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 import Button from './Button';
+import useFocusTrap from '../../hooks/useFocusTrap';
 
 const Modal = ({
   isOpen,
@@ -20,6 +22,8 @@ const Modal = ({
   className,
   headerStyle = 'default', // 'default' | 'nhs-blue'
 }) => {
+  // ACC-03: Trap focus within modal for accessibility
+  const focusTrapRef = useFocusTrap(isOpen);
   useEffect(() => {
     if (!isOpen) return;
 
@@ -58,6 +62,7 @@ const Modal = ({
       }}
     >
       <div
+        ref={focusTrapRef}
         className={clsx('modal-content', className)}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
