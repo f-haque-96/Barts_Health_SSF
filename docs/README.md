@@ -6,11 +6,14 @@
 
 ## 🚀 Quick Start
 
+### 📍 **[Complete Documentation Index](DOCUMENTATION_INDEX.md)** ← Start Here for Full Navigation
+
 ### New to the Project?
 Start here:
 1. [getting-started/START_HERE.md](getting-started/START_HERE.md) - **Read this first!**
-2. [getting-started/DEVELOPMENT_MODE_GUIDE.md](getting-started/DEVELOPMENT_MODE_GUIDE.md) - Set up your environment
-3. [getting-started/CRN_SETUP_GUIDE.md](getting-started/CRN_SETUP_GUIDE.md) - Configure company lookup
+2. [security/CRITICAL_VALIDATION_FIX.md](security/CRITICAL_VALIDATION_FIX.md) - **MUST READ** - Critical validation fixes
+3. [getting-started/DEV_MODE_TESTING_GUIDE.md](getting-started/DEV_MODE_TESTING_GUIDE.md) - Set up your environment
+4. [getting-started/CRN_SETUP_GUIDE.md](getting-started/CRN_SETUP_GUIDE.md) - Configure company lookup
 
 ### Deploying to Production?
 Go here:
@@ -29,9 +32,21 @@ Go here:
 
 ```
 docs/
+├── DOCUMENTATION_INDEX.md  👈 MASTER INDEX - Complete navigation guide
+│
+├── security/               👈 🔴 CRITICAL - Security fixes & validation
+│   ├── CRITICAL_VALIDATION_FIX.md    (MUST READ - 48+ field validations)
+│   ├── PDF_SECURITY_FIX.md           (MUST READ - Banking details protection)
+│   ├── SECURITY_FIXES_SUMMARY.md
+│   └── SECURITY_CHANGES_EXPLAINED.md
+│
+├── fixes/                  👈 Bug fixes & new features
+│   ├── BUG_FIXES_COMPLETE.md         (Upload validation & bank details)
+│   └── BANK_DETAILS_BADGES_COMPLETE.md
+│
 ├── getting-started/         👈 Start here if you're new
 │   ├── START_HERE.md       (Complete beginner's guide)
-│   ├── DEVELOPMENT_MODE_GUIDE.md
+│   ├── DEV_MODE_TESTING_GUIDE.md
 │   ├── CRN_SETUP_GUIDE.md
 │   └── DEVELOPMENT_AUTH_GUIDE.md
 │
@@ -51,7 +66,11 @@ docs/
 │   └── ALEMBA.md           (Integration guide)
 │
 ├── reference/              👈 Technical reference
+│   ├── VALIDATION_VERIFICATION.md (All validation rules documented)
 │   └── ROADMAP.md          (Future features)
+│
+├── debugging/              👈 Troubleshooting guides
+│   └── DEBUGGING_FILE_UPLOADS.md
 │
 └── archive/                👈 Old documentation (for reference)
     ├── PRODUCTION_FIXES_2026-02-04.md
@@ -125,5 +144,18 @@ All documentation follows these standards:
 
 ---
 
-**Last Updated:** February 5, 2026
+## 🔒 Critical Security Documentation (Read First!)
+
+**Recent Critical Fixes (February 6, 2026):**
+1. **[Comprehensive Form Validation](security/CRITICAL_VALIDATION_FIX.md)** - 48+ fields validated, prevents invalid data submission
+2. **[PDF Banking Security](security/PDF_SECURITY_FIX.md)** - No banking details exposed in PDFs
+3. **[Bug Fixes Complete](fixes/BUG_FIXES_COMPLETE.md)** - Upload validation & bank details visibility
+4. **[Bank Details Badges](fixes/BANK_DETAILS_BADGES_COMPLETE.md)** - Review page badges implementation
+
+**Priority:** 🔴 **CRITICAL** - Read before any deployment or development work
+
+---
+
+**Last Updated:** February 6, 2026
 **Maintained By:** NHS Barts Health Development Team
+**Documentation Version:** 2.0 (Post Security & Validation Fixes)
