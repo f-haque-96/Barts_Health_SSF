@@ -127,7 +127,7 @@ const Section6FinancialInfo = () => {
         {watchOverseas === 'yes' && (
           <>
             <Input
-              label={<QuestionLabel section="6" question="2">IBAN</QuestionLabel>}
+              label={<QuestionLabel section="6" question="2" tooltip="International Bank Account Number - Up to 34 characters starting with 2-letter country code">IBAN</QuestionLabel>}
               name="iban"
               {...register('iban')}
               onChange={(e) => {
@@ -148,7 +148,7 @@ const Section6FinancialInfo = () => {
 
             <div className="form-row">
               <Input
-                label={<QuestionLabel section="6" question="3">SWIFT/BIC Code</QuestionLabel>}
+                label={<QuestionLabel section="6" question="3" tooltip="Bank Identifier Code for international transfers - 8 or 11 characters">SWIFT/BIC Code</QuestionLabel>}
                 name="swiftCode"
                 {...register('swiftCode')}
                 onChange={(e) => {
@@ -167,7 +167,7 @@ const Section6FinancialInfo = () => {
               />
 
               <Input
-                label={<QuestionLabel section="6" question="4">Bank Routing Number</QuestionLabel>}
+                label={<QuestionLabel section="6" question="4" tooltip="US bank routing number for ACH transfers - 9 digits">Bank Routing Number</QuestionLabel>}
                 name="bankRouting"
                 {...register('bankRouting')}
                 onChange={(e) => {
