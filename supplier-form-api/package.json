@@ -1,7 +1,7 @@
 {
   "name": "supplier-form-api",
   "version": "1.0.0",
-  "description": "Backend API for NHS Barts Health Supplier Setup Form",
+  "description": "Backend API for NHS Barts Health Supplier Setup Form - Secure supplier onboarding system",
   "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",

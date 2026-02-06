@@ -33,3 +33,7 @@ dist-ssr
 
 # Claude/AI tool files
 .claude/
+
+# Session files
+SESSION_SUMMARY.md
+*.session.md

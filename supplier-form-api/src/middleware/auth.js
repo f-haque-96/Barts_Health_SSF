@@ -1,6 +1,7 @@
 /**
  * Authentication Middleware
  * Verifies user is authenticated before allowing access
+ * Updated: February 2026 - Security enhancements and CSRF protection
  */
 
 const passport = require('passport');

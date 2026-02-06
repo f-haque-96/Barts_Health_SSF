@@ -1,6 +1,7 @@
 /**
  * API Routes Index
  * Main router that combines all route modules
+ * Updated: February 2026 - Self-approval prevention & validation enhancements
  */
 
 const express = require('express');

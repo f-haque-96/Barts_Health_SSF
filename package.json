@@ -1,8 +1,9 @@
 {
   "name": "nhs-supplier-form-react",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "NHS Barts Health Supplier Setup Smart Form - Frontend Application",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
