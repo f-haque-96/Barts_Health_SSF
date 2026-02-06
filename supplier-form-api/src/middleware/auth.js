@@ -40,7 +40,30 @@ const optionalAuth = (req, res, next) => {
   })(req, res, next);
 };
 
+/**
+ * Development bypass - allows public access in dev mode, requires auth in production
+ * Use this for endpoints that should work during local development but require auth in production
+ */
+const devBypassAuth = (req, res, next) => {
+  // In development mode, allow access without authentication
+  if (process.env.NODE_ENV !== 'production') {
+    // Create a mock user for development
+    req.user = req.user || {
+      oid: 'dev-user',
+      email: 'dev@localhost',
+      name: 'Development User',
+      roles: ['developer']
+    };
+    logger.info('Dev mode: Bypassing authentication');
+    return next();
+  }
+
+  // In production, require authentication
+  return requireAuth(req, res, next);
+};
+
 module.exports = {
   requireAuth,
-  optionalAuth
+  optionalAuth,
+  devBypassAuth
 };

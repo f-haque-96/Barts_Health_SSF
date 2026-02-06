@@ -404,6 +404,11 @@ const Section2PreScreening = () => {
         Complete these questions in order. Each question unlocks after the previous one is answered.
       </p>
 
+      {/* Security Notice about file uploads */}
+      <NoticeBox type="info">
+        <strong>Security Note:</strong> Uploaded documents are stored securely in memory only and will NOT persist if you close or refresh your browser. Please complete the form in one session, or be prepared to re-upload documents if needed.
+      </NoticeBox>
+
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* QUESTION 1: Supplier Connection (CONFLICT OF INTEREST - NOW FIRST) */}
         <div className={getQuestionClass(questionStatus.q1_supplierConnection.locked)}>

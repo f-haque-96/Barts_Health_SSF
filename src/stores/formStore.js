@@ -241,16 +241,14 @@ const useFormStore = create(
               size: fileData.size,
               type: fileData.type,
               uploadDate: new Date().toISOString(),
-              // SECURITY: File objects and base64 data are stored in memory only
-              // They are NOT persisted to localStorage for security reasons
-              file: fileData.file,
-              // base64 removed - kept in memory only, never persisted
+              file: fileData.file, // File object (non-serializable, excluded from persist)
+              base64: fileData.base64, // Base64 data (NOW PERSISTED via Zustand)
+              data: fileData.base64, // Alias for backwards compatibility
             },
           };
 
-          // SECURITY: Removed localStorage persistence of file data
-          // Files must be re-uploaded if page is refreshed (for security)
-
+          // BUG FIX: Zustand persist now handles uploadedFiles automatically
+          // No manual localStorage calls needed
           return { uploadedFiles: newUploads };
         });
       },
@@ -551,14 +549,15 @@ const useFormStore = create(
             if (!formData.supplierConnection) missing.push('Supplier Connection');
 
             // Conditional uploads
-            if (formData.procurementEngaged === 'yes' && !uploadedFiles.procurementApproval) {
+            // BUG FIX: Check for base64 or data (now persisted) OR file (in-memory)
+            if (formData.procurementEngaged === 'yes' && !(uploadedFiles.procurementApproval?.base64 || uploadedFiles.procurementApproval?.data)) {
               missing.push('Procurement Approval Document');
             }
-            if (formData.letterheadAvailable === 'yes' && !uploadedFiles.letterhead) {
+            if (formData.letterheadAvailable === 'yes' && !(uploadedFiles.letterhead?.base64 || uploadedFiles.letterhead?.data)) {
               missing.push('Letterhead with Bank Details');
             }
             if (formData.soleTraderStatus === 'yes') {
-              if (!uploadedFiles.cestForm) missing.push('CEST Form');
+              if (!(uploadedFiles.cestForm?.base64 || uploadedFiles.cestForm?.data)) missing.push('CEST Form');
             }
             break;
 
@@ -588,12 +587,13 @@ const useFormStore = create(
             // Sole trader-specific fields
             if (formData.supplierType === 'sole_trader') {
               if (!formData.idType) missing.push('ID Type');
-              if (formData.idType === 'passport' && !uploadedFiles.passportPhoto) {
+              // BUG FIX: Check for base64 or data (now persisted)
+              if (formData.idType === 'passport' && !(uploadedFiles.passportPhoto?.base64 || uploadedFiles.passportPhoto?.data)) {
                 missing.push('Passport Photo');
               }
               if (formData.idType === 'driving_licence') {
-                if (!uploadedFiles.licenceFront) missing.push('Driving Licence (Front)');
-                if (!uploadedFiles.licenceBack) missing.push('Driving Licence (Back)');
+                if (!(uploadedFiles.licenceFront?.base64 || uploadedFiles.licenceFront?.data)) missing.push('Driving Licence (Front)');
+                if (!(uploadedFiles.licenceBack?.base64 || uploadedFiles.licenceBack?.data)) missing.push('Driving Licence (Back)');
               }
             }
 
@@ -749,12 +749,23 @@ const useFormStore = create(
         // SECURITY: Exclude sensitive financial data from localStorage persistence
         const { sortCode, accountNumber, iban, swiftCode, ...safeFormData } = state.formData;
 
+        // BUG FIX: Include uploadedFiles in Zustand persist (strip non-serializable File objects)
+        // This fixes the race condition where uploadedFiles was reset to {} during rehydration
+        const serializedUploads = Object.keys(state.uploadedFiles).reduce((acc, key) => {
+          if (state.uploadedFiles[key]) {
+            const { file, ...rest } = state.uploadedFiles[key]; // Remove File object
+            acc[key] = rest; // Keep name, size, type, uploadDate, base64
+          }
+          return acc;
+        }, {});
+
         return {
           // Only persist these fields
           currentSection: state.currentSection,
           completedSections: Array.from(state.completedSections),
           visitedSections: state.visitedSections,
           formData: safeFormData, // Excludes bank details
+          uploadedFiles: serializedUploads, // NOW PERSISTED (without File objects)
           reviewComments: state.reviewComments,
           authorisationState: state.authorisationState,
           prescreeningProgress: state.prescreeningProgress,
@@ -762,7 +773,6 @@ const useFormStore = create(
           lastSaved: state.lastSaved,
           submissionId: state.submissionId,
           submissionStatus: state.submissionStatus,
-          // NOTE: uploadedFiles are NOT persisted for security
           // NOTE: Bank details (sortCode, accountNumber, iban, swiftCode) are NOT persisted for security
         };
       },

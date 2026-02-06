@@ -808,28 +808,6 @@ const Section7ReviewSubmit = () => {
             </div>
           )}
 
-          {/* Show all missing fields */}
-          {missingFields.length > 0 && (
-            <div style={{
-              background: '#fef3c7',
-              border: '1px solid #f59e0b',
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '24px'
-            }}>
-              <h4 style={{ color: '#92400e', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <WarningIcon size={18} color="#f59e0b" /> Please Complete All Required Fields
-              </h4>
-              <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                {missingFields.map((field, index) => (
-                  <li key={index} style={{ color: '#92400e', marginBottom: '4px' }}>
-                    {field}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
           <NoticeBox type="info">
             <strong>Before submitting:</strong> Please ensure all information is accurate and complete.
             Once submitted, this form will be reviewed by the Procurement team.

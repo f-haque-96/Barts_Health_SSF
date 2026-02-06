@@ -698,6 +698,30 @@ const OPWReviewPage = ({
       {/* Section 6: Financial Information */}
       <ReviewCard title="Section 6: Financial & Accounts">
         <ReviewItem label="Overseas Supplier" value={formData.overseasSupplier} />
+
+        {/* Bank Details Provided Badge */}
+        <div style={{
+          padding: '12px 16px',
+          borderRadius: '8px',
+          border: '1px solid #22c55e',
+          backgroundColor: '#f0fdf4',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginTop: '12px',
+          marginBottom: '12px',
+        }}>
+          <CheckIcon size={16} color="#22c55e" />
+          <div>
+            <strong style={{ color: '#166534' }}>
+              {formData.overseasSupplier === 'yes' ? 'Overseas Bank Details Provided' : 'UK Bank Details Provided'}
+            </strong>
+            <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#6b7280' }}>
+              Banking information has been submitted and will be verified by AP Control.
+            </p>
+          </div>
+        </div>
+
         {formData.iban && <ReviewItem label="IBAN" value={formData.iban} />}
         <ReviewItem label="Accounts Address Same" value={formData.accountsAddressSame} />
         <ReviewItem label="GHX/DUNS Known" value={formData.ghxDunsKnown} />

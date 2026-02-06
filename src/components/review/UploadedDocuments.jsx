@@ -68,13 +68,15 @@ const UploadedDocuments = () => {
   // Determine which uploads are required based on formData
   const requiredUploads = [];
 
-  // Letterhead - ALWAYS REQUIRED
-  requiredUploads.push({
-    fieldName: 'letterhead',
-    label: 'Letterhead with Bank Details',
-    section: 'Section 2: Pre-screening',
-    required: true,
-  });
+  // Letterhead - Required if letterheadAvailable === 'yes'
+  if (formData?.letterheadAvailable === 'yes') {
+    requiredUploads.push({
+      fieldName: 'letterhead',
+      label: 'Letterhead with Bank Details',
+      section: 'Section 2: Pre-screening',
+      required: true,
+    });
+  }
 
   // Procurement Approval - Required if engaged with procurement
   if (formData?.procurementEngaged === 'yes') {
@@ -98,9 +100,9 @@ const UploadedDocuments = () => {
 
   // Passport/ID - Required for Sole Traders
   if (formData?.supplierType === 'sole_trader' || formData?.soleTraderStatus === 'yes') {
-    const hasPassport = uploadedFiles?.passportPhoto?.base64;
-    const hasLicenceFront = uploadedFiles?.licenceFront?.base64;
-    const hasLicenceBack = uploadedFiles?.licenceBack?.base64;
+    const hasPassport = uploadedFiles?.passportPhoto?.base64 || uploadedFiles?.passportPhoto?.data || uploadedFiles?.passportPhoto?.file;
+    const hasLicenceFront = uploadedFiles?.licenceFront?.base64 || uploadedFiles?.licenceFront?.data || uploadedFiles?.licenceFront?.file;
+    const hasLicenceBack = uploadedFiles?.licenceBack?.base64 || uploadedFiles?.licenceBack?.data || uploadedFiles?.licenceBack?.file;
 
     if (hasPassport || (hasLicenceFront && hasLicenceBack)) {
       // Show whichever they uploaded
@@ -175,7 +177,8 @@ const UploadedDocuments = () => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
         {requiredUploads.map((upload) => {
           const file = uploadedFiles?.[upload.fieldName];
-          const isUploaded = !!(file?.base64 || file?.data);
+          // BUG FIX: Check for base64/data (persisted) OR file object (in-memory)
+          const isUploaded = !!(file?.base64 || file?.data || file?.file);
 
           return (
             <div
@@ -239,7 +242,7 @@ const UploadedDocuments = () => {
         })}
       </div>
 
-      {requiredUploads.some(u => !uploadedFiles?.[u.fieldName]?.base64) && (
+      {requiredUploads.some(u => !(uploadedFiles?.[u.fieldName]?.base64 || uploadedFiles?.[u.fieldName]?.data || uploadedFiles?.[u.fieldName]?.file)) && (
         <div
           style={{
             marginTop: 'var(--space-16)',

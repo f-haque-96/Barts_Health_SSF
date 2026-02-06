@@ -669,19 +669,26 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submissionDate
         {/* SECTION 6: Financial Information */}
         <Text style={styles.sectionHeader}>Section 6: Financial & Accounts</Text>
         <Field label="Overseas Supplier" value={normalizedData.section6?.overseasSupplier || normalizedData.overseasSupplier} />
-        {(normalizedData.section6?.overseasSupplier || normalizedData.overseasSupplier) === 'yes' ? (
-          <>
-            <Field label="IBAN" value={normalizedData.section6?.iban || normalizedData.iban} />
-            <Field label="SWIFT/BIC" value={normalizedData.section6?.swiftCode || normalizedData.swiftCode || normalizedData.section6?.swiftBic || normalizedData.swiftBic} />
-            <Field label="Bank Routing" value={normalizedData.section6?.bankRouting || normalizedData.bankRouting} />
-          </>
-        ) : (
-          <>
-            <Field label="Name on Account" value={normalizedData.section6?.nameOnAccount || normalizedData.nameOnAccount} />
-            <Field label="Sort Code" value={normalizedData.section6?.sortCode || normalizedData.sortCode} />
-            <Field label="Account Number" value={normalizedData.section6?.accountNumber || normalizedData.accountNumber} />
-          </>
-        )}
+
+        {/* Bank Details Status Badges - NO actual banking information shown for security */}
+        <View style={{ marginTop: 12, marginBottom: 12, gap: 8 }}>
+          {/* Badge 1: UK or Overseas Bank Details Provided */}
+          <View style={[styles.authBadge, styles.badgeBlue, { display: 'flex', flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginBottom: 6 }]}>
+            <Text style={styles.badgeText}>
+              {(normalizedData.section6?.overseasSupplier || normalizedData.overseasSupplier) === 'yes'
+                ? 'OVERSEAS BANK DETAILS PROVIDED'
+                : 'UK BANK DETAILS PROVIDED'}
+            </Text>
+          </View>
+
+          {/* Badge 2: Verified status (AP Control only) */}
+          {isAPControlPDF && (
+            <View style={[styles.authBadge, styles.badgeGreen, { display: 'flex', flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start' }]}>
+              <Text style={styles.badgeText}>BANK DETAILS VERIFIED</Text>
+            </View>
+          )}
+        </View>
+
         <Field label="Accounts Address Same" value={normalizedData.section6?.accountsAddressSame || normalizedData.accountsAddressSame} />
         {(normalizedData.section6?.accountsAddressSame || normalizedData.accountsAddressSame) === 'no' && (
           <>

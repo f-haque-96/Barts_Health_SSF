@@ -6,7 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, devBypassAuth } = require('../middleware/auth');
 const { requireRole, canAccessSubmission } = require('../middleware/rbac');
 const {
   validateSubmissionCreate,
@@ -239,9 +239,9 @@ router.get('/audit/:id', requireAuth, canAccessSubmission, async (req, res, next
 /**
  * GET /api/companies-house/:crn
  * Proxy Companies House lookup (keeps API key server-side)
- * SECURITY: Always requires authentication
+ * SECURITY: Requires authentication in production, bypassed in dev mode
  */
-router.get('/companies-house/:crn', requireAuth, validateCRNLookup, async (req, res, next) => {
+router.get('/companies-house/:crn', devBypassAuth, validateCRNLookup, async (req, res, next) => {
   try {
     const { crn } = req.params;
     const apiKey = process.env.CH_API_KEY;
