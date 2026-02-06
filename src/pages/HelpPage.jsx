@@ -194,7 +194,7 @@ const HelpPage = () => {
           {faqs.map((faq, index) => (
             <details key={index} className="faq-item">
               <summary>{faq.question}</summary>
-              <p>{faq.answer}</p>
+              <div className="faq-answer">{faq.answer}</div>
             </details>
           ))}
         </section>
