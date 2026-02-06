@@ -54,11 +54,13 @@ export const formatCRN = (value) => {
 
 /**
  * Generate unique submission ID
+ * SECURITY: Uses crypto.randomUUID() for cryptographically secure ID generation
  */
 export const generateSubmissionId = (prefix = 'SUB') => {
   const timestamp = Date.now();
-  const random = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `${prefix}-${timestamp}-${random}`;
+  // Use crypto.randomUUID() which is cryptographically secure
+  const uuid = crypto.randomUUID().split('-')[0].toUpperCase(); // First segment of UUID
+  return `${prefix}-${timestamp}-${uuid}`;
 };
 
 /**

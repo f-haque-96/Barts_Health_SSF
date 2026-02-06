@@ -1,6 +1,7 @@
 /**
  * API Integration Module
  * Handles all communication with Power Automate flows and backend services
+ * SECURITY: Includes CSRF token handling for all state-changing requests
  */
 
 // API Endpoints - Configure in .env.production
@@ -14,7 +15,12 @@ const API_ENDPOINTS = {
   apComplete: import.meta.env.VITE_API_AP_COMPLETE,
   uploadDocument: import.meta.env.VITE_API_UPLOAD_DOCUMENT,
   verifyCRN: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/VerifyCRN` : null,
+  csrfToken: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/csrf-token` : null,
 };
+
+// CSRF Token Cache
+let csrfToken = null;
+let csrfTokenPromise = null;
 
 /**
  * Check if backend is configured
@@ -24,7 +30,60 @@ export const isBackendConfigured = () => {
 };
 
 /**
- * Generic API call handler
+ * Fetch CSRF token from backend
+ * SECURITY: Required for all state-changing requests (POST/PUT/DELETE)
+ */
+export const fetchCSRFToken = async () => {
+  // If we already have a token fetch in progress, wait for it
+  if (csrfTokenPromise) {
+    return csrfTokenPromise;
+  }
+
+  // If we already have a cached token, return it
+  if (csrfToken) {
+    return csrfToken;
+  }
+
+  // No token endpoint configured (development/mock mode)
+  if (!API_ENDPOINTS.csrfToken) {
+    return null;
+  }
+
+  // Fetch new token
+  csrfTokenPromise = fetch(API_ENDPOINTS.csrfToken, {
+    credentials: 'include', // Include cookies
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Failed to fetch CSRF token: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      csrfToken = data.csrfToken;
+      csrfTokenPromise = null;
+      return csrfToken;
+    })
+    .catch(error => {
+      console.error('CSRF token fetch failed:', error);
+      csrfTokenPromise = null;
+      return null;
+    });
+
+  return csrfTokenPromise;
+};
+
+/**
+ * Clear cached CSRF token (call this on 403 errors to refresh)
+ */
+export const clearCSRFToken = () => {
+  csrfToken = null;
+  csrfTokenPromise = null;
+};
+
+/**
+ * Generic API call handler with CSRF protection
+ * SECURITY: Automatically includes CSRF token in all state-changing requests
  */
 const apiCall = async (endpoint, data, options = {}) => {
   if (!endpoint) {
@@ -32,14 +91,49 @@ const apiCall = async (endpoint, data, options = {}) => {
   }
 
   try {
+    // Get CSRF token for state-changing requests
+    const method = options.method || 'POST';
+    let headers = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+      const token = await fetchCSRFToken();
+      if (token) {
+        headers['X-CSRF-Token'] = token;
+      }
+    }
+
     const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      method,
+      headers,
+      credentials: 'include', // Include cookies for CSRF
       body: JSON.stringify(data),
     });
+
+    // If we get a 403, the CSRF token might be invalid - clear it and retry once
+    if (response.status === 403 && csrfToken) {
+      console.warn('CSRF token rejected, refreshing and retrying...');
+      clearCSRFToken();
+      const newToken = await fetchCSRFToken();
+      if (newToken) {
+        headers['X-CSRF-Token'] = newToken;
+        const retryResponse = await fetch(endpoint, {
+          method,
+          headers,
+          credentials: 'include',
+          body: JSON.stringify(data),
+        });
+
+        if (!retryResponse.ok) {
+          const errorText = await retryResponse.text();
+          throw new Error(`API Error: ${retryResponse.status} - ${errorText}`);
+        }
+
+        return await retryResponse.json();
+      }
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -338,7 +432,7 @@ export const submitAPCompletion = async (submissionId, approvalData) => {
 // ============================================================================
 
 /**
- * Upload document to SharePoint
+ * Upload document to SharePoint with CSRF protection
  * Returns URL of uploaded document
  */
 export const uploadDocument = async (submissionId, file, documentType) => {
@@ -360,9 +454,18 @@ export const uploadDocument = async (submissionId, file, documentType) => {
   formData.append('documentType', documentType);
 
   try {
+    // Get CSRF token
+    const token = await fetchCSRFToken();
+    const headers = {};
+    if (token) {
+      headers['X-CSRF-Token'] = token;
+    }
+
     const response = await fetch(endpoint, {
       method: 'POST',
-      body: formData,
+      headers,
+      credentials: 'include', // Include cookies for CSRF
+      body: formData, // Don't set Content-Type - browser sets it with boundary
     });
 
     if (!response.ok) {
@@ -433,8 +536,22 @@ export const getSubmissionStatus = async (submissionId) => {
   }
 };
 
+/**
+ * Initialize API service (call this on app startup)
+ * Preloads CSRF token if backend is configured
+ */
+export const initializeAPI = async () => {
+  if (isBackendConfigured() && API_ENDPOINTS.csrfToken) {
+    console.log('Initializing API service and fetching CSRF token...');
+    await fetchCSRFToken();
+  }
+};
+
 export default {
   isBackendConfigured,
+  initializeAPI,
+  fetchCSRFToken,
+  clearCSRFToken,
   submitPBPQuestionnaire,
   submitPBPDecision,
   submitSupplierForm,

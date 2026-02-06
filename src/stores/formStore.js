@@ -22,19 +22,9 @@ const useFormStore = create(
       touchedFields: {},
 
       // ===== Uploaded Files =====
-      // Note: Files are now persisted to localStorage including base64 data
-      uploadedFiles: (() => {
-        try {
-          const saved = localStorage.getItem('formUploads');
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            return parsed;
-          }
-        } catch (e) {
-          console.error('Failed to load uploads from localStorage:', e);
-        }
-        return {};
-      })(),
+      // SECURITY: Files are stored in memory only, never persisted to localStorage
+      // Users must re-upload documents if they refresh the page (for security)
+      uploadedFiles: {},
 
       // ===== Reviewer Mode =====
       reviewerRole: null, // 'procurement' | 'ir35' | 'ap'
@@ -246,18 +236,15 @@ const useFormStore = create(
               size: fileData.size,
               type: fileData.type,
               uploadDate: new Date().toISOString(),
-              // File object itself is not persisted, but base64 is
+              // SECURITY: File objects and base64 data are stored in memory only
+              // They are NOT persisted to localStorage for security reasons
               file: fileData.file,
-              base64: fileData.base64, // Store base64 for persistence
+              // base64 removed - kept in memory only, never persisted
             },
           };
 
-          // Persist to localStorage
-          try {
-            localStorage.setItem('formUploads', JSON.stringify(newUploads));
-          } catch (e) {
-            console.error('Failed to save uploads to localStorage:', e);
-          }
+          // SECURITY: Removed localStorage persistence of file data
+          // Files must be re-uploaded if page is refreshed (for security)
 
           return { uploadedFiles: newUploads };
         });
@@ -743,13 +730,9 @@ const useFormStore = create(
         return {
           formData,
           uploadedFiles: Object.keys(uploadedFiles).reduce((acc, key) => {
-            // Return metadata including base64, but exclude file object
-            const { file, ...metadata } = uploadedFiles[key];
-            acc[key] = {
-              ...metadata,
-              // Ensure base64 is included
-              base64: uploadedFiles[key].base64
-            };
+            // Return metadata only, exclude file object and base64
+            const { file, base64, ...metadata } = uploadedFiles[key];
+            acc[key] = metadata;
             return acc;
           }, {}),
         };
@@ -757,22 +740,27 @@ const useFormStore = create(
     }),
     {
       name: 'nhs-supplier-form-storage',
-      partialize: (state) => ({
-        // Only persist these fields
-        currentSection: state.currentSection,
-        completedSections: Array.from(state.completedSections),
-        visitedSections: state.visitedSections,
-        formData: state.formData,
-        reviewComments: state.reviewComments,
-        authorisationState: state.authorisationState,
-        prescreeningProgress: state.prescreeningProgress,
-        crnCache: state.crnCache,
-        lastSaved: state.lastSaved,
-        submissionId: state.submissionId,
-        submissionStatus: state.submissionStatus,
-        // NOTE: uploadedFiles are NOT persisted (file objects can't be serialized)
-        // Users will need to re-upload files if they refresh
-      }),
+      partialize: (state) => {
+        // SECURITY: Exclude sensitive financial data from localStorage persistence
+        const { sortCode, accountNumber, iban, swiftCode, ...safeFormData } = state.formData;
+
+        return {
+          // Only persist these fields
+          currentSection: state.currentSection,
+          completedSections: Array.from(state.completedSections),
+          visitedSections: state.visitedSections,
+          formData: safeFormData, // Excludes bank details
+          reviewComments: state.reviewComments,
+          authorisationState: state.authorisationState,
+          prescreeningProgress: state.prescreeningProgress,
+          crnCache: state.crnCache,
+          lastSaved: state.lastSaved,
+          submissionId: state.submissionId,
+          submissionStatus: state.submissionStatus,
+          // NOTE: uploadedFiles are NOT persisted for security
+          // NOTE: Bank details (sortCode, accountNumber, iban, swiftCode) are NOT persisted for security
+        };
+      },
       // Custom deserializer to reconstruct Set from array
       onRehydrateStorage: () => (state) => {
         if (state && Array.isArray(state.completedSections)) {

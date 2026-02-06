@@ -1,6 +1,5 @@
 // Companies House API Integration
-const COMPANIES_HOUSE_API_KEY = '7ed689df-a9a5-456b-a5dd-b160465be531';
-const API_BASE_URL = 'https://api.company-information.service.gov.uk';
+// SECURITY: API key is stored server-side only. All requests route through backend proxy.
 
 // Error types for better handling
 export const CRN_ERROR_TYPES = {
@@ -9,39 +8,6 @@ export const CRN_ERROR_TYPES = {
   NETWORK_ERROR: 'NETWORK_ERROR',
   INVALID_CRN: 'INVALID_CRN',
   API_ERROR: 'API_ERROR',
-};
-
-export const searchCompany = async (query) => {
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/search/companies?q=${encodeURIComponent(query)}`,
-      {
-        headers: {
-          'Authorization': `Basic ${btoa(COMPANIES_HOUSE_API_KEY + ':')}`,
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error('Company search failed');
-    }
-
-    const data = await response.json();
-    return { success: true, data: data.items || [] };
-  } catch (error) {
-    console.error('Companies House search error:', error);
-
-    // Check if it's a CORS error
-    if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
-      return {
-        success: false,
-        error: CRN_ERROR_TYPES.CORS_BLOCKED,
-        message: 'Unable to verify CRN due to browser restrictions. Please enter company details manually.'
-      };
-    }
-
-    return { success: false, error: CRN_ERROR_TYPES.API_ERROR, data: [] };
-  }
 };
 
 export const getCompanyDetails = async (companyNumber) => {

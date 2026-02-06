@@ -6,14 +6,17 @@
 const { getPool, sql } = require('../config/database');
 const { logAudit } = require('./auditService');
 const logger = require('../config/logger');
+const crypto = require('crypto');
 
 /**
  * Generate unique submission ID
+ * SECURITY: Uses crypto.randomUUID() for cryptographically secure ID generation
  */
 function generateSubmissionId() {
   const year = new Date().getFullYear();
-  const random = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
-  return `SUP-${year}-${random}`;
+  // Use crypto.randomUUID() which is cryptographically secure
+  const uuid = crypto.randomUUID().split('-')[0].toUpperCase(); // First segment of UUID
+  return `SUP-${year}-${uuid}`;
 }
 
 /**
