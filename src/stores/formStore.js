@@ -532,12 +532,47 @@ const useFormStore = create(
 
         switch(section) {
           case 1:
-            if (!formData.firstName?.trim()) missing.push('First Name');
-            if (!formData.lastName?.trim()) missing.push('Last Name');
-            if (!formData.jobTitle?.trim()) missing.push('Job Title');
-            if (!formData.department?.trim()) missing.push('Department');
-            if (!formData.nhsEmail?.trim()) missing.push('NHS Email');
-            if (!formData.phoneNumber?.trim()) missing.push('Phone Number');
+            if (!formData.firstName?.trim()) {
+              missing.push('First Name');
+            } else if (formData.firstName.trim().length > 50) {
+              missing.push('First Name (maximum 50 characters)');
+            }
+
+            if (!formData.lastName?.trim()) {
+              missing.push('Last Name');
+            } else if (formData.lastName.trim().length > 50) {
+              missing.push('Last Name (maximum 50 characters)');
+            }
+
+            if (!formData.jobTitle?.trim()) {
+              missing.push('Job Title');
+            } else if (formData.jobTitle.trim().length > 100) {
+              missing.push('Job Title (maximum 100 characters)');
+            }
+
+            if (!formData.department?.trim()) {
+              missing.push('Department');
+            } else if (formData.department.trim().length > 100) {
+              missing.push('Department (maximum 100 characters)');
+            }
+
+            if (!formData.nhsEmail?.trim()) {
+              missing.push('NHS Email');
+            } else {
+              const allowedDomains = ['@nhs.net', '@nhs.uk', '@bartshealth.nhs.uk', '@nhs.scot', '@wales.nhs.uk'];
+              const hasValidDomain = allowedDomains.some(domain => formData.nhsEmail.toLowerCase().endsWith(domain));
+              if (!hasValidDomain) {
+                missing.push('NHS Email (must be an NHS email address)');
+              } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.nhsEmail)) {
+                missing.push('NHS Email (invalid email format)');
+              }
+            }
+
+            if (!formData.phoneNumber?.trim()) {
+              missing.push('Phone Number');
+            } else if (!/^[+]?[0-9 ()-]{7,15}$/.test(formData.phoneNumber)) {
+              missing.push('Phone Number (invalid UK phone format)');
+            }
             break;
 
           case 2:
@@ -547,6 +582,15 @@ const useFormStore = create(
             if (!formData.soleTraderStatus) missing.push('Sole Trader Status');
             if (!formData.usageFrequency) missing.push('Usage Frequency');
             if (!formData.supplierConnection) missing.push('Supplier Connection');
+
+            // Justification validation
+            if (!formData.justification?.trim()) {
+              missing.push('Justification');
+            } else if (formData.justification.trim().length < 10) {
+              missing.push('Justification (minimum 10 characters)');
+            } else if (formData.justification.trim().length > 350) {
+              missing.push('Justification (maximum 350 characters)');
+            }
 
             // Conditional uploads
             // BUG FIX: Check for base64 or data (now persisted) OR file (in-memory)
@@ -566,21 +610,31 @@ const useFormStore = create(
             if (!formData.companiesHouseRegistered) missing.push('Companies House Registration Status');
             if (!formData.supplierType) missing.push('Supplier Type');
 
-            // CRN only required if:
-            // - Companies House Registered = YES
-            // - AND supplier type is limited_company
+            // CRN validation for Limited Company
             if (formData.companiesHouseRegistered === 'yes') {
-              if (formData.supplierType === 'limited_company' && !formData.crn) {
-                missing.push('Company Registration Number');
+              if (formData.supplierType === 'limited_company') {
+                if (!formData.crn) {
+                  missing.push('Company Registration Number');
+                } else if (!/^[0-9]{7,8}$/.test(formData.crn.replace(/\s/g, ''))) {
+                  missing.push('Company Registration Number (must be 7 or 8 digits)');
+                }
               }
             }
 
             // Charity-specific fields
             if (formData.supplierType === 'charity') {
-              if (!formData.charityNumber) missing.push('Charity Number');
+              if (!formData.charityNumber) {
+                missing.push('Charity Number');
+              } else if (formData.charityNumber.length > 8) {
+                missing.push('Charity Number (maximum 8 digits)');
+              }
               // CRN for charity only if registered with Companies House
-              if (formData.companiesHouseRegistered === 'yes' && !formData.crnCharity) {
-                missing.push('Charity Registration Number');
+              if (formData.companiesHouseRegistered === 'yes') {
+                if (!formData.crnCharity) {
+                  missing.push('Charity Registration Number');
+                } else if (!/^[0-9]{7,8}$/.test(formData.crnCharity.replace(/\s/g, ''))) {
+                  missing.push('Charity Registration Number (must be 7 or 8 digits)');
+                }
               }
             }
 
@@ -603,58 +657,211 @@ const useFormStore = create(
             }
 
             // Always required regardless of type
-            if (!formData.annualValue) missing.push('Annual Value');
+            if (!formData.annualValue) {
+              missing.push('Annual Value');
+            } else if (formData.annualValue <= 0) {
+              missing.push('Annual Value (must be greater than 0)');
+            }
             if (!formData.employeeCount) missing.push('Employee Count');
             break;
 
           case 4:
-            if (!formData.companyName?.trim()) missing.push('Company Name');
-            if (!formData.registeredAddress?.trim()) missing.push('Registered Address');
-            if (!formData.city?.trim()) missing.push('City');
-            if (!formData.postcode?.trim()) missing.push('Postcode');
-            if (!formData.contactName?.trim()) missing.push('Contact Name');
-            if (!formData.contactEmail?.trim()) missing.push('Contact Email');
-            if (!formData.contactPhone?.trim()) missing.push('Contact Phone');
+            if (!formData.companyName?.trim()) {
+              missing.push('Company Name');
+            } else if (formData.companyName.trim().length > 100) {
+              missing.push('Company Name (maximum 100 characters)');
+            }
+
+            if (!formData.registeredAddress?.trim()) {
+              missing.push('Registered Address');
+            } else if (formData.registeredAddress.trim().length > 300) {
+              missing.push('Registered Address (maximum 300 characters)');
+            }
+
+            if (!formData.city?.trim()) {
+              missing.push('City');
+            } else if (formData.city.trim().length > 50) {
+              missing.push('City (maximum 50 characters)');
+            } else if (!/^[a-zA-Z\s\-]+$/.test(formData.city)) {
+              missing.push('City (only letters, spaces, and hyphens allowed)');
+            }
+
+            if (!formData.postcode?.trim()) {
+              missing.push('Postcode');
+            } else if (!/^[A-Z]{1,2}[0-9]{1,2}[A-Z]?\s?[0-9][A-Z]{2}$/i.test(formData.postcode)) {
+              missing.push('Postcode (invalid UK postcode format)');
+            }
+
+            if (!formData.contactName?.trim()) {
+              missing.push('Contact Name');
+            } else if (formData.contactName.trim().length > 100) {
+              missing.push('Contact Name (maximum 100 characters)');
+            }
+
+            if (!formData.contactEmail?.trim()) {
+              missing.push('Contact Email');
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactEmail)) {
+              missing.push('Contact Email (invalid email format)');
+            }
+
+            if (!formData.contactPhone?.trim()) {
+              missing.push('Contact Phone');
+            } else if (!/^[+]?[0-9 ()-]{7,15}$/.test(formData.contactPhone)) {
+              missing.push('Contact Phone (invalid UK phone format)');
+            }
+
+            // Website is optional but must be valid if provided
+            if (formData.website && formData.website.trim() !== '') {
+              if (!formData.website.startsWith('https://')) {
+                missing.push('Website (must start with https://)');
+              } else if (!/^https:\/\/.+\..+/.test(formData.website)) {
+                missing.push('Website (invalid URL format)');
+              }
+            }
             break;
 
           case 5:
             if (!formData.serviceType || formData.serviceType.length === 0) {
               missing.push('Service Type');
+            } else if (formData.serviceType.length > 7) {
+              missing.push('Service Type (maximum 7 types allowed)');
             }
-            if (!formData.serviceDescription?.trim()) missing.push('Service Description');
+
+            if (!formData.serviceDescription?.trim()) {
+              missing.push('Service Description');
+            } else if (formData.serviceDescription.trim().length < 10) {
+              missing.push('Service Description (minimum 10 characters)');
+            } else if (formData.serviceDescription.trim().length > 350) {
+              missing.push('Service Description (maximum 350 characters)');
+            }
             break;
 
           case 6:
             if (!formData.overseasSupplier) missing.push('Overseas Supplier Status');
+
+            // Overseas supplier validation (with format checks)
             if (formData.overseasSupplier === 'yes') {
-              if (!formData.iban?.trim()) missing.push('IBAN');
-              if (!formData.swiftCode?.trim()) missing.push('SWIFT Code');
-              if (!formData.bankRouting?.trim()) missing.push('Bank Routing Number');
+              if (!formData.iban?.trim()) {
+                missing.push('IBAN');
+              } else if (formData.iban.replace(/\s/g, '').length < 15 || formData.iban.replace(/\s/g, '').length > 34) {
+                missing.push('IBAN (must be 15-34 characters)');
+              } else if (!/^[A-Z]{2}[0-9A-Z\s]+$/i.test(formData.iban)) {
+                missing.push('IBAN (invalid format - must start with 2-letter country code)');
+              }
+
+              if (!formData.swiftCode?.trim()) {
+                missing.push('SWIFT Code');
+              } else {
+                const swiftClean = formData.swiftCode.replace(/\s/g, '');
+                if (swiftClean.length !== 8 && swiftClean.length !== 11) {
+                  missing.push('SWIFT Code (must be 8 or 11 characters)');
+                } else if (!/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/i.test(swiftClean)) {
+                  missing.push('SWIFT Code (invalid format)');
+                }
+              }
+
+              if (!formData.bankRouting?.trim()) {
+                missing.push('Bank Routing Number');
+              } else if (!/^[0-9]{9}$/.test(formData.bankRouting.replace(/\s/g, ''))) {
+                missing.push('Bank Routing Number (must be exactly 9 digits)');
+              }
             }
+
+            // UK supplier validation (with format checks)
+            if (formData.overseasSupplier === 'no') {
+              if (!formData.nameOnAccount?.trim()) {
+                missing.push('Name on Account');
+              } else if (formData.nameOnAccount.trim().length < 2) {
+                missing.push('Name on Account (must be at least 2 characters)');
+              }
+
+              if (!formData.sortCode?.trim()) {
+                missing.push('Sort Code');
+              } else {
+                const sortClean = formData.sortCode.replace(/[\s-]/g, '');
+                if (!/^[0-9]{6}$/.test(sortClean)) {
+                  missing.push('Sort Code (must be exactly 6 digits)');
+                }
+              }
+
+              if (!formData.accountNumber?.trim()) {
+                missing.push('Account Number');
+              } else if (!/^[0-9]{8}$/.test(formData.accountNumber.trim())) {
+                missing.push('Account Number (must be exactly 8 digits)');
+              }
+            }
+
             if (!formData.accountsAddressSame) missing.push('Accounts Address Same');
             if (formData.accountsAddressSame === 'no') {
               if (!formData.accountsAddress?.trim()) missing.push('Accounts Address');
               if (!formData.accountsCity?.trim()) missing.push('Accounts City');
-              if (!formData.accountsPostcode?.trim()) missing.push('Accounts Postcode');
+              if (!formData.accountsPostcode?.trim()) {
+                missing.push('Accounts Postcode');
+              } else if (!/^[A-Z]{1,2}[0-9]{1,2}[A-Z]?\s?[0-9][A-Z]{2}$/i.test(formData.accountsPostcode)) {
+                missing.push('Accounts Postcode (invalid UK postcode format)');
+              }
               if (!formData.accountsPhone?.trim()) missing.push('Accounts Phone');
-              if (!formData.accountsEmail?.trim()) missing.push('Accounts Email');
+              if (!formData.accountsEmail?.trim()) {
+                missing.push('Accounts Email');
+              } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.accountsEmail)) {
+                missing.push('Accounts Email (invalid email format)');
+              }
             }
+
             if (!formData.ghxDunsKnown) missing.push('GHX/DUNS Known');
-            if (formData.ghxDunsKnown === 'yes' && !formData.ghxDunsNumber?.trim()) {
-              missing.push('GHX/DUNS Number');
+            if (formData.ghxDunsKnown === 'yes') {
+              if (!formData.ghxDunsNumber?.trim()) {
+                missing.push('GHX/DUNS Number');
+              } else {
+                const dunsClean = formData.ghxDunsNumber.replace(/[\s-]/g, '');
+                if (!/^[0-9]{9}$/.test(dunsClean)) {
+                  missing.push('GHX/DUNS Number (must be exactly 9 digits)');
+                }
+              }
             }
+
             if (!formData.cisRegistered) missing.push('CIS Registration Status');
-            if (formData.cisRegistered === 'yes' && !formData.utrNumber?.trim()) {
-              missing.push('UTR Number');
+            if (formData.cisRegistered === 'yes') {
+              if (!formData.utrNumber?.trim()) {
+                missing.push('UTR Number');
+              } else {
+                const utrClean = formData.utrNumber.replace(/\s/g, '');
+                if (!/^[0-9]{10}$/.test(utrClean)) {
+                  missing.push('UTR Number (must be exactly 10 digits)');
+                }
+              }
             }
+
             if (!formData.publicLiability) missing.push('Public Liability Insurance');
             if (formData.publicLiability === 'yes') {
-              if (!formData.plCoverage) missing.push('Public Liability Coverage');
-              if (!formData.plExpiry) missing.push('Public Liability Expiry Date');
+              if (!formData.plCoverage) {
+                missing.push('Public Liability Coverage');
+              } else if (formData.plCoverage <= 0) {
+                missing.push('Public Liability Coverage (must be greater than 0)');
+              }
+              if (!formData.plExpiry) {
+                missing.push('Public Liability Expiry Date');
+              } else {
+                const expiry = new Date(formData.plExpiry);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (expiry < today) {
+                  missing.push('Public Liability Expiry Date (must be today or in the future)');
+                }
+              }
             }
+
             if (!formData.vatRegistered) missing.push('VAT Registration Status');
-            if (formData.vatRegistered === 'yes' && !formData.vatNumber?.trim()) {
-              missing.push('VAT Number');
+            if (formData.vatRegistered === 'yes') {
+              if (!formData.vatNumber?.trim()) {
+                missing.push('VAT Number');
+              } else {
+                const vatClean = formData.vatNumber.replace(/\s/g, '').toUpperCase();
+                const withoutGB = vatClean.startsWith('GB') ? vatClean.slice(2) : vatClean;
+                if (!/^[0-9]{9,12}$/.test(withoutGB)) {
+                  missing.push('VAT Number (must be 9 or 12 digits after optional GB prefix)');
+                }
+              }
             }
             break;
 
