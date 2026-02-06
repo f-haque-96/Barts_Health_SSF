@@ -172,6 +172,9 @@ const Section7ReviewSubmit = () => {
     return localStorage.getItem('current-test-submission-id') || null;
   });
 
+  // ACC-02: Screen reader announcements for form status changes
+  const [announcement, setAnnouncement] = useState('');
+
   const {
     control,
     handleSubmit,
@@ -201,6 +204,30 @@ const Section7ReviewSubmit = () => {
     setMissingFields(missing);
     setCanSubmitWithUploads(missing.length === 0);
   }, [getMissingFields]);
+
+  // ACC-02: Announce form submission success to screen readers
+  useEffect(() => {
+    if (submitSuccess) {
+      setAnnouncement('Form submitted successfully! Thank you for your submission.');
+    }
+  }, [submitSuccess]);
+
+  // ACC-02: Announce form submission errors to screen readers
+  useEffect(() => {
+    if (submitError) {
+      setAnnouncement(`Error submitting form: ${submitError}`);
+    }
+  }, [submitError]);
+
+  // ACC-02: Announce validation errors to screen readers
+  useEffect(() => {
+    if (missingFields.length > 0) {
+      setAnnouncement(`Form validation error: ${missingFields.length} required field${missingFields.length === 1 ? '' : 's'} must be completed before submission.`);
+    } else if (announcement.includes('validation error')) {
+      // Clear validation error announcement when all fields are complete
+      setAnnouncement('All required fields completed. Form is ready to submit.');
+    }
+  }, [missingFields.length]);
 
   const canSubmit = canSubmitForm() && finalAcknowledgement && canSubmitWithUploads;
 
@@ -578,6 +605,22 @@ const Section7ReviewSubmit = () => {
 
   return (
     <section className="form-section active" id="section-7">
+      {/* ACC-02: Visually hidden live region for screen reader announcements */}
+      <div
+        role="status"
+        aria-live="assertive"
+        aria-atomic="true"
+        style={{
+          position: 'absolute',
+          left: '-10000px',
+          width: '1px',
+          height: '1px',
+          overflow: 'hidden',
+        }}
+      >
+        {announcement}
+      </div>
+
       <h3>Review & Submit</h3>
       <p className="section-subtitle">
         Please review all information before submitting. You can edit any section by clicking the "Edit" button.
