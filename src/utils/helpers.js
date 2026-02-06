@@ -132,11 +132,24 @@ export const isDateInPast = (dateString) => {
 };
 
 /**
- * Sanitize input (basic)
+ * Sanitize input for XSS protection
+ * SEC-12: Improved sanitization - escapes HTML entities instead of stripping
+ * TODO: For production, consider using DOMPurify library for comprehensive XSS protection
  */
 export const sanitizeInput = (input) => {
   if (typeof input !== 'string') return input;
-  return input.trim().replace(/<[^>]*>/g, '');
+
+  // Escape HTML entities to prevent XSS
+  const escapeMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#x27;',
+    '/': '&#x2F;',
+  };
+
+  return input.trim().replace(/[&<>"'\/]/g, (char) => escapeMap[char]);
 };
 
 /**

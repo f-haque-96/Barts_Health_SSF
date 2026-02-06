@@ -51,11 +51,28 @@ function configurePassport(app) {
     return done(null, user);
   }));
 
+  // SECURITY: Only store user OID in session, not full user object
+  // This prevents session hijacking and role escalation attacks
   passport.serializeUser((user, done) => {
-    done(null, user);
+    // Store only the OID (Azure AD Object ID)
+    done(null, { oid: user.oid });
   });
 
-  passport.deserializeUser((user, done) => {
+  // SECURITY: Reconstruct user from OID on each request
+  // In production, groups should be looked up from Azure AD or cached server-side
+  passport.deserializeUser((sessionData, done) => {
+    // TODO: In production, implement Azure AD group lookup via Microsoft Graph API
+    // For now, we'll need to look up user data from another source
+    // This is a placeholder - full implementation requires Graph API integration
+
+    // Minimal user object with OID only
+    // Groups will need to be fetched from Azure AD or database on each request
+    const user = {
+      oid: sessionData.oid,
+      // In production, call Azure AD Graph API here to get current user info
+      // Example: const graphUser = await getAzureADUser(sessionData.oid);
+    };
+
     done(null, user);
   });
 

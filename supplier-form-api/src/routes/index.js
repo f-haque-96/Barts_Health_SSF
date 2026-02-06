@@ -391,9 +391,34 @@ router.get('/documents/:submissionId/alemba-eligible', requireAuth, canAccessSub
 /**
  * DELETE /api/documents/:documentId
  * Delete a document
+ * SECURITY: Ownership check added - user must have access to parent submission
  */
 router.delete('/documents/:documentId', requireAuth, async (req, res, next) => {
   try {
+    // Get document to find its submission ID
+    const document = await documentService.getDocumentById(req.params.documentId);
+
+    if (!document) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    // Check if user has access to the submission this document belongs to
+    const submission = await submissionService.getById(document.submissionId);
+
+    if (!submission) {
+      return res.status(404).json({ error: 'Parent submission not found' });
+    }
+
+    // Use RBAC middleware logic to check access
+    const hasAccess = await canAccessSubmission(req, res, () => {}, submission);
+
+    if (!hasAccess) {
+      return res.status(403).json({
+        error: 'FORBIDDEN',
+        message: 'You do not have permission to delete this document'
+      });
+    }
+
     const result = await documentService.deleteDocument(req.params.documentId, req.user);
     res.json(result);
   } catch (error) {

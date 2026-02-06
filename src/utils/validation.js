@@ -7,13 +7,25 @@ import { z } from 'zod';
 
 // ===== Custom Validators =====
 
+// VAL-02: Support multiple NHS trust domains
+const ALLOWED_NHS_DOMAINS = [
+  '@nhs.net',
+  '@nhs.uk',
+  '@bartshealth.nhs.uk',
+  '@nhs.scot',
+  '@wales.nhs.uk',
+];
+
 const nhsEmailSchema = z
   .string()
   .min(1, 'Email is required')
   .email('Please enter a valid email address')
-  .refine((val) => val.endsWith('@nhs.net'), {
-    message: 'Email must be an NHS email address ending in @nhs.net',
-  });
+  .refine(
+    (val) => ALLOWED_NHS_DOMAINS.some(domain => val.toLowerCase().endsWith(domain)),
+    {
+      message: 'Email must be an NHS email address (e.g., @nhs.net, @bartshealth.nhs.uk)',
+    }
+  );
 
 const ukPhoneSchema = z
   .string()
@@ -35,12 +47,13 @@ const crnSchema = z
   .regex(/^[0-9]{7,8}$/, 'CRN must be 7 or 8 digits')
   .transform((val) => (val.length === 7 ? '0' + val : val));
 
+// VAL-01: Support Unicode characters (international names with accents, umlauts, etc.)
 const nameSchema = z
   .string()
   .min(1, 'This field is required')
   .max(50, 'Maximum 50 characters')
   .regex(
-    /^[a-zA-Z\s\-']+$/,
+    /^[\p{L}\s\-']+$/u,
     'Only letters, spaces, hyphens, and apostrophes are allowed'
   );
 

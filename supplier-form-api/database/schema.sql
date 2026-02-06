@@ -298,6 +298,7 @@ GO
 -- =============================================================================
 
 -- Procedure to check for duplicate vendors
+-- DI-01: Fixed SQL wildcard injection vulnerability by escaping special characters
 CREATE PROCEDURE dbo.CheckDuplicateVendor
     @CompanyName NVARCHAR(255),
     @VATNumber NVARCHAR(20) = NULL,
@@ -307,6 +308,13 @@ BEGIN
     SET NOCOUNT ON;
 
     DECLARE @NormalizedName NVARCHAR(255) = dbo.NormalizeCompanyName(@CompanyName);
+
+    -- SECURITY: Escape SQL wildcard characters to prevent wildcard injection
+    -- Replace %, _, and [ with their escape sequences
+    DECLARE @EscapedName NVARCHAR(255) = @NormalizedName;
+    SET @EscapedName = REPLACE(@EscapedName, '[', '[[]');  -- Escape [ first
+    SET @EscapedName = REPLACE(@EscapedName, '%', '[%]');  -- Escape %
+    SET @EscapedName = REPLACE(@EscapedName, '_', '[_]');  -- Escape _
 
     SELECT
         VendorID,
@@ -326,7 +334,7 @@ BEGIN
             (CRN = @CRN AND @CRN IS NOT NULL)
             OR (VATNumber = @VATNumber AND @VATNumber IS NOT NULL)
             OR NormalizedName = @NormalizedName
-            OR NormalizedName LIKE '%' + @NormalizedName + '%'
+            OR NormalizedName LIKE '%' + @EscapedName + '%' ESCAPE '['
         );
 END;
 GO
