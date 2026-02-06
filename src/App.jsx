@@ -27,12 +27,16 @@ import RequesterResponsePage from './pages/RequesterResponsePage';
 import HelpPage from './pages/HelpPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import useFormStore from './stores/formStore';
+import useUnsavedChanges from './hooks/useUnsavedChanges';
 import { getQueryParam } from './utils/helpers';
 
 // Main Form Component (Public - any authenticated user can submit)
 const MainForm = () => {
   const { currentSection, setReviewerRole, formData, resetForm, setRejectionData, rejectionData: storedRejectionData } = useFormStore();
   const [showRejectionBanner, setShowRejectionBanner] = useState(false);
+
+  // UX-01: Warn users before leaving with unsaved changes
+  useUnsavedChanges(true);
 
   // Check for rejected submissions by current user
   useEffect(() => {
