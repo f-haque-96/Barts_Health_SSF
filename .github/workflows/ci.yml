@@ -1,3 +1,5 @@
+# CI/CD Pipeline for NHS Barts Health Supplier Setup Form
+# Updated: February 2026 - Enhanced package-lock validation & build verification
 name: CI - Lint and Build
 
 on:
@@ -25,6 +27,14 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
+      - name: Verify package-lock.json exists
+        run: |
+          if [ ! -f package-lock.json ]; then
+            echo "Error: package-lock.json not found"
+            exit 1
+          fi
+          echo "✓ package-lock.json found"
+
       # Frontend
       - name: Install frontend dependencies
         run: npm ci
@@ -34,13 +44,26 @@ jobs:
         continue-on-error: true
 
       - name: Build frontend
-        run: npm run build
+        run: |
+          echo "Building frontend application..."
+          npm run build
+          echo "✓ Frontend build complete"
+          ls -lh dist/ || echo "Warning: dist/ directory not found"
 
       # Backend
+      - name: Verify backend package-lock.json exists
+        run: |
+          if [ ! -f supplier-form-api/package-lock.json ]; then
+            echo "Error: Backend package-lock.json not found"
+            exit 1
+          fi
+          echo "✓ Backend package-lock.json found"
+
       - name: Install backend dependencies
         run: |
           cd supplier-form-api
           npm ci
+          echo "✓ Backend dependencies installed"
 
       - name: Lint backend code
         run: |
