@@ -24,4 +24,3 @@ export { default as RejectionBanner } from './RejectionBanner';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export { default as LoadingSkeleton, FormSkeleton, TableSkeleton, CardSkeleton } from './LoadingSkeleton';
 export * from './Icons';
-export { default as Icons } from './Icons';
