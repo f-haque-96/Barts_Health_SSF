@@ -113,25 +113,30 @@ router.put('/submissions/:id', requireAuth, validateSubmissionUpdate, canAccessS
 /**
  * GET /api/reviews/:stage/queue
  * Get work queue for a review stage
+ * SECURITY: Role enforcement added for each stage
  */
-router.get('/reviews/:stage/queue', requireAuth, async (req, res, next) => {
+router.get('/reviews/:stage/queue', requireAuth, (req, res, next) => {
+  const { stage } = req.params;
+
+  // Map stage to required role and enforce it
+  const stageRoles = {
+    'pbp': 'pbp',
+    'procurement': 'procurement',
+    'opw': 'opw',
+    'contract': 'contract',
+    'ap': 'apControl'
+  };
+
+  const requiredRole = stageRoles[stage];
+  if (!requiredRole) {
+    return res.status(400).json({ error: 'Invalid stage' });
+  }
+
+  // Apply role enforcement middleware dynamically
+  requireRole(requiredRole)(req, res, next);
+}, async (req, res, next) => {
   try {
     const { stage } = req.params;
-
-    // Check role based on stage
-    const stageRoles = {
-      'pbp': 'pbp',
-      'procurement': 'procurement',
-      'opw': 'opw',
-      'contract': 'contract',
-      'ap': 'apControl'
-    };
-
-    const requiredRole = stageRoles[stage];
-    if (!requiredRole) {
-      return res.status(400).json({ error: 'Invalid stage' });
-    }
-
     const queue = await submissionService.getWorkQueue(stage, req.user);
     res.json(queue);
   } catch (error) {
@@ -142,8 +147,28 @@ router.get('/reviews/:stage/queue', requireAuth, async (req, res, next) => {
 /**
  * POST /api/reviews/:stage/:id
  * Submit review decision
+ * SECURITY: Role enforcement added for each stage
  */
-router.post('/reviews/:stage/:id', requireAuth, canAccessSubmission, async (req, res, next) => {
+router.post('/reviews/:stage/:id', requireAuth, (req, res, next) => {
+  const { stage } = req.params;
+
+  // Map stage to required role and enforce it
+  const stageRoles = {
+    'pbp': 'pbp',
+    'procurement': 'procurement',
+    'opw': 'opw',
+    'contract': 'contract',
+    'ap': 'apControl'
+  };
+
+  const requiredRole = stageRoles[stage];
+  if (!requiredRole) {
+    return res.status(400).json({ error: 'Invalid stage' });
+  }
+
+  // Apply role enforcement middleware dynamically
+  requireRole(requiredRole)(req, res, next);
+}, canAccessSubmission, async (req, res, next) => {
   try {
     const { stage, id } = req.params;
     const { decision, comments, signature } = req.body;

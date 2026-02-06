@@ -123,8 +123,24 @@ app.get('/api/csrf-token', (req, res) => {
 // Audit logging middleware
 app.use('/api', auditMiddleware);
 
-// Enhanced health check endpoint with dependency verification
-app.get('/health', async (req, res) => {
+// Public health check endpoint (minimal information)
+// SECURITY: Does not expose infrastructure details to unauthenticated users
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Detailed health check endpoint (requires authentication)
+// SECURITY: Only authenticated users can see dependency status
+app.get('/api/health/detailed', async (req, res) => {
+  // TODO: Add authentication middleware here (requireAuth)
+  // For now, checking if user is authenticated via session
+  if (!req.user && process.env.NODE_ENV === 'production') {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
   const health = {
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -141,7 +157,7 @@ app.get('/health', async (req, res) => {
     await pool.request().query('SELECT 1');
     health.checks.database = 'connected';
   } catch (error) {
-    health.checks.database = 'disconnected';
+    health.checks.database = 'error';
     health.status = 'unhealthy';
     logger.error('Health check: Database connection failed', error);
   }
@@ -152,7 +168,7 @@ app.get('/health', async (req, res) => {
     await sp.web.get();
     health.checks.sharepoint = 'connected';
   } catch (error) {
-    health.checks.sharepoint = 'disconnected';
+    health.checks.sharepoint = 'error';
     health.status = 'unhealthy';
     logger.error('Health check: SharePoint connection failed', error);
   }
