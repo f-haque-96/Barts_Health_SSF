@@ -1,0 +1,66 @@
+name: CI - Lint and Build
+
+on:
+  push:
+    branches: [master, main, develop]
+  pull_request:
+    branches: [master, main, develop]
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      # Frontend
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Lint frontend code
+        run: npm run lint --if-present
+        continue-on-error: true
+
+      - name: Build frontend
+        run: npm run build
+
+      # Backend
+      - name: Install backend dependencies
+        run: |
+          cd supplier-form-api
+          npm ci
+
+      - name: Lint backend code
+        run: |
+          cd supplier-form-api
+          npm run lint --if-present
+        continue-on-error: true
+
+      # Security Audit
+      - name: Run npm audit (frontend)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Run npm audit (backend)
+        run: |
+          cd supplier-form-api
+          npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-${{ matrix.node-version }}
+          path: dist/
+          retention-days: 7

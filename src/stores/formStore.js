@@ -1,6 +1,11 @@
 /**
  * NHS Supplier Setup Form - Zustand State Management Store
  * Manages form data, navigation, file uploads, and reviewer comments with persistence
+ *
+ * PERF-01: For production optimization, consider implementing:
+ * - Debounced persistence (2-second delay after last change)
+ * - Partial state updates (only persist changed sections)
+ * - IndexedDB for larger data instead of localStorage
  */
 
 import { create } from 'zustand';
