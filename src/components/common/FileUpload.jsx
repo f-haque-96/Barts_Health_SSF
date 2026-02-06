@@ -27,6 +27,9 @@ const FileUpload = ({
   ...props
 }) => {
   const [uploadError, setUploadError] = React.useState(null);
+  // UI-02: Upload progress tracking
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [uploadProgress, setUploadProgress] = React.useState(0);
 
   // Use new props if provided, otherwise fall back to accept
   const finalExtensions = acceptedExtensions || accept;
@@ -41,15 +44,30 @@ const FileUpload = ({
       }
 
       const reader = new FileReader();
+
+      // UI-02: Track upload progress
+      reader.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(percentComplete);
+        }
+      };
+
       reader.readAsDataURL(file);
+
       reader.onload = () => {
         if (reader.result) {
+          setUploadProgress(100); // Ensure 100% on completion
           resolve(reader.result);
         } else {
           reject(new Error('Failed to read file'));
         }
       };
-      reader.onerror = () => reject(new Error('FileReader error occurred'));
+
+      reader.onerror = () => {
+        setUploadProgress(0);
+        reject(new Error('FileReader error occurred'));
+      };
     });
   };
 
@@ -75,6 +93,10 @@ const FileUpload = ({
       const file = acceptedFiles[0];
 
       try {
+        // UI-02: Show upload progress
+        setIsUploading(true);
+        setUploadProgress(0);
+
         // Convert file to base64 for storage in localStorage
         const base64Data = await convertToBase64(file);
 
@@ -85,9 +107,17 @@ const FileUpload = ({
           file: file, // Keep original file object for immediate use
           base64: base64Data, // Add base64 data for persistence
         });
+
+        // UI-02: Small delay to show 100% completion before hiding progress
+        setTimeout(() => {
+          setIsUploading(false);
+          setUploadProgress(0);
+        }, 500);
       } catch (error) {
         console.error('Error converting file to base64:', error);
         setUploadError('Failed to process file. Please try again.');
+        setIsUploading(false);
+        setUploadProgress(0);
       }
     }
   }, [onUpload, maxSize, finalExtensions, errorMessage]);
@@ -142,6 +172,51 @@ const FileUpload = ({
           {label}
           {required && <span className="required-asterisk">*</span>}
         </label>
+      )}
+
+      {/* UI-02: Upload progress indicator */}
+      {isUploading && (
+        <div
+          style={{
+            marginTop: 'var(--space-12)',
+            padding: 'var(--space-12)',
+            backgroundColor: 'var(--color-background)',
+            borderRadius: 'var(--radius-base)',
+            border: '1px solid var(--color-border)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-text)' }}>
+              Uploading...
+            </span>
+            <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--nhs-blue)' }}>
+              {uploadProgress}%
+            </span>
+          </div>
+          <div
+            style={{
+              width: '100%',
+              height: '8px',
+              backgroundColor: '#e5e7eb',
+              borderRadius: '4px',
+              overflow: 'hidden',
+            }}
+            role="progressbar"
+            aria-valuenow={uploadProgress}
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-label="File upload progress"
+          >
+            <div
+              style={{
+                width: `${uploadProgress}%`,
+                height: '100%',
+                backgroundColor: 'var(--nhs-blue)',
+                transition: 'width 0.3s ease',
+              }}
+            />
+          </div>
+        </div>
       )}
 
       {!currentFile ? (
