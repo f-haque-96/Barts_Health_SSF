@@ -10,7 +10,7 @@ import { pdf } from '@react-pdf/renderer';
 import { Checkbox, Button, NoticeBox, QuestionLabel, CheckIcon, WarningIcon, VerificationBadge } from '../common';
 import { FormNavigation } from '../layout';
 import { section7Schema } from '../../utils/validation';
-import { formatCurrency } from '../../utils/helpers';
+import { formatCurrency, scrollToFirstError } from '../../utils/helpers';
 import { formatFieldValue, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes, formatOrganisationType } from '../../utils/formatters';
 import useFormStore from '../../stores/formStore';
 import useFormNavigation from '../../hooks/useFormNavigation';
@@ -204,12 +204,20 @@ const Section7ReviewSubmit = () => {
 
   const canSubmit = canSubmitForm() && finalAcknowledgement && canSubmitWithUploads;
 
+  // ACC-03: Handle form validation errors from react-hook-form
+  const onError = (errors) => {
+    console.error('Form validation errors:', errors);
+    scrollToFirstError();
+  };
+
   const onSubmit = async () => {
     // Double-check validation before submitting
     const missing = getMissingFields('all');
 
     if (missing.length > 0) {
       alert('Please complete all required fields and uploads before submitting:\n\n' + missing.join('\n'));
+      // ACC-03: Auto-focus on first error field for accessibility
+      scrollToFirstError();
       return;
     }
 
@@ -775,7 +783,7 @@ const Section7ReviewSubmit = () => {
       )}
 
       {/* Final Acknowledgement */}
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit, onError)}>
         <div style={{ marginTop: 'var(--space-32)', paddingTop: 'var(--space-24)', borderTop: '2px solid var(--color-border)' }}>
           {/* Show missing uploads warning */}
           {missingFields.filter(f => f.includes('Upload')).length > 0 && (
@@ -844,7 +852,7 @@ const Section7ReviewSubmit = () => {
         </div>
 
         <FormNavigation
-          onNext={handleSubmit(onSubmit)}
+          onNext={handleSubmit(onSubmit, onError)}
           onPrev={handlePrev}
           showNext={true}
           nextDisabled={!canSubmit || isSubmitting}
