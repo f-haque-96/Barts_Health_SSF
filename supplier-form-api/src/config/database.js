@@ -51,21 +51,8 @@ function getPool() {
   return pool;
 }
 
-async function query(queryString, params = []) {
-  const pool = getPool();
-  const request = pool.request();
-
-  // Add parameters
-  params.forEach((param, index) => {
-    request.input(`param${index}`, param);
-  });
-
-  return request.query(queryString);
-}
-
 module.exports = {
   initializeDatabase,
   getPool,
-  query,
   sql
 };

@@ -147,31 +147,59 @@ router.get('/reviews/:stage/queue', requireAuth, (req, res, next) => {
 /**
  * POST /api/reviews/:stage/:id
  * Submit review decision
- * SECURITY: Role enforcement added for each stage
+ * SECURITY: Requires role for the specific stage. Requester cannot self-approve.
  */
-router.post('/reviews/:stage/:id', requireAuth, (req, res, next) => {
-  const { stage } = req.params;
-
-  // Map stage to required role and enforce it
-  const stageRoles = {
-    'pbp': 'pbp',
-    'procurement': 'procurement',
-    'opw': 'opw',
-    'contract': 'contract',
-    'ap': 'apControl'
-  };
-
-  const requiredRole = stageRoles[stage];
-  if (!requiredRole) {
-    return res.status(400).json({ error: 'Invalid stage' });
-  }
-
-  // Apply role enforcement middleware dynamically
-  requireRole(requiredRole)(req, res, next);
-}, canAccessSubmission, async (req, res, next) => {
+router.post('/reviews/:stage/:id', requireAuth, async (req, res, next) => {
   try {
     const { stage, id } = req.params;
     const { decision, comments, signature } = req.body;
+
+    // --- Validate stage param ---
+    const validStages = ['pbp', 'procurement', 'opw', 'contract', 'ap'];
+    if (!validStages.includes(stage)) {
+      return res.status(400).json({ error: 'VALIDATION_ERROR', message: 'Invalid review stage' });
+    }
+
+    // --- Validate decision param ---
+    const validDecisions = ['approved', 'rejected', 'info_required'];
+    if (!decision || !validDecisions.includes(decision)) {
+      return res.status(400).json({ error: 'VALIDATION_ERROR', message: 'Invalid decision value' });
+    }
+
+    // --- Enforce reviewer role (NOT canAccessSubmission) ---
+    const stageRoles = {
+      'pbp': 'pbp',
+      'procurement': 'procurement',
+      'opw': 'opw',
+      'contract': 'contract',
+      'ap': 'apControl'
+    };
+    const { ROLE_GROUPS } = require('../middleware/rbac');
+    const userGroups = req.user.groups || [];
+    const allowedGroups = ROLE_GROUPS[stageRoles[stage]] || [];
+    const hasReviewerRole = userGroups.some(g => allowedGroups.includes(g));
+
+    if (!hasReviewerRole) {
+      logger.warn(`Unauthorized review attempt: ${req.user.email} tried ${stage} review without role`);
+      return res.status(403).json({
+        error: 'ACCESS_DENIED',
+        message: 'You do not have permission to review at this stage'
+      });
+    }
+
+    // --- Prevent self-approval: reviewer must not be the requester ---
+    const submission = await submissionService.getById(id);
+    if (!submission) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Submission not found' });
+    }
+
+    if (submission.RequesterEmail?.toLowerCase() === req.user.email?.toLowerCase()) {
+      logger.warn(`Self-approval blocked: ${req.user.email} tried to review own submission ${id}`);
+      return res.status(403).json({
+        error: 'CONFLICT_OF_INTEREST',
+        message: 'You cannot review your own submission'
+      });
+    }
 
     // Update submission with review data
     const updateData = {
@@ -186,10 +214,9 @@ router.post('/reviews/:stage/:id', requireAuth, (req, res, next) => {
 
     // Update status based on decision
     if (decision === 'approved') {
-      // Move to next stage
       const nextStages = {
         'pbp': 'procurement',
-        'procurement': 'opw', // or ap depending on classification
+        'procurement': 'opw',
         'opw': 'contract',
         'contract': 'ap'
       };
@@ -197,6 +224,8 @@ router.post('/reviews/:stage/:id', requireAuth, (req, res, next) => {
       updateData.status = `${stage}_approved`;
     } else if (decision === 'rejected') {
       updateData.status = 'rejected';
+    } else if (decision === 'info_required') {
+      updateData.status = 'info_required';
     }
 
     await submissionService.update(id, updateData, req.user);
