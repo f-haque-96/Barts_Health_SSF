@@ -76,11 +76,20 @@
   transform: rotate(90deg);
 }
 
-.faq-item p {
-  padding: 0 var(--space-20) var(--space-16) var(--space-20);
-  margin: 0;
+/* FAQ answer container styling */
+.faq-item .faq-answer {
+  padding: var(--space-16) var(--space-20) var(--space-20) var(--space-20);
   color: var(--color-text);
   line-height: 1.6;
+}
+
+/* FAQ answer paragraphs - no extra padding since parent has it */
+.faq-item .faq-answer p {
+  margin: 0 0 var(--space-12) 0;
+}
+
+.faq-item .faq-answer p:last-child {
+  margin-bottom: 0;
 }
 
 .contact-section {
