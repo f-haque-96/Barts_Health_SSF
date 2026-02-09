@@ -129,7 +129,10 @@ CH_API_URL=https://api.companieshouse.gov.uk
 
 ```bash
 cd supplier-form-api
-npm run dev
+npm uninstall csurf
+npm instal csrf-csrf
+npm install
+npm start
 ```
 
 ### Step 3: Test
