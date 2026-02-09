@@ -492,6 +492,11 @@ const useFormStore = create(
           if (!formData.iban || !formData.swiftCode || !formData.bankRouting) return false;
         }
 
+        // UK supplier bank details validation (CRITICAL: Must have sort code and account number)
+        if (formData.overseasSupplier === 'no') {
+          if (!formData.nameOnAccount || !formData.sortCode || !formData.accountNumber) return false;
+        }
+
         if (!formData.accountsAddressSame) return false;
 
         if (formData.accountsAddressSame === 'no') {
@@ -953,9 +958,6 @@ const useFormStore = create(
     {
       name: 'nhs-supplier-form-storage',
       partialize: (state) => {
-        // SECURITY: Exclude sensitive financial data from localStorage persistence
-        const { sortCode, accountNumber, iban, swiftCode, ...safeFormData } = state.formData;
-
         // BUG FIX: Include uploadedFiles in Zustand persist (strip non-serializable File objects)
         // This fixes the race condition where uploadedFiles was reset to {} during rehydration
         const serializedUploads = Object.keys(state.uploadedFiles).reduce((acc, key) => {
@@ -971,7 +973,7 @@ const useFormStore = create(
           currentSection: state.currentSection,
           completedSections: Array.from(state.completedSections),
           visitedSections: state.visitedSections,
-          formData: safeFormData, // Excludes bank details
+          formData: state.formData, // Now includes bank details (user requested persistence on refresh)
           uploadedFiles: serializedUploads, // NOW PERSISTED (without File objects)
           reviewComments: state.reviewComments,
           authorisationState: state.authorisationState,
@@ -980,7 +982,7 @@ const useFormStore = create(
           lastSaved: state.lastSaved,
           submissionId: state.submissionId,
           submissionStatus: state.submissionStatus,
-          // NOTE: Bank details (sortCode, accountNumber, iban, swiftCode) are NOT persisted for security
+          // NOTE: Bank details (sortCode, accountNumber, iban, swiftCode) ARE NOW persisted to localStorage for usability
         };
       },
       // Custom deserializer to reconstruct Set from array
