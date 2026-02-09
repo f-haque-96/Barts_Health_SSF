@@ -27,6 +27,13 @@ const ProgressIndicator = () => {
   const getMissingFields = useFormStore((state) => state.getMissingFields);
   const goToSection = useFormStore((state) => state.goToSection);
   const canNavigateTo = useFormStore((state) => state.canNavigateTo);
+  const submissionId = useFormStore((state) => state.submissionId);
+
+  // Hide progress indicator when form is successfully submitted
+  // This prevents users from accidentally navigating back after submission
+  if (submissionId) {
+    return null;
+  }
 
   const getStepStatus = (section) => {
     // Current section is always active
