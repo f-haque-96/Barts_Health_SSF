@@ -441,6 +441,11 @@ const useFormStore = create(
           return false;
         }
 
+        // Justification field required (minimum 10 characters)
+        if (!formData.justification || formData.justification.trim().length < 10) {
+          return false;
+        }
+
         // Section 3: Classification
         if (!formData.companiesHouseRegistered) return false;
         if (!formData.supplierType) return false;
