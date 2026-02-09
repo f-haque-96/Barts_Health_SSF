@@ -85,15 +85,17 @@ const ExchangeThread = ({ exchanges, onPreviewDocument }) => {
                 </span>
               </div>
 
-              {/* Message */}
-              <div style={{
-                padding: 'var(--space-12)',
-                backgroundColor: 'white',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--color-border)',
-              }}>
-                <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{exchange.message}</p>
-              </div>
+              {/* Message - Only show if there's a message */}
+              {exchange.message && exchange.message.trim() && (
+                <div style={{
+                  padding: 'var(--space-12)',
+                  backgroundColor: 'white',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--color-border)',
+                }}>
+                  <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{exchange.message}</p>
+                </div>
+              )}
 
               {/* Attachments */}
               {exchange.attachments && Object.keys(exchange.attachments).length > 0 && (
@@ -162,6 +164,282 @@ const StatusBadge = ({ status, isAwaitingYou }) => {
     }}>
       {config.text}
     </span>
+  );
+};
+
+// ===== Workflow Status Timeline =====
+const WorkflowStatus = ({ submission }) => {
+  // Determine current stage and status of each stage
+  const getStageInfo = () => {
+    const stages = [
+      {
+        id: 'pbp',
+        name: 'PBP Review',
+        description: 'Prescreening questionnaire review',
+        icon: '📋',
+      },
+      {
+        id: 'procurement',
+        name: 'Procurement Review',
+        description: 'Supplier classification and routing',
+        icon: '📊',
+      },
+      {
+        id: 'opw',
+        name: 'OPW Panel',
+        description: 'IR35 assessment (if required)',
+        icon: '⚖️',
+      },
+      {
+        id: 'ap',
+        name: 'AP Control',
+        description: 'Bank details verification',
+        icon: '💰',
+      },
+      {
+        id: 'complete',
+        name: 'Vendor Created',
+        description: 'Supplier setup complete',
+        icon: '✅',
+      },
+    ];
+
+    // Map submission data to stage statuses
+    const status = submission?.status || 'pending_review';
+    const currentStage = submission?.currentStage || submission?.stage || 'pbp';
+    const pbpStatus = submission?.pbpReview?.decision || (status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'pending');
+    const procurementStatus = submission?.procurementReview?.decision || submission?.procurementStatus;
+    const opwStatus = submission?.opwReview?.decision || submission?.opwStatus;
+    const apStatus = submission?.apControlReview?.verified ? 'verified' : submission?.apStatus;
+    const isComplete = submission?.finalStatus === 'complete' || submission?.vendorNumber;
+
+    return stages.map(stage => {
+      let stageStatus = 'pending';
+      let statusText = '';
+      let completedDate = '';
+
+      if (stage.id === 'pbp') {
+        if (pbpStatus === 'approved') {
+          stageStatus = 'completed';
+          statusText = 'Approved';
+          completedDate = submission?.pbpReview?.completedAt || submission?.pbpReview?.date;
+        } else if (pbpStatus === 'rejected') {
+          stageStatus = 'rejected';
+          statusText = 'Rejected';
+        } else if (currentStage === 'pbp' || status === 'pending_review' || status === 'info_required') {
+          stageStatus = 'active';
+          statusText = status === 'info_required' ? 'Information Requested' : 'Under Review';
+        }
+      } else if (stage.id === 'procurement') {
+        if (procurementStatus === 'approved' || procurementStatus === 'classified') {
+          stageStatus = 'completed';
+          statusText = 'Reviewed & Classified';
+          completedDate = submission?.procurementReview?.completedAt;
+        } else if (currentStage === 'procurement') {
+          stageStatus = 'active';
+          statusText = 'Classifying Supplier';
+        } else if (pbpStatus === 'approved') {
+          stageStatus = 'pending';
+        } else {
+          stageStatus = 'locked';
+        }
+      } else if (stage.id === 'opw') {
+        if (opwStatus === 'inside_ir35' || opwStatus === 'outside_ir35') {
+          stageStatus = 'completed';
+          statusText = opwStatus === 'outside_ir35' ? 'Outside IR35' : 'Inside IR35';
+          completedDate = submission?.opwReview?.completedAt;
+        } else if (currentStage === 'opw') {
+          stageStatus = 'active';
+          statusText = 'Assessing IR35';
+        } else if (procurementStatus && submission?.requiresOPW !== false) {
+          stageStatus = 'pending';
+        } else if (submission?.requiresOPW === false) {
+          stageStatus = 'skipped';
+          statusText = 'Not Required';
+        } else {
+          stageStatus = 'locked';
+        }
+      } else if (stage.id === 'ap') {
+        if (apStatus === 'verified' || submission?.apControlReview?.verified) {
+          stageStatus = 'completed';
+          statusText = 'Bank Details Verified';
+          completedDate = submission?.apControlReview?.completedAt;
+        } else if (currentStage === 'ap' || currentStage === 'ap_control') {
+          stageStatus = 'active';
+          statusText = 'Verifying Bank Details';
+        } else if ((opwStatus || submission?.requiresOPW === false) && procurementStatus) {
+          stageStatus = 'pending';
+        } else {
+          stageStatus = 'locked';
+        }
+      } else if (stage.id === 'complete') {
+        if (isComplete || submission?.vendorNumber) {
+          stageStatus = 'completed';
+          statusText = `Vendor #${submission?.vendorNumber || 'Created'}`;
+          completedDate = submission?.completedAt;
+        } else if (apStatus === 'verified') {
+          stageStatus = 'active';
+          statusText = 'Creating Vendor Record';
+        } else {
+          stageStatus = 'locked';
+        }
+      }
+
+      return {
+        ...stage,
+        status: stageStatus,
+        statusText,
+        completedDate,
+        isActive: stageStatus === 'active',
+        isCompleted: stageStatus === 'completed',
+        isSkipped: stageStatus === 'skipped',
+        isPending: stageStatus === 'pending',
+        isLocked: stageStatus === 'locked',
+      };
+    });
+  };
+
+  const stages = getStageInfo();
+  const hasStartedFullForm = submission?.procurementReview || submission?.currentStage !== 'pbp';
+
+  // Only show workflow if submission has progressed beyond PBP or is approved
+  if (!hasStartedFullForm && submission?.status !== 'approved') {
+    return null;
+  }
+
+  return (
+    <div style={{
+      marginTop: 'var(--space-24)',
+      marginBottom: 'var(--space-24)',
+      padding: 'var(--space-20)',
+      backgroundColor: '#f8fafc',
+      borderRadius: 'var(--radius-base)',
+      border: '2px solid #e2e8f0',
+    }}>
+      <h3 style={{
+        margin: '0 0 var(--space-16) 0',
+        color: 'var(--nhs-blue)',
+        fontSize: 'var(--font-size-lg)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+      }}>
+        📍 Workflow Progress
+      </h3>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
+        {stages.map((stage, index) => {
+          const isLastStage = index === stages.length - 1;
+
+          return (
+            <div key={stage.id}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 'var(--space-12)',
+                opacity: stage.isLocked ? 0.4 : 1,
+              }}>
+                {/* Icon/Status Indicator */}
+                <div style={{
+                  minWidth: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.25rem',
+                  backgroundColor: stage.isCompleted ? '#22c55e' :
+                                   stage.isActive ? '#3b82f6' :
+                                   stage.isPending ? '#f59e0b' :
+                                   stage.isSkipped ? '#94a3b8' : '#e2e8f0',
+                  border: stage.isActive ? '3px solid #1e40af' : 'none',
+                  animation: stage.isActive ? 'pulse 2s infinite' : 'none',
+                }}>
+                  {stage.isCompleted ? '✅' :
+                   stage.isActive ? '🔄' :
+                   stage.isSkipped ? '⏭️' :
+                   stage.isPending ? '⏳' : stage.icon}
+                </div>
+
+                {/* Stage Info */}
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginBottom: '4px',
+                  }}>
+                    <strong style={{
+                      fontSize: 'var(--font-size-base)',
+                      color: stage.isActive ? '#1e40af' : 'var(--color-text)',
+                    }}>
+                      {stage.name}
+                    </strong>
+                    {stage.isActive && (
+                      <span style={{
+                        padding: '2px 8px',
+                        backgroundColor: '#dbeafe',
+                        color: '#1e40af',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                      }}>
+                        IN PROGRESS
+                      </span>
+                    )}
+                  </div>
+
+                  <p style={{
+                    margin: '0 0 4px 0',
+                    fontSize: '0.875rem',
+                    color: 'var(--color-text-secondary)',
+                  }}>
+                    {stage.description}
+                  </p>
+
+                  {stage.statusText && (
+                    <p style={{
+                      margin: 0,
+                      fontSize: '0.875rem',
+                      color: stage.isCompleted ? '#059669' :
+                             stage.isActive ? '#1e40af' : '#6b7280',
+                      fontWeight: stage.isCompleted || stage.isActive ? '600' : '400',
+                    }}>
+                      {stage.statusText}
+                      {stage.completedDate && ` • ${formatDate(stage.completedDate)}`}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Connector Line */}
+              {!isLastStage && (
+                <div style={{
+                  marginLeft: '20px',
+                  width: '2px',
+                  height: '20px',
+                  backgroundColor: stage.isCompleted ? '#22c55e' : '#e2e8f0',
+                }} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Estimated Completion */}
+      {!stages[stages.length - 1].isCompleted && stages.some(s => s.isActive) && (
+        <div style={{
+          marginTop: 'var(--space-16)',
+          padding: 'var(--space-12)',
+          backgroundColor: '#eff6ff',
+          borderRadius: 'var(--radius-sm)',
+          fontSize: '0.875rem',
+          color: '#1e40af',
+        }}>
+          <strong>ℹ️ Estimated Completion:</strong> 2-3 working days
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -419,6 +697,9 @@ const RequesterResponsePage = ({
           <StatusBadge status={submission.status} isAwaitingYou={isAwaitingResponse} />
         </div>
       </div>
+
+      {/* Workflow Status Timeline */}
+      <WorkflowStatus submission={submission} />
 
       {/* Final Decision Notice */}
       {isFinalDecision && (
