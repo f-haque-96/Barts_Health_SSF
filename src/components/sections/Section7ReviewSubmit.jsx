@@ -490,9 +490,11 @@ const Section7ReviewSubmit = () => {
     }
 
     // Open the appropriate review page with the SAME submission ID
-    // Special handling for requester response page (different URL pattern)
+    // Special handling for pages with different URL patterns
     if (type === 'respond') {
       window.open(`/respond/${currentSubmissionId}`, '_blank');
+    } else if (type === 'contract') {
+      window.open(`/contract-drafter/${currentSubmissionId}`, '_blank');
     } else {
       window.open(`/${type}-review/${currentSubmissionId}`, '_blank');
     }
@@ -575,7 +577,7 @@ const Section7ReviewSubmit = () => {
               </p>
             )}
             <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-12)' }}>
-              Test authorization workflow: PBP → Procurement → OPW → AP Control
+              Test authorization workflow: PBP → Procurement → OPW → Contract Drafter → AP Control
             </p>
             <div style={{ display: 'flex', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
               <Button variant="outline" onClick={() => handlePreviewAuthorisation('pbp')} style={{ color: 'var(--nhs-blue)' }}>
@@ -587,15 +589,18 @@ const Section7ReviewSubmit = () => {
               <Button variant="outline" onClick={() => handlePreviewAuthorisation('opw')} style={{ color: 'var(--nhs-blue)' }}>
                 3. OPW Panel
               </Button>
+              <Button variant="outline" onClick={() => handlePreviewAuthorisation('contract')} style={{ color: '#059669', borderColor: '#059669' }}>
+                4. Contract Drafter
+              </Button>
               <Button variant="outline" onClick={() => handlePreviewAuthorisation('ap')} style={{ color: 'var(--nhs-blue)' }}>
-                4. AP Control
+                5. AP Control
               </Button>
               <Button variant="outline" onClick={() => handlePreviewAuthorisation('respond')} style={{ color: '#ca8a04', borderColor: '#ca8a04', backgroundColor: '#fefce8' }}>
-                5. Requester
+                6. Requester
               </Button>
             </div>
             <p style={{ fontSize: 'var(--font-size-xs)', color: '#6b7280', marginTop: 'var(--space-8)', marginBottom: 0 }}>
-              Use "5. Requester" to view the requester's perspective when PBP requests more information
+              Use "6. Requester" to view the requester's perspective when PBP requests more information
             </p>
           </div>
         )}

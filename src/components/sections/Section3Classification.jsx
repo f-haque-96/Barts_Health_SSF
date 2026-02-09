@@ -35,7 +35,7 @@ const Section3Classification = () => {
 
   const [selectedSupplierType, setSelectedSupplierType] = useState(formData.supplierType || '');
   const [companiesHouseValue, setCompaniesHouseValue] = useState(formData.companiesHouseRegistered || '');
-  const [idConsentGiven, setIdConsentGiven] = useState(false);
+  const [idConsentGiven, setIdConsentGiven] = useState(formData.idConsentGiven || false);
 
   // Determine which schema to use based on supplier type
   const getValidationSchema = () => {
@@ -536,7 +536,10 @@ const Section3Classification = () => {
                 <input
                   type="checkbox"
                   checked={idConsentGiven}
-                  onChange={(e) => setIdConsentGiven(e.target.checked)}
+                  onChange={(e) => {
+                    setIdConsentGiven(e.target.checked);
+                    updateFormData('idConsentGiven', e.target.checked); // Persist consent to formData
+                  }}
                   required
                 />
                 <span>

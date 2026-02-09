@@ -882,23 +882,25 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
               </View>
             )}
 
-            {/* 4. Contract Drafter - Only if OPW/IR35 and contract uploaded */}
-            {submission.procurementReview?.supplierClassification === 'opw_ir35' && submission.contractDrafter && (
+            {/* 4. Contract Drafter - Only if OPW/IR35 and contract approved */}
+            {submission.procurementReview?.supplierClassification === 'opw_ir35' && submission.contractDrafter && submission.contractDrafter.decision === 'approved' && (
               <View style={styles.authBlock}>
                 <View style={styles.authBlockHeader}>
                   <Text style={styles.authBlockTitle}>Contract Agreement</Text>
                   <View style={[styles.authBadge, styles.badgeGreen]}>
-                    <Text style={styles.badgeText}>UPLOADED</Text>
+                    <Text style={styles.badgeText}>APPROVED</Text>
                   </View>
                 </View>
-                <Text style={styles.authField}>Uploaded by: {submission.contractDrafter.uploadedBy}</Text>
-                {submission.contractDrafter.contract && (
-                  <Text style={styles.authField}>File: {submission.contractDrafter.contract.name}</Text>
+                {submission.contractDrafter.templateUsed && (
+                  <Text style={styles.authField}>Agreement Type: {submission.contractDrafter.templateUsed}</Text>
+                )}
+                {submission.contractDrafter.finalizedAgreement && (
+                  <Text style={styles.authField}>Final Document: {submission.contractDrafter.finalizedAgreement.name}</Text>
                 )}
                 <View style={styles.signatureRow}>
-                  <Text>Signature: {submission.contractDrafter.signature || '_______________'}</Text>
+                  <Text>Approved by: {submission.contractDrafter.digitalSignature || submission.contractDrafter.decidedBy || '_______________'}</Text>
                   <Text>
-                    Date: {submission.contractDrafter.date ? formatDate(submission.contractDrafter.date) : '_______________'}
+                    Date: {submission.contractDrafter.signedAt ? formatDate(submission.contractDrafter.signedAt) : submission.contractDrafter.decidedAt ? formatDate(submission.contractDrafter.decidedAt) : '_______________'}
                   </Text>
                 </View>
               </View>

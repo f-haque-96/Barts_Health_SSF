@@ -142,20 +142,25 @@ const ContractDrafterPage = ({
     );
   }
 
-  if (isSubmitted || submission.contractDrafter) {
+  if (isSubmitted || (submission.contractDrafter && submission.contractDrafter.decision === 'approved')) {
     return (
       <div className="contract-drafter-page">
         <div className="success-message">
           <div className="success-icon"><CheckIcon size={32} color="white" /></div>
-          <h2>Contract Submitted</h2>
-          <p>The contract has been uploaded and sent to AP Control for final approval.</p>
+          <h2>Contract Approved</h2>
+          <p>The contract has been approved and sent to AP Control for final approval.</p>
           <div className="submission-details">
             <p>
-              <strong>Uploaded by:</strong> {submission.contractDrafter.uploadedBy}
+              <strong>Approved by:</strong> {submission.contractDrafter.digitalSignature || submission.contractDrafter.decidedBy || 'Contract Drafter'}
             </p>
             <p>
-              <strong>Upload date:</strong> {formatDate(submission.contractDrafter.submittedAt)}
+              <strong>Approval date:</strong> {formatDate(submission.contractDrafter.signedAt || submission.contractDrafter.decidedAt)}
             </p>
+            {submission.contractDrafter.finalizedAgreement && (
+              <p>
+                <strong>Final Document:</strong> {submission.contractDrafter.finalizedAgreement.name}
+              </p>
+            )}
           </div>
         </div>
       </div>

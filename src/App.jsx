@@ -22,7 +22,7 @@ import PBPReviewPage from './pages/PBPReviewPage';
 import ProcurementReviewPage from './pages/ProcurementReviewPage';
 import OPWReviewPage from './pages/OPWReviewPage';
 import APControlReviewPage from './pages/APControlReviewPage';
-import ContractDrafterPage from './pages/ContractDrafterPage';
+import ContractDrafterReviewPage from './pages/ContractDrafterReviewPage';
 import RequesterResponsePage from './pages/RequesterResponsePage';
 import HelpPage from './pages/HelpPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
@@ -263,7 +263,7 @@ function App() {
           element={
             <ProtectedRoute requiredRole={ROLES.CONTRACT}>
               <SecureReviewPage requiredRole={ROLES.CONTRACT}>
-                <ContractDrafterPage />
+                <ContractDrafterReviewPage />
               </SecureReviewPage>
             </ProtectedRoute>
           }

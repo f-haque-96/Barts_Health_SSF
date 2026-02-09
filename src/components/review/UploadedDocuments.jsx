@@ -78,9 +78,10 @@ const UploadedDocuments = () => {
 
   // Passport/ID - Required for Sole Traders
   if (formData?.supplierType === 'sole_trader' || formData?.soleTraderStatus === 'yes') {
-    const hasPassport = uploadedFiles?.passportPhoto?.base64 || uploadedFiles?.passportPhoto?.data || uploadedFiles?.passportPhoto?.file;
-    const hasLicenceFront = uploadedFiles?.licenceFront?.base64 || uploadedFiles?.licenceFront?.data || uploadedFiles?.licenceFront?.file;
-    const hasLicenceBack = uploadedFiles?.licenceBack?.base64 || uploadedFiles?.licenceBack?.data || uploadedFiles?.licenceBack?.file;
+    // Check for file existence (name indicates file was uploaded, even if base64 stripped after refresh)
+    const hasPassport = !!(uploadedFiles?.passportPhoto?.name || uploadedFiles?.passportPhoto?.base64 || uploadedFiles?.passportPhoto?.data || uploadedFiles?.passportPhoto?.file);
+    const hasLicenceFront = !!(uploadedFiles?.licenceFront?.name || uploadedFiles?.licenceFront?.base64 || uploadedFiles?.licenceFront?.data || uploadedFiles?.licenceFront?.file);
+    const hasLicenceBack = !!(uploadedFiles?.licenceBack?.name || uploadedFiles?.licenceBack?.base64 || uploadedFiles?.licenceBack?.data || uploadedFiles?.licenceBack?.file);
 
     if (hasPassport || (hasLicenceFront && hasLicenceBack)) {
       // Show whichever they uploaded
@@ -155,8 +156,8 @@ const UploadedDocuments = () => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
         {requiredUploads.map((upload) => {
           const file = uploadedFiles?.[upload.fieldName];
-          // BUG FIX: Check for base64/data (persisted) OR file object (in-memory)
-          const isUploaded = !!(file?.base64 || file?.data || file?.file);
+          // BUG FIX: Check for name (metadata) OR base64/data (full file) OR file object (in-memory)
+          const isUploaded = !!(file?.name || file?.base64 || file?.data || file?.file);
 
           return (
             <div
@@ -220,7 +221,7 @@ const UploadedDocuments = () => {
         })}
       </div>
 
-      {requiredUploads.some(u => !(uploadedFiles?.[u.fieldName]?.base64 || uploadedFiles?.[u.fieldName]?.data || uploadedFiles?.[u.fieldName]?.file)) && (
+      {requiredUploads.some(u => !(uploadedFiles?.[u.fieldName]?.name || uploadedFiles?.[u.fieldName]?.base64 || uploadedFiles?.[u.fieldName]?.data || uploadedFiles?.[u.fieldName]?.file)) && (
         <div
           style={{
             marginTop: 'var(--space-16)',

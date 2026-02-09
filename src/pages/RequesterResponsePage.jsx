@@ -1,18 +1,39 @@
 /**
- * Requester Response Page
- * Allows requesters to respond to PBP information requests
- * Supports multiple rounds of back-and-forth communication
+ * Requester & Supplier Response Portal
+ * Unified page for both requesters and suppliers to:
+ * - View workflow progress
+ * - Communicate with authorized personnel
+ * - Respond to information requests (PBP stage - requester only)
+ * - Participate in contract negotiation (Contract stage - both parties)
+ *
+ * Access Control:
+ * - Requester: Full access to all stages and exchanges
+ * - Supplier: Access from Contract Drafter stage onwards
+ * - Sole Trader: Requester IS the supplier (full access)
  */
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PDFDownloadLink } from '@react-pdf/renderer';
-import { Button, NoticeBox, Textarea, PaperclipIcon } from '../components/common';
+import {
+  Button,
+  NoticeBox,
+  Textarea,
+  PaperclipIcon,
+  ClipboardIcon,
+  BuildingIcon,
+  ShieldIcon,
+  DocumentIcon,
+  PoundIcon,
+  CheckIcon,
+  ClockIcon,
+  XIcon
+} from '../components/common';
 import { formatDate } from '../utils/helpers';
 import PBPApprovalPDF from '../components/pdf/PBPApprovalPDF';
 
 // ===== Exchange Thread Component =====
-const ExchangeThread = ({ exchanges, onPreviewDocument }) => {
+const ExchangeThread = ({ exchanges, onPreviewDocument, userRole }) => {
   if (!exchanges || exchanges.length === 0) return null;
 
   return (
@@ -35,7 +56,22 @@ const ExchangeThread = ({ exchanges, onPreviewDocument }) => {
       <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
         {exchanges.map((exchange, index) => {
           const isPBP = exchange.from === 'pbp';
-          const isDecision = exchange.type === 'decision';
+          const isContractDrafter = exchange.from === 'contract_drafter';
+          const isFromRequester = exchange.from === 'requester';
+          const isFromSupplier = exchange.from === 'supplier';
+          const isDecision = exchange.type === 'decision' || exchange.type === 'contract_approved' || exchange.type === 'contract_rejected';
+
+          // Determine background color
+          let backgroundColor;
+          if (isDecision) {
+            backgroundColor = exchange.decision === 'approved' ? '#f0fdf4' : '#fef2f2';
+          } else if (isPBP) {
+            backgroundColor = '#f0f7ff';
+          } else if (isContractDrafter) {
+            backgroundColor = '#f0fdf4';
+          } else {
+            backgroundColor = '#fefce8';
+          }
 
           return (
             <div
@@ -43,9 +79,7 @@ const ExchangeThread = ({ exchanges, onPreviewDocument }) => {
               style={{
                 padding: 'var(--space-16)',
                 borderBottom: index < exchanges.length - 1 ? '1px solid var(--color-border)' : 'none',
-                backgroundColor: isDecision
-                  ? (exchange.decision === 'approved' ? '#f0fdf4' : '#fef2f2')
-                  : (isPBP ? '#f0f7ff' : '#fefce8'),
+                backgroundColor,
               }}
             >
               {/* Header */}
@@ -61,10 +95,17 @@ const ExchangeThread = ({ exchanges, onPreviewDocument }) => {
                     borderRadius: '4px',
                     fontSize: '0.75rem',
                     fontWeight: '600',
-                    backgroundColor: isPBP ? '#005EB8' : '#ca8a04',
+                    backgroundColor: isPBP ? '#005EB8' :
+                                     isContractDrafter ? '#059669' :
+                                     isFromRequester ? '#ca8a04' :
+                                     isFromSupplier ? '#3b82f6' : '#ca8a04',
                     color: 'white',
                   }}>
-                    {isPBP ? 'PBP REVIEWER' : 'YOU'}
+                    {isPBP ? 'PBP REVIEWER' :
+                     isContractDrafter ? 'CONTRACT DRAFTER' :
+                     isFromRequester ? 'REQUESTER' :
+                     isFromSupplier ? 'SUPPLIER' :
+                     userRole === 'supplier' ? 'SUPPLIER' : 'REQUESTER'}
                   </span>
                   <span style={{ fontWeight: '600' }}>{exchange.fromName}</span>
                   {isDecision && (
@@ -136,18 +177,56 @@ const ExchangeThread = ({ exchanges, onPreviewDocument }) => {
 };
 
 // ===== Status Badge =====
-const StatusBadge = ({ status, isAwaitingYou }) => {
+const StatusBadge = ({ submission, isAwaitingYou }) => {
   const getConfig = () => {
-    if (status === 'approved') {
-      return { bg: '#22c55e', text: 'Approved', color: 'white' };
+    const currentStage = submission?.currentStage || submission?.stage || 'pbp';
+    const vendorNumber = submission?.vendorNumber;
+
+    // Completed - vendor created
+    if (vendorNumber || submission?.finalStatus === 'complete') {
+      return { bg: '#22c55e', text: `Completed - Vendor #${vendorNumber || 'Created'}`, color: 'white' };
     }
-    if (status === 'rejected') {
+
+    // Rejected at any stage
+    if (submission?.status === 'rejected' || submission?.pbpReview?.decision === 'rejected') {
       return { bg: '#ef4444', text: 'Rejected', color: 'white' };
     }
+
+    // Action required from requester/supplier
     if (isAwaitingYou) {
       return { bg: '#f59e0b', text: 'Action Required - Please Respond', color: 'white' };
     }
-    return { bg: '#3b82f6', text: 'Awaiting PBP Review', color: 'white' };
+
+    // Stage-specific statuses
+    switch (currentStage) {
+      case 'pbp':
+        if (submission?.pbpReview?.decision === 'approved') {
+          return { bg: '#3b82f6', text: 'PBP Approved - Proceeding to Procurement', color: 'white' };
+        }
+        return { bg: '#3b82f6', text: 'Under Review by PBP Panel', color: 'white' };
+
+      case 'procurement':
+        return { bg: '#3b82f6', text: 'Under Review by Procurement Team', color: 'white' };
+
+      case 'opw':
+        return { bg: '#3b82f6', text: 'Under Assessment by OPW Panel', color: 'white' };
+
+      case 'contract':
+        if (submission?.contractDrafter?.decision === 'approved') {
+          return { bg: '#22c55e', text: 'Contract Approved - Proceeding to AP Control', color: 'white' };
+        }
+        return { bg: '#3b82f6', text: 'Contract Under Review', color: 'white' };
+
+      case 'ap':
+      case 'ap_control':
+        if (submission?.apControlReview?.verified) {
+          return { bg: '#22c55e', text: 'AP Verified - Creating Vendor Record', color: 'white' };
+        }
+        return { bg: '#3b82f6', text: 'Bank Details Verification in Progress', color: 'white' };
+
+      default:
+        return { bg: '#3b82f6', text: 'In Review', color: 'white' };
+    }
   };
 
   const config = getConfig();
@@ -169,6 +248,29 @@ const StatusBadge = ({ status, isAwaitingYou }) => {
 
 // ===== Workflow Status Timeline =====
 const WorkflowStatus = ({ submission }) => {
+  const [isExpanded, setIsExpanded] = React.useState(true);
+
+  // Determine if OPW and Contract stages are required based on procurement classification
+  const requiresOPWAndContract = () => {
+    const classification = submission?.procurementReview?.classification;
+    const requiresOPW = submission?.requiresOPW;
+
+    // If explicitly marked as not requiring OPW, skip both stages
+    if (requiresOPW === false) {
+      return false;
+    }
+
+    // Standard suppliers don't need OPW or contract review
+    if (classification === 'standard' || classification === 'Standard') {
+      return false;
+    }
+
+    // Potential OPW or any other classification requires these stages
+    return true;
+  };
+
+  const showOPWAndContract = requiresOPWAndContract();
+
   // Determine current stage and status of each stage
   const getStageInfo = () => {
     const stages = [
@@ -176,31 +278,37 @@ const WorkflowStatus = ({ submission }) => {
         id: 'pbp',
         name: 'PBP Review',
         description: 'Prescreening questionnaire review',
-        icon: '📋',
+        IconComponent: ClipboardIcon,
       },
       {
         id: 'procurement',
         name: 'Procurement Review',
         description: 'Supplier classification and routing',
-        icon: '📊',
+        IconComponent: BuildingIcon,
       },
       {
         id: 'opw',
         name: 'OPW Panel',
         description: 'IR35 assessment (if required)',
-        icon: '⚖️',
+        IconComponent: ShieldIcon,
+      },
+      {
+        id: 'contract',
+        name: 'Contract Review',
+        description: 'Agreement negotiation and signature',
+        IconComponent: DocumentIcon,
       },
       {
         id: 'ap',
         name: 'AP Control',
         description: 'Bank details verification',
-        icon: '💰',
+        IconComponent: PoundIcon,
       },
       {
         id: 'complete',
         name: 'Vendor Created',
         description: 'Supplier setup complete',
-        icon: '✅',
+        IconComponent: CheckIcon,
       },
     ];
 
@@ -244,7 +352,10 @@ const WorkflowStatus = ({ submission }) => {
           stageStatus = 'locked';
         }
       } else if (stage.id === 'opw') {
-        if (opwStatus === 'inside_ir35' || opwStatus === 'outside_ir35') {
+        if (!showOPWAndContract) {
+          stageStatus = 'skipped';
+          statusText = 'Not Required';
+        } else if (opwStatus === 'inside_ir35' || opwStatus === 'outside_ir35') {
           stageStatus = 'completed';
           statusText = opwStatus === 'outside_ir35' ? 'Outside IR35' : 'Inside IR35';
           completedDate = submission?.opwReview?.completedAt;
@@ -256,6 +367,23 @@ const WorkflowStatus = ({ submission }) => {
         } else if (submission?.requiresOPW === false) {
           stageStatus = 'skipped';
           statusText = 'Not Required';
+        } else {
+          stageStatus = 'locked';
+        }
+      } else if (stage.id === 'contract') {
+        const contractStatus = submission?.contractDrafter?.decision;
+        if (!showOPWAndContract) {
+          stageStatus = 'skipped';
+          statusText = 'Not Required';
+        } else if (contractStatus === 'approved') {
+          stageStatus = 'completed';
+          statusText = 'Contract Approved';
+          completedDate = submission?.contractDrafter?.completedAt;
+        } else if (currentStage === 'contract') {
+          stageStatus = 'active';
+          statusText = 'Negotiating Agreement';
+        } else if (opwStatus) {
+          stageStatus = 'pending';
         } else {
           stageStatus = 'locked';
         }
@@ -299,7 +427,17 @@ const WorkflowStatus = ({ submission }) => {
     });
   };
 
-  const stages = getStageInfo();
+  const allStages = getStageInfo();
+
+  // Filter out stages that should be hidden (not just skipped, but completely hidden)
+  const stages = allStages.filter(stage => {
+    // Hide OPW and Contract stages if procurement classified as standard
+    if (!showOPWAndContract && (stage.id === 'opw' || stage.id === 'contract')) {
+      return false;
+    }
+    return true;
+  });
+
   const hasStartedFullForm = submission?.procurementReview || submission?.currentStage !== 'pbp';
 
   // Only show workflow if submission has progressed beyond PBP or is approved
@@ -316,20 +454,58 @@ const WorkflowStatus = ({ submission }) => {
       borderRadius: 'var(--radius-base)',
       border: '2px solid #e2e8f0',
     }}>
-      <h3 style={{
-        margin: '0 0 var(--space-16) 0',
-        color: 'var(--nhs-blue)',
-        fontSize: 'var(--font-size-lg)',
+      <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
+        justifyContent: 'space-between',
+        marginBottom: isExpanded ? 'var(--space-16)' : '0',
       }}>
-        📍 Workflow Progress
-      </h3>
+        <h3 style={{
+          margin: 0,
+          color: 'var(--nhs-blue)',
+          fontSize: 'var(--font-size-lg)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+        }}>
+          <ClipboardIcon size={20} color="var(--nhs-blue)" />
+          Workflow Progress
+        </h3>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
-        {stages.map((stage, index) => {
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          style={{
+            padding: '6px 12px',
+            backgroundColor: 'transparent',
+            border: '1px solid #e2e8f0',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            color: 'var(--nhs-blue)',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = '#f0f7ff';
+            e.target.style.borderColor = 'var(--nhs-blue)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = 'transparent';
+            e.target.style.borderColor = '#e2e8f0';
+          }}
+        >
+          {isExpanded ? '▼ Collapse' : '▶ Expand'}
+        </button>
+      </div>
+
+      {isExpanded && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
+          {stages.map((stage, index) => {
           const isLastStage = index === stages.length - 1;
+          const StageIcon = stage.IconComponent; // React requires capitalized variable for component
 
           return (
             <div key={stage.id}>
@@ -355,10 +531,17 @@ const WorkflowStatus = ({ submission }) => {
                   border: stage.isActive ? '3px solid #1e40af' : 'none',
                   animation: stage.isActive ? 'pulse 2s infinite' : 'none',
                 }}>
-                  {stage.isCompleted ? '✅' :
-                   stage.isActive ? '🔄' :
-                   stage.isSkipped ? '⏭️' :
-                   stage.isPending ? '⏳' : stage.icon}
+                  {stage.isCompleted ? (
+                    <CheckIcon size={20} color="white" />
+                  ) : stage.isActive ? (
+                    <StageIcon size={20} color="white" />
+                  ) : stage.isSkipped ? (
+                    <XIcon size={16} color="white" />
+                  ) : stage.isPending ? (
+                    <ClockIcon size={18} color="white" />
+                  ) : (
+                    <StageIcon size={18} color="#94a3b8" />
+                  )}
                 </div>
 
                 {/* Stage Info */}
@@ -424,20 +607,21 @@ const WorkflowStatus = ({ submission }) => {
             </div>
           );
         })}
-      </div>
 
-      {/* Estimated Completion */}
-      {!stages[stages.length - 1].isCompleted && stages.some(s => s.isActive) && (
-        <div style={{
-          marginTop: 'var(--space-16)',
-          padding: 'var(--space-12)',
-          backgroundColor: '#eff6ff',
-          borderRadius: 'var(--radius-sm)',
-          fontSize: '0.875rem',
-          color: '#1e40af',
-        }}>
-          <strong>ℹ️ Estimated Completion:</strong> 2-3 working days
-        </div>
+        {/* Estimated Completion */}
+        {!stages[stages.length - 1].isCompleted && stages.some(s => s.isActive) && (
+          <div style={{
+            marginTop: 'var(--space-16)',
+            padding: 'var(--space-12)',
+            backgroundColor: '#eff6ff',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: '0.875rem',
+            color: '#1e40af',
+          }}>
+            <strong>ℹ️ Estimated Completion:</strong> 2-3 working days
+          </div>
+        )}
+      </div>
       )}
     </div>
   );
@@ -460,6 +644,23 @@ const RequesterResponsePage = ({
   const [responseAttachments, setResponseAttachments] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Determine user role: requester, supplier, or both (sole trader)
+  const requesterEmail = submission?.formData?.nhsEmail?.toLowerCase();
+  const supplierEmail = submission?.formData?.contactEmail?.toLowerCase();
+  const userEmail = user?.email?.toLowerCase();
+  const isSoleTrader = submission?.formData?.supplierType === 'sole_trader' ||
+                       submission?.formData?.soleTraderStatus === 'yes';
+
+  // For sole traders without NHS email, treat supplier email as both roles
+  const isRequester = requesterEmail ? (userEmail === requesterEmail) : false;
+  const isSupplier = supplierEmail ? (userEmail === supplierEmail) : false;
+  const isBothRoles = isSoleTrader && (isRequester || (isSupplier && !requesterEmail)); // Sole trader case
+
+  // Determine primary role for display
+  const userRole = isBothRoles ? 'both' :
+                   isRequester ? 'requester' :
+                   isSupplier ? 'supplier' : 'requester';
+
   // Load submission
   useEffect(() => {
     // Skip localStorage loading if submission provided via props
@@ -481,10 +682,36 @@ const RequesterResponsePage = ({
     setLoading(false);
   }, [submissionId, propSubmission]);
 
-  // Check status
-  const exchanges = submission?.pbpReview?.exchanges || [];
+  // Check status - support both PBP and Contract exchanges
+  const pbpExchanges = submission?.pbpReview?.exchanges || [];
+  const contractExchanges = submission?.contractDrafter?.exchanges || [];
+
+  // Determine which exchange system is active
+  const currentStage = submission?.currentStage || 'pbp';
+  const isContractStage = currentStage === 'contract';
+
+  // Filter exchanges based on user role
+  // Suppliers only see contract stage exchanges (unless they're also the requester)
+  let visibleExchanges;
+  if (userRole === 'supplier' && !isBothRoles) {
+    // Supplier only: show only contract exchanges
+    visibleExchanges = contractExchanges;
+  } else if (isContractStage) {
+    // Requester or both: show current stage exchanges
+    visibleExchanges = contractExchanges;
+  } else {
+    // Requester in PBP stage
+    visibleExchanges = pbpExchanges;
+  }
+
+  const exchanges = visibleExchanges;
   const lastExchange = exchanges.length > 0 ? exchanges[exchanges.length - 1] : null;
-  const isAwaitingResponse = lastExchange?.from === 'pbp' && lastExchange?.type !== 'decision';
+
+  // Check if awaiting response from supplier/requester
+  const isAwaitingResponse = isContractStage
+    ? (lastExchange?.from === 'contract_drafter' && lastExchange?.type !== 'contract_approved' && lastExchange?.type !== 'contract_rejected')
+    : (lastExchange?.from === 'pbp' && lastExchange?.type !== 'decision');
+
   const isFinalDecision = submission?.status === 'approved' || submission?.status === 'rejected';
 
   // Handle document preview
@@ -582,34 +809,82 @@ const RequesterResponsePage = ({
 
     try {
       const timestamp = new Date().toISOString();
-      const requesterName = `${submission?.formData?.section1?.firstName || submission?.formData?.firstName || ''} ${submission?.formData?.section1?.lastName || submission?.formData?.lastName || ''}`.trim() || 'Requester';
-      const requesterEmail = submission?.formData?.section1?.nhsEmail || submission?.formData?.nhsEmail || submission?.submittedBy || 'Unknown';
+
+      // Determine who is responding (requester or supplier)
+      const respondingAsSupplier = isContractStage && (userRole === 'supplier' || userRole === 'both');
+
+      // Get the appropriate name and email
+      let fromName, fromEmail, responseFrom, responseType;
+
+      if (respondingAsSupplier) {
+        // Responding as supplier
+        fromName = submission?.formData?.contactName || 'Supplier';
+        fromEmail = supplierEmail || submission?.formData?.contactEmail || userEmail || 'Unknown';
+        responseFrom = 'supplier';
+        responseType = 'supplier_response';
+      } else {
+        // Responding as requester
+        fromName = `${submission?.formData?.section1?.firstName || submission?.formData?.firstName || ''} ${submission?.formData?.section1?.lastName || submission?.formData?.lastName || ''}`.trim() || user?.displayName || 'Requester';
+        fromEmail = requesterEmail || submission?.formData?.nhsEmail || userEmail || 'Unknown';
+        responseFrom = 'requester';
+        responseType = 'requester_response';
+      }
+
+      // Convert attachments object to array format for consistency
+      const attachmentsArray = Object.keys(responseAttachments).length > 0
+        ? Object.values(responseAttachments).map(att => ({
+            name: att.name,
+            type: att.type,
+            size: att.size,
+            base64: att.base64,
+            url: att.base64, // Use base64 as URL for download
+            uploadedAt: att.uploadedAt
+          }))
+        : [];
 
       // Create new exchange entry
       const newExchange = {
         id: `EXC-${Date.now()}`,
-        type: 'requester_response',
-        from: 'requester',
-        fromName: requesterName,
-        fromEmail: requesterEmail,
+        type: responseType,
+        from: responseFrom,
+        fromName: fromName,
+        fromEmail: fromEmail,
         message: responseMessage,
-        attachments: Object.keys(responseAttachments).length > 0 ? responseAttachments : null,
+        attachments: attachmentsArray.length > 0 ? attachmentsArray : null,
         timestamp: timestamp,
+        uploadedBy: fromName,
+        uploadedByEmail: fromEmail,
       };
 
       // Update exchanges
       const updatedExchanges = [...exchanges, newExchange];
 
-      // Update submission
-      const updatedSubmission = {
-        ...submission,
-        pbpReview: {
-          ...submission.pbpReview,
-          exchanges: updatedExchanges,
-          currentStatus: 'awaiting_pbp',
-          lastResponseAt: timestamp,
-        },
-      };
+      // Update submission based on current stage
+      let updatedSubmission;
+      if (isContractStage) {
+        updatedSubmission = {
+          ...submission,
+          currentStage: 'contract', // Ensure stage stays as contract
+          contractDrafter: {
+            ...submission.contractDrafter,
+            exchanges: updatedExchanges,
+            status: 'negotiating',
+            lastResponseAt: timestamp,
+            lastResponseBy: fromName,
+          },
+        };
+      } else {
+        updatedSubmission = {
+          ...submission,
+          currentStage: 'pbp', // Ensure stage stays as pbp
+          pbpReview: {
+            ...submission.pbpReview,
+            exchanges: updatedExchanges,
+            currentStatus: 'awaiting_pbp',
+            lastResponseAt: timestamp,
+          },
+        };
+      }
 
       // Save to localStorage
       localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
@@ -618,7 +893,7 @@ const RequesterResponsePage = ({
       const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
       const index = submissions.findIndex(s => s.submissionId === submissionId);
       if (index !== -1) {
-        submissions[index].currentStatus = 'awaiting_pbp';
+        submissions[index].currentStatus = isContractStage ? 'contract_negotiating' : 'awaiting_pbp';
         submissions[index].lastResponseAt = timestamp;
         localStorage.setItem('all_submissions', JSON.stringify(submissions));
       }
@@ -627,7 +902,13 @@ const RequesterResponsePage = ({
       setResponseMessage('');
       setResponseAttachments({});
 
-      alert('Your response has been submitted successfully!\n\nThe PBP reviewer will be notified and will review your response.\n\n(In production, an email notification would be sent)');
+      const notificationMessage = respondingAsSupplier
+        ? 'Your response has been submitted successfully!\n\nThe Contract Drafter will be notified and will review your response and attachments.\n\n(In production, an email notification would be sent to the Contract Drafter)'
+        : isContractStage
+          ? 'Your response has been submitted successfully!\n\nThe Contract Drafter will be notified and will review your response.\n\n(In production, an email notification would be sent)'
+          : 'Your response has been submitted successfully!\n\nThe PBP reviewer will be notified and will review your response.\n\n(In production, an email notification would be sent)';
+
+      alert(notificationMessage);
     } catch (error) {
       console.error('Error submitting response:', error);
       alert('Failed to submit response. Please try again.');
@@ -672,13 +953,37 @@ const RequesterResponsePage = ({
         borderBottom: '2px solid var(--color-border)',
       }}>
         <h1 style={{ margin: '0 0 var(--space-8) 0', color: 'var(--nhs-blue)' }}>
-          Respond to Information Request
+          {isBothRoles ? 'Supplier Onboarding Portal' :
+           userRole === 'supplier' ? 'Supplier Portal - Contract Review' :
+           'Requester & Supplier Portal'}
         </h1>
-        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-12)' }}>
           <div>Reference: <strong>{submission.submissionId}</strong></div>
           <div>Questionnaire Type: <strong style={{ textTransform: 'capitalize' }}>{questionnaireType}</strong></div>
           <div>Originally Submitted: {formatDate(submission.submissionDate)}</div>
+          {isBothRoles && (
+            <div style={{ marginTop: 'var(--space-8)', color: '#059669', fontWeight: '500' }}>
+              ℹ️ You are both the requester and supplier for this submission
+            </div>
+          )}
+          {userRole === 'supplier' && !isBothRoles && (
+            <div style={{ marginTop: 'var(--space-8)', color: '#3b82f6', fontWeight: '500' }}>
+              👤 Viewing as: <strong>Supplier</strong> (Contract stage access)
+            </div>
+          )}
+          {userRole === 'requester' && !isBothRoles && (
+            <div style={{ marginTop: 'var(--space-8)', color: '#ca8a04', fontWeight: '500' }}>
+              👤 Viewing as: <strong>Requester</strong> (Full access)
+            </div>
+          )}
         </div>
+
+        {/* Role-specific Access Notice */}
+        {userRole === 'supplier' && !isBothRoles && (
+          <NoticeBox type="info" style={{ fontSize: 'var(--font-size-sm)' }}>
+            <strong>Supplier Access:</strong> As the supplier, you can view workflow progress and participate in contract negotiations from the Contract Drafter stage onwards. Earlier stages are managed by the requester.
+          </NoticeBox>
+        )}
       </div>
 
       {/* Status Banner */}
@@ -694,7 +999,7 @@ const RequesterResponsePage = ({
       }}>
         <div>
           <span style={{ fontWeight: '600', marginRight: '12px' }}>Status:</span>
-          <StatusBadge status={submission.status} isAwaitingYou={isAwaitingResponse} />
+          <StatusBadge submission={submission} isAwaitingYou={isAwaitingResponse} />
         </div>
       </div>
 
@@ -769,11 +1074,22 @@ const RequesterResponsePage = ({
 
       {/* Exchange Thread - Only show if there was actual back-and-forth communication */}
       {exchanges.length > 0 && !(exchanges.length === 1 && exchanges[0].type === 'decision') && (
-        <ExchangeThread exchanges={exchanges} onPreviewDocument={handlePreviewDocument} />
+        <ExchangeThread exchanges={exchanges} onPreviewDocument={handlePreviewDocument} userRole={userRole} />
+      )}
+
+      {/* Supplier Notice - No contract exchanges yet */}
+      {userRole === 'supplier' && !isBothRoles && exchanges.length === 0 && (
+        <NoticeBox type="info" style={{ marginBottom: 'var(--space-24)' }}>
+          <strong>Awaiting Contract Stage</strong>
+          <p style={{ margin: '8px 0 0 0' }}>
+            The submission is currently in the early review stages. You will be notified when the Contract Drafter stage begins, at which point you can participate in contract negotiations and view exchange history.
+          </p>
+        </NoticeBox>
       )}
 
       {/* Response Form - Only show if awaiting response and not final decision */}
-      {isAwaitingResponse && !isFinalDecision && (
+      {/* Suppliers can only respond during contract stage */}
+      {isAwaitingResponse && !isFinalDecision && !(userRole === 'supplier' && !isContractStage) && (
         <div style={{
           padding: 'var(--space-24)',
           backgroundColor: '#fefce8',
@@ -781,22 +1097,32 @@ const RequesterResponsePage = ({
           border: '2px solid #facc15',
         }}>
           <h3 style={{ margin: '0 0 var(--space-16) 0', color: '#854d0e' }}>
-            Your Response
+            {isContractStage
+              ? (userRole === 'supplier' ? 'Supplier Response' : 'Your Response')
+              : 'Your Response'}
           </h3>
 
           <NoticeBox type="warning" style={{ marginBottom: 'var(--space-16)' }}>
-            <strong>The PBP has requested additional information.</strong>
+            <strong>
+              {isContractStage
+                ? 'The Contract Drafter has sent a message.'
+                : 'The PBP has requested additional information.'}
+            </strong>
             <p style={{ margin: '8px 0 0 0' }}>
-              Please review their message above and provide the requested information below.
+              {isContractStage
+                ? 'Please review the contract agreement and respond with any questions, or upload the signed contract if ready.'
+                : 'Please review their message above and provide the requested information below.'}
             </p>
           </NoticeBox>
 
           <Textarea
-            label="Your Response"
+            label={isContractStage ? "Your Response to Contract Drafter" : "Your Response"}
             value={responseMessage}
             onChange={(e) => setResponseMessage(e.target.value)}
             rows={5}
-            placeholder="Enter your response here. Include any clarifications or explanations requested..."
+            placeholder={isContractStage
+              ? "Enter your response about the contract agreement. If uploading a signed contract, provide any clarifications here..."
+              : "Enter your response here. Include any clarifications or explanations requested..."}
             required
             style={{ marginBottom: 'var(--space-16)' }}
           />
@@ -808,7 +1134,7 @@ const RequesterResponsePage = ({
               marginBottom: 'var(--space-8)',
               fontWeight: 'var(--font-weight-medium)',
             }}>
-              Attach Documents (Optional)
+              {isContractStage ? "Upload Signed Contract (Required if finalizing agreement)" : "Attach Documents (Optional)"}
             </label>
             <input
               type="file"

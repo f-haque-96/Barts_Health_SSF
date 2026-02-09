@@ -315,17 +315,20 @@ const OPWReviewPage = ({
         };
       }
 
-      // Update submission with OPW review
+      // Update submission with OPW review - route to contract stage
       const updatedSubmission = {
         ...currentSubmission, // Use fresh data from localStorage
         opwReview: opwReviewData,
-        // Different status based on IR35 determination
-        status: ir35Determination === 'outside'
-          ? 'OPW_Outside_IR35_Awaiting_Agreement'
-          : currentSubmission.status,
-        currentStage: ir35Determination === 'outside'
-          ? 'Consultancy_Agreement'
-          : currentSubmission.currentStage,
+        currentStage: 'contract', // Route to contract drafter for agreement
+        contractDrafter: {
+          status: 'pending_review',
+          ir35Status: ir35Determination,
+          requiredTemplate: ir35Determination === 'outside'
+            ? 'BartsConsultancyAgreement.1.2.docx'
+            : 'Sole Trader Agreement latest version 22.docx',
+          assignedTo: 'peter.persaud@nhs.net',
+          exchanges: [],
+        },
       };
 
       // Save back to localStorage
@@ -342,13 +345,16 @@ const OPWReviewPage = ({
 
       setSubmission(updatedSubmission);
 
-      // Show different message based on determination
+      // Notify contract drafter
+      const supplierName = currentSubmission?.formData?.companyName ||
+        currentSubmission?.formData?.section4?.companyName ||
+        'Supplier';
+
+      // Show message based on determination
       if (ir35Determination === 'outside') {
-        const supplierEmail = currentSubmission?.formData?.contactEmail || currentSubmission?.formData?.section4?.contactEmail || 'supplier@email.com';
-        const requesterEmail = currentSubmission?.formData?.nhsEmail || currentSubmission?.formData?.section1?.nhsEmail || 'requester@nhs.net';
-        alert(`Outside IR35 Determination Submitted.\n\nIn production, an email will be sent to:\n- ${supplierEmail} (Supplier)\n- CC: ${requesterEmail} (Requester)\n- CC: peter.persaud@nhs.net (Contract Drafter)\n\nWith the Sole Trader/Consultancy Agreement form attached.\n\nThe negotiation will happen offline via email. Once signed, the Contract Drafter will upload the agreement.`);
+        alert(`Outside IR35 Determination Submitted.\n\nContract Drafter has been notified to send the Barts Consultancy Agreement to the supplier.\n\nThe agreement will be negotiated through the system with full audit trail.`);
       } else {
-        alert('Inside IR35 Determination Submitted. Contract Drafter has been notified.');
+        alert(`Inside IR35 Determination Submitted.\n\nContract Drafter has been notified to send the Sole Trader Agreement to the supplier.\n\nThe agreement will be negotiated through the system with full audit trail.`);
       }
     } catch (error) {
       console.error('Error updating submission:', error);
@@ -1099,90 +1105,44 @@ const OPWReviewPage = ({
         </div>
       )}
 
-      {/* Contract Upload Section - Show after determination is made (but NOT for rejections) */}
+      {/* Contract Negotiation - Next Stage Notice */}
       {opwReview && opwReview.decision !== 'rejected' && (
         <div style={{
           marginTop: 'var(--space-32)',
           padding: 'var(--space-24)',
-          backgroundColor: 'var(--color-surface)',
+          backgroundColor: '#f0f7ff',
           borderRadius: 'var(--radius-base)',
-          border: '2px solid var(--color-border)',
+          border: '2px solid #dbeafe',
         }}>
           <h4 style={{ margin: '0 0 var(--space-16) 0', color: 'var(--nhs-blue)' }}>
-            Contract/Agreement
+            📋 Next Stage: Contract Negotiation
           </h4>
 
-          {!submission.contractDrafter ? (
-            <div>
-              <NoticeBox type="info" style={{ marginBottom: 'var(--space-16)' }}>
-                <strong>Contract Upload Required:</strong>
-                <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-                  Please upload the signed contract or agreement for this engagement. Once uploaded, this will be sent to AP Control for final approval.
-                </p>
-              </NoticeBox>
+          <NoticeBox type="info" style={{ marginBottom: 'var(--space-16)' }}>
+            <strong>Contract Drafter Stage:</strong>
+            <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+              This submission will now proceed to the <strong>Contract Drafter</strong> for agreement negotiation.
+            </p>
+            <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+              The Contract Drafter will use a dedicated page to:
+            </p>
+            <ul style={{ marginTop: 'var(--space-8)', marginBottom: 0, paddingLeft: 'var(--space-20)' }}>
+              <li>Select and send the appropriate agreement template ({opwReview.ir35Status === 'outside_ir35' ? 'Consultancy Agreement' : 'Sole Trader Agreement'})</li>
+              <li>Exchange messages with the supplier and requester</li>
+              <li>Negotiate contract terms if needed</li>
+              <li>Review and approve the signed contract</li>
+              <li>Forward to AP Control for final verification</li>
+            </ul>
+          </NoticeBox>
 
-              <div style={{ marginBottom: 'var(--space-16)' }}>
-                <FileUpload
-                  name="opwContract"
-                  label="Contract/Agreement (PDF)"
-                  acceptedTypes={['application/pdf']}
-                  onUpload={handleContractUpload}
-                  required
-                />
-                {contractFile && (
-                  <div style={{
-                    marginTop: 'var(--space-8)',
-                    padding: 'var(--space-12)',
-                    backgroundColor: '#d1fae5',
-                    borderRadius: 'var(--radius-base)',
-                    fontSize: 'var(--font-size-sm)',
-                  }}>
-                    <CheckIcon size={14} style={{ marginRight: '4px' }} /> File selected: {contractFile.name}
-                  </div>
-                )}
-              </div>
-
-              <Input
-                label="Uploaded by (Full Name)"
-                type="text"
-                value={contractUploadedBy}
-                onChange={(e) => setContractUploadedBy(e.target.value)}
-                placeholder="Enter your full name"
-                required
-                style={{ marginBottom: 'var(--space-16)' }}
-              />
-
-              <Button
-                variant="primary"
-                onClick={handleSaveContract}
-                disabled={isSavingContract || !contractFile || !contractUploadedBy.trim()}
-                style={{ backgroundColor: 'var(--color-success)' }}
-              >
-                {isSavingContract ? 'Uploading...' : 'Save Contract & Send to AP Control'}
-              </Button>
-            </div>
-          ) : (
-            <div>
-              <NoticeBox type="success" style={{ marginBottom: 'var(--space-16)' }}>
-                <strong><CheckIcon size={14} style={{ marginRight: '4px' }} /> Contract Uploaded Successfully</strong>
-                <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-                  Uploaded by: <strong>{submission.contractDrafter.uploadedBy}</strong>
-                </p>
-                <p style={{ marginTop: 'var(--space-4)', marginBottom: 0 }}>
-                  Upload date: {formatDate(submission.contractDrafter.submittedAt)}
-                </p>
-              </NoticeBox>
-
-              {submission.contractDrafter.contract && (
-                <Button
-                  variant="outline"
-                  onClick={() => handlePreviewDocument(submission.contractDrafter.contract)}
-                >
-                  Preview Contract
-                </Button>
-              )}
-            </div>
-          )}
+          <div style={{
+            padding: 'var(--space-12)',
+            backgroundColor: '#fef3c7',
+            border: '1px solid #fde047',
+            borderRadius: 'var(--radius-sm)',
+          }}>
+            <strong>ℹ️ Note:</strong> Contract upload is no longer done at this stage. The Contract Drafter will manage all agreement exchange and signature collection through their dedicated workflow page.
+          </div>
         </div>
       )}
 

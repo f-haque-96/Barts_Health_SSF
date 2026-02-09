@@ -105,6 +105,14 @@ export const AuthProvider = ({ children }) => {
       return true;
     }
 
+    // Supplier can access their own submission via response page
+    const supplierEmail = submission.formData?.contactEmail ||
+                         submission.formData?.section4?.contactEmail;
+
+    if (supplierEmail && supplierEmail.toLowerCase() === user.email?.toLowerCase()) {
+      return true;
+    }
+
     // Check stage-based access
     const status = submission.status?.toLowerCase() || '';
     const currentStage = submission.currentStage?.toLowerCase();

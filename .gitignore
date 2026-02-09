@@ -37,3 +37,4 @@ dist-ssr
 # Session files
 SESSION_SUMMARY.md
 *.session.md
+nul

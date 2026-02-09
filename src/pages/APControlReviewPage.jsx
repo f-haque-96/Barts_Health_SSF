@@ -1047,7 +1047,7 @@ const APControlReviewPage = ({
               </div>
 
               {/* Contract Agreement Section - within the same box */}
-              {submission.contractDrafter && (
+              {submission.contractDrafter && submission.contractDrafter.decision === 'approved' && (
                 <div style={{
                   marginTop: 'var(--space-16)',
                   paddingTop: 'var(--space-16)',
@@ -1068,12 +1068,19 @@ const APControlReviewPage = ({
                         fontWeight: 'var(--font-weight-semibold)',
                         fontSize: 'var(--font-size-xs)',
                       }}>
-                        UPLOADED
+                        APPROVED
                       </span>
                     </p>
-                    <p style={{ marginBottom: 'var(--space-8)' }}>
-                      <strong>Uploaded by:</strong> {submission.contractDrafter.uploadedBy || 'Not recorded'}
-                    </p>
+                    {submission.contractDrafter.templateUsed && (
+                      <p style={{ marginBottom: 'var(--space-8)' }}>
+                        <strong>Agreement Type:</strong> {submission.contractDrafter.templateUsed}
+                      </p>
+                    )}
+                    {submission.contractDrafter.finalizedAgreement && (
+                      <p style={{ marginBottom: 'var(--space-8)' }}>
+                        <strong>Final Document:</strong> {submission.contractDrafter.finalizedAgreement.name}
+                      </p>
+                    )}
                     <div style={{
                       marginTop: 'var(--space-12)',
                       paddingTop: 'var(--space-12)',
@@ -1084,16 +1091,16 @@ const APControlReviewPage = ({
                       color: 'var(--color-text-secondary)',
                     }}>
                       <span>
-                        <strong>Signed by:</strong>{' '}
-                        {submission.contractDrafter.signature ||
-                         submission.contractDrafter.uploadedBy ||
+                        <strong>Approved by:</strong>{' '}
+                        {submission.contractDrafter.digitalSignature ||
+                         submission.contractDrafter.decidedBy ||
                          'Not recorded'}
                       </span>
                       <span>
                         <strong>Date:</strong>{' '}
-                        {formatDate(submission.contractDrafter.date ||
-                         submission.contractDrafter.uploadDate ||
-                         submission.contractDrafter.submittedAt)}
+                        {formatDate(submission.contractDrafter.signedAt ||
+                         submission.contractDrafter.decidedAt ||
+                         submission.contractDrafter.lastUpdated)}
                       </span>
                     </div>
                   </div>
@@ -1228,8 +1235,8 @@ const APControlReviewPage = ({
             </div>
           )}
 
-          {/* Contract Agreement */}
-          {(submission?.contractDrafter?.contract || submission?.uploads?.contract) && (
+          {/* Finalized Contract Agreement */}
+          {submission?.contractDrafter?.finalizedAgreement && (
             <div className="document-card">
               <div className="document-icon" style={{
                 display: 'flex',
@@ -1237,29 +1244,29 @@ const APControlReviewPage = ({
                 justifyContent: 'center',
                 width: '40px',
                 height: '40px',
-                background: '#eff6ff',
+                background: '#dcfce7',
                 borderRadius: '8px',
-                color: '#005EB8',
+                color: '#059669',
                 fontSize: '0.85rem',
                 fontWeight: '600'
-              }}>PDF</div>
+              }}>
+                {submission.contractDrafter.finalizedAgreement.type === 'application/pdf' ? 'PDF' : 'DOC'}
+              </div>
               <div className="document-info">
-                <h4>Contract Agreement</h4>
+                <h4>Finalized Contract Agreement</h4>
                 <p className="file-name">
-                  {submission?.contractDrafter?.contract?.name ||
-                   submission?.uploads?.contract?.name ||
-                   'contract.pdf'}
+                  {submission.contractDrafter.finalizedAgreement.name}
                 </p>
                 <p className="upload-date">
-                  Uploaded by: {submission?.contractDrafter?.uploadedBy || 'Contract Drafter'}
+                  Approved by: {submission.contractDrafter.digitalSignature || submission.contractDrafter.decidedBy || 'Contract Drafter'}
+                  {' • '}
+                  {formatDate(submission.contractDrafter.signedAt || submission.contractDrafter.decidedAt)}
                 </p>
               </div>
               <div className="document-actions">
                 <button
                   className="btn-preview"
-                  onClick={() => handlePreviewDocument(
-                    submission?.contractDrafter?.contract || submission?.uploads?.contract
-                  )}
+                  onClick={() => handlePreviewDocument(submission.contractDrafter.finalizedAgreement)}
                 >
                   Preview
                 </button>

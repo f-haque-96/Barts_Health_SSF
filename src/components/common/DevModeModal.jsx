@@ -64,6 +64,7 @@ const DevModeModal = ({ isOpen, onClose }) => {
     { name: 'PBP Review', path: '/pbp-review', color: '#005EB8' },
     { name: 'Procurement Review', path: '/procurement-review', color: '#007F3B' },
     { name: 'OPW/IR35 Review', path: '/opw-review', color: '#7C2855' },
+    { name: 'Contract Drafter', path: '/contract-drafter', color: '#059669' },
     { name: 'AP Control', path: '/ap-review', color: '#ED8B00' },
     { name: 'Requester Response', path: '/respond', color: '#8A1538' },
   ];

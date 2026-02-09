@@ -7,6 +7,46 @@ const { getPool, sql } = require('../config/database');
 const logger = require('../config/logger');
 
 /**
+ * Audit Action Types
+ * Standardized action types for logging
+ */
+const ACTION_TYPES = {
+  // Submission actions
+  SUBMISSION_CREATED: 'submission_created',
+  SUBMISSION_UPDATED: 'submission_updated',
+  SUBMISSION_DELETED: 'submission_deleted',
+
+  // Review actions
+  PBP_APPROVED: 'pbp_approved',
+  PBP_REJECTED: 'pbp_rejected',
+  PBP_INFO_REQUESTED: 'pbp_info_requested',
+
+  PROCUREMENT_APPROVED: 'procurement_approved',
+  PROCUREMENT_REJECTED: 'procurement_rejected',
+
+  OPW_APPROVED: 'opw_approved',
+  OPW_REJECTED: 'opw_rejected',
+
+  AP_VERIFIED: 'ap_verified',
+  AP_REJECTED: 'ap_rejected',
+
+  // Contract drafter actions
+  CONTRACT_SENT: 'contract_sent',
+  CONTRACT_RESPONSE: 'contract_response',
+  CONTRACT_APPROVED: 'contract_approved',
+  CONTRACT_REJECTED: 'contract_rejected',
+  CONTRACT_CHANGES_REQUESTED: 'contract_changes_requested',
+
+  // Document actions
+  DOCUMENT_UPLOADED: 'document_uploaded',
+  DOCUMENT_DELETED: 'document_deleted',
+
+  // System actions
+  VENDOR_CREATED: 'vendor_created',
+  NOTIFICATION_SENT: 'notification_sent',
+};
+
+/**
  * Log an audit entry to the database
  */
 async function logAudit(auditData) {
@@ -66,7 +106,37 @@ async function getAuditTrail(submissionId) {
   }
 }
 
+/**
+ * Log contract drafter action
+ * Helper function for logging contract-related actions
+ * @param {string} submissionId - Submission ID
+ * @param {string} action - Action type (from ACTION_TYPES)
+ * @param {object} details - Action details
+ */
+async function logContractAction(submissionId, action, details) {
+  const auditData = {
+    submissionId,
+    action,
+    user: details.performedBy,
+    userEmail: details.performedByEmail,
+    ipAddress: details.ipAddress,
+    userAgent: details.userAgent,
+    previousStatus: details.previousStatus,
+    newStatus: details.newStatus,
+    contractType: details.contractType,
+    templateUsed: details.templateUsed,
+    exchangeId: details.exchangeId,
+    attachments: details.attachments,
+    message: details.message,
+    decision: details.decision,
+  };
+
+  return logAudit(auditData);
+}
+
 module.exports = {
+  ACTION_TYPES,
   logAudit,
-  getAuditTrail
+  getAuditTrail,
+  logContractAction,
 };

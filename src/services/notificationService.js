@@ -35,6 +35,12 @@ export const NOTIFICATION_TYPES = {
 
   AP_VERIFIED: 'AP_VERIFIED',
 
+  // Contract notifications
+  CONTRACT_REQUEST_SENT: 'CONTRACT_REQUEST_SENT',
+  CONTRACT_RESPONSE_RECEIVED: 'CONTRACT_RESPONSE_RECEIVED',
+  CONTRACT_APPROVED: 'CONTRACT_APPROVED',
+  CONTRACT_CHANGES_REQUESTED: 'CONTRACT_CHANGES_REQUESTED',
+
   // Alert notifications
   DUPLICATE_SUPPLIER_FLAG: 'DUPLICATE_SUPPLIER_FLAG',
   WATCHLIST_MATCH: 'WATCHLIST_MATCH',
@@ -590,6 +596,250 @@ export const markNotificationProcessed = (notificationId) => {
   }
 };
 
+/**
+ * Send contract request email to supplier and requester
+ * @param {object} submission - Submission data
+ * @param {object} templateInfo - Agreement template information
+ * @param {string} message - Message from contract drafter
+ * @returns {object} - Notification record
+ */
+export const sendContractRequestEmail = (submission, templateInfo, message) => {
+  const requesterEmail = submission.formData?.nhsEmail;
+  const requesterName = `${submission.formData?.firstName || ''} ${submission.formData?.lastName || ''}`.trim();
+  const supplierEmail = submission.formData?.contactEmail;
+  const supplierName = submission.formData?.companyName || submission.formData?.section4?.companyName || 'Supplier';
+  const contractDrafterEmail = DEPARTMENT_EMAILS.contractDrafter;
+
+  const subject = `Contract Review Required - ${submission.submissionId}`;
+
+  const body = `
+Dear ${supplierName},
+
+Your supplier setup form has been reviewed. A contract agreement is required to proceed.
+
+SUBMISSION DETAILS:
+- Submission ID: ${submission.submissionId}
+- Agreement Type: ${templateInfo.name}
+- Version: ${templateInfo.version}
+
+MESSAGE FROM CONTRACT DRAFTER:
+${message || 'Please review the attached agreement, complete the required fields, and upload the signed document.'}
+
+NEXT STEPS:
+1. Review the attached agreement document
+2. Complete all required fields
+3. Have authorized signatory sign the document
+4. Upload the signed document via the response link below
+
+RESPOND VIA:
+${window.location.origin}/respond/${submission.submissionId}
+
+The Contract Drafter (${contractDrafterEmail}) is available to answer questions about the agreement terms.
+
+If you need clarification or wish to negotiate any terms, please respond via the link above with your comments.
+
+Regards,
+Barts Health NHS Trust
+Procurement Team
+
+---
+This is an automated notification from the NHS Supplier Setup System.
+  `.trim();
+
+  // Notify supplier
+  const supplierNotif = createNotificationRecord({
+    type: NOTIFICATION_TYPES.CONTRACT_REQUEST_SENT,
+    submissionId: submission.submissionId,
+    recipientEmail: supplierEmail,
+    recipientName: supplierName,
+    subject,
+    body,
+    metadata: {
+      agreementType: templateInfo.name,
+      agreementVersion: templateInfo.version,
+      templateFilename: templateInfo.filename,
+      responseUrl: `${window.location.origin}/respond/${submission.submissionId}`,
+    },
+  });
+
+  // Notify requester (copy)
+  if (requesterEmail) {
+    createNotificationRecord({
+      type: NOTIFICATION_TYPES.CONTRACT_REQUEST_SENT,
+      submissionId: submission.submissionId,
+      recipientEmail: requesterEmail,
+      recipientName: requesterName,
+      subject: `[CC] ${subject}`,
+      body: `You are copied on this message.\n\n${body}`,
+      metadata: {
+        role: 'requester',
+        agreementType: templateInfo.name,
+      },
+    });
+  }
+
+  return supplierNotif;
+};
+
+/**
+ * Notify contract drafter of supplier response
+ * @param {object} submission - Submission data
+ * @param {object} exchange - Exchange/response data
+ * @returns {object} - Notification record
+ */
+export const notifyContractDrafterOfResponse = (submission, exchange) => {
+  const supplierName = submission.formData?.companyName || submission.formData?.section4?.companyName || 'Supplier';
+  const contractDrafterEmail = DEPARTMENT_EMAILS.contractDrafter;
+
+  const hasAttachments = exchange.attachments && exchange.attachments.length > 0;
+  const attachmentInfo = hasAttachments
+    ? `\n\nATTACHMENTS:\n${exchange.attachments.map(a => `- ${a.name}`).join('\n')}`
+    : '';
+
+  return notifyDepartment('contractDrafter', {
+    type: NOTIFICATION_TYPES.CONTRACT_RESPONSE_RECEIVED,
+    submissionId: submission.submissionId,
+    subject: `Contract Response Received - ${supplierName} (${submission.submissionId})`,
+    body: `
+The supplier has responded to the contract agreement.
+
+SUBMISSION DETAILS:
+- Submission ID: ${submission.submissionId}
+- Supplier: ${supplierName}
+- Response Time: ${new Date(exchange.timestamp).toLocaleString('en-GB')}
+
+MESSAGE:
+${exchange.message || 'No message provided'}${attachmentInfo}
+
+Please review the response and take appropriate action:
+${window.location.origin}/contract-review/${submission.submissionId}
+
+Regards,
+NHS Supplier Setup System
+    `.trim(),
+    metadata: {
+      supplierName,
+      hasAttachments,
+      attachmentCount: exchange.attachments?.length || 0,
+      exchangeId: exchange.id,
+    },
+  });
+};
+
+/**
+ * Notify all parties that contract has been approved
+ * @param {object} submission - Submission data
+ * @param {string} approvedBy - Name of approver
+ * @returns {Array} - Array of notification records
+ */
+export const notifyContractApproved = (submission, approvedBy) => {
+  const requesterEmail = submission.formData?.nhsEmail;
+  const requesterName = `${submission.formData?.firstName || ''} ${submission.formData?.lastName || ''}`.trim();
+  const supplierEmail = submission.formData?.contactEmail;
+  const supplierName = submission.formData?.companyName || submission.formData?.section4?.companyName || 'Supplier';
+
+  const notifications = [];
+
+  // Notify supplier
+  notifications.push(
+    createNotificationRecord({
+      type: NOTIFICATION_TYPES.CONTRACT_APPROVED,
+      submissionId: submission.submissionId,
+      recipientEmail: supplierEmail,
+      recipientName: supplierName,
+      subject: `Contract Approved - ${submission.submissionId}`,
+      body: `
+Dear ${supplierName},
+
+Your contract agreement has been reviewed and approved by ${approvedBy}.
+
+SUBMISSION DETAILS:
+- Submission ID: ${submission.submissionId}
+- Approved By: ${approvedBy}
+- Date: ${new Date().toLocaleString('en-GB', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric',
+})}
+
+NEXT STEPS:
+Your supplier setup request will now proceed to the final verification stage (AP Control for bank details verification).
+
+You will be notified once your supplier account has been created.
+
+Regards,
+Barts Health NHS Trust
+Procurement Team
+      `.trim(),
+      metadata: {
+        supplierName,
+        approvedBy,
+      },
+    })
+  );
+
+  // Notify requester
+  if (requesterEmail) {
+    notifications.push(
+      createNotificationRecord({
+        type: NOTIFICATION_TYPES.CONTRACT_APPROVED,
+        submissionId: submission.submissionId,
+        recipientEmail: requesterEmail,
+        recipientName: requesterName,
+        subject: `Contract Approved - ${supplierName} (${submission.submissionId})`,
+        body: `
+Dear ${requesterName},
+
+The contract agreement for ${supplierName} has been approved.
+
+SUBMISSION DETAILS:
+- Submission ID: ${submission.submissionId}
+- Supplier: ${supplierName}
+- Approved By: ${approvedBy}
+
+The supplier setup request is now proceeding to final verification.
+
+Regards,
+NHS Supplier Setup System
+        `.trim(),
+        metadata: {
+          supplierName,
+          approvedBy,
+        },
+      })
+    );
+  }
+
+  // Notify AP Control team
+  notifications.push(
+    notifyDepartment('ap', {
+      type: NOTIFICATION_TYPES.CONTRACT_APPROVED,
+      submissionId: submission.submissionId,
+      subject: `Contract Approved - Ready for AP Verification: ${supplierName}`,
+      body: `
+A contract agreement has been approved and is ready for final bank details verification.
+
+SUBMISSION DETAILS:
+- Submission ID: ${submission.submissionId}
+- Supplier: ${supplierName}
+- Contract Approved By: ${approvedBy}
+
+Please proceed with bank details verification:
+${window.location.origin}/ap-review/${submission.submissionId}
+
+Regards,
+NHS Supplier Setup System
+      `.trim(),
+      metadata: {
+        supplierName,
+        approvedBy,
+      },
+    })
+  );
+
+  return notifications;
+};
+
 export default {
   NOTIFICATION_TYPES,
   createNotificationRecord,
@@ -600,4 +850,7 @@ export default {
   sendConflictOfInterestAlert,
   getNotificationHistory,
   markNotificationProcessed,
+  sendContractRequestEmail,
+  notifyContractDrafterOfResponse,
+  notifyContractApproved,
 };

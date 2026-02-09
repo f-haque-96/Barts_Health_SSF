@@ -266,7 +266,10 @@ const useFormStore = create(
       },
 
       hasUploadedFile: (fieldName) => {
-        return !!get().uploadedFiles[fieldName];
+        const file = get().uploadedFiles[fieldName];
+        if (!file) return false;
+        // Check if file has name (metadata) OR base64/data (actual content)
+        return !!(file.name || file.base64 || file.data);
       },
 
       // ----- CRN Cache Actions -----
@@ -603,15 +606,17 @@ const useFormStore = create(
             }
 
             // Conditional uploads
-            // BUG FIX: Check for base64 or data (now persisted) OR file (in-memory)
-            if (formData.procurementEngaged === 'yes' && !(uploadedFiles.procurementApproval?.base64 || uploadedFiles.procurementApproval?.data)) {
+            // Helper function to check if file exists
+            const fileExists = (fileObj) => !!(fileObj?.name || fileObj?.base64 || fileObj?.data);
+
+            if (formData.procurementEngaged === 'yes' && !fileExists(uploadedFiles.procurementApproval)) {
               missing.push('Procurement Approval Document');
             }
-            if (formData.letterheadAvailable === 'yes' && !(uploadedFiles.letterhead?.base64 || uploadedFiles.letterhead?.data)) {
+            if (formData.letterheadAvailable === 'yes' && !fileExists(uploadedFiles.letterhead)) {
               missing.push('Letterhead with Bank Details');
             }
             if (formData.soleTraderStatus === 'yes') {
-              if (!(uploadedFiles.cestForm?.base64 || uploadedFiles.cestForm?.data)) missing.push('CEST Form');
+              if (!fileExists(uploadedFiles.cestForm)) missing.push('CEST Form');
             }
             break;
 
@@ -651,13 +656,15 @@ const useFormStore = create(
             // Sole trader-specific fields
             if (formData.supplierType === 'sole_trader') {
               if (!formData.idType) missing.push('ID Type');
-              // BUG FIX: Check for base64 or data (now persisted)
-              if (formData.idType === 'passport' && !(uploadedFiles.passportPhoto?.base64 || uploadedFiles.passportPhoto?.data)) {
+              // Helper function to check if file exists
+              const fileExists = (fileObj) => !!(fileObj?.name || fileObj?.base64 || fileObj?.data);
+
+              if (formData.idType === 'passport' && !fileExists(uploadedFiles.passportPhoto)) {
                 missing.push('Passport Photo');
               }
               if (formData.idType === 'driving_licence') {
-                if (!(uploadedFiles.licenceFront?.base64 || uploadedFiles.licenceFront?.data)) missing.push('Driving Licence (Front)');
-                if (!(uploadedFiles.licenceBack?.base64 || uploadedFiles.licenceBack?.data)) missing.push('Driving Licence (Back)');
+                if (!fileExists(uploadedFiles.licenceFront)) missing.push('Driving Licence (Front)');
+                if (!fileExists(uploadedFiles.licenceBack)) missing.push('Driving Licence (Back)');
               }
             }
 
@@ -889,30 +896,38 @@ const useFormStore = create(
           const section3 = formData?.section3 || formData || {};
           const currentUploads = uploadedFiles || state.uploads || {};
 
-          // Letterhead with Bank Details - ALWAYS REQUIRED
-          if (!currentUploads?.letterhead?.base64 && !currentUploads?.letterhead?.data) {
-            missing.push('Letterhead with Bank Details (Upload Required)');
+          // Helper function to check if file exists (checks for name or base64/data for backwards compatibility)
+          const fileExists = (fileObj) => {
+            if (!fileObj) return false;
+            return !!(fileObj.name || fileObj.base64 || fileObj.data);
+          };
+
+          // Letterhead with Bank Details - Required if letterheadAvailable === 'yes'
+          if (section2?.letterheadAvailable === 'yes' || formData?.letterheadAvailable === 'yes') {
+            if (!fileExists(currentUploads?.letterhead)) {
+              missing.push('Letterhead with Bank Details (Upload Required)');
+            }
           }
 
           // Procurement Approval - Required if engaged with procurement
           if (section2?.procurementEngaged === 'yes' || formData?.procurementEngaged === 'yes' || formData?.hasProcurementApproval === 'yes') {
-            if (!currentUploads?.procurementApproval?.base64 && !currentUploads?.procurementApproval?.data) {
+            if (!fileExists(currentUploads?.procurementApproval)) {
               missing.push('Procurement Approval Document (Upload Required)');
             }
           }
 
           // CEST Form - Required for Sole Traders
           if (section3?.supplierType === 'sole_trader' || section3?.supplierType === 'individual' || formData?.supplierType === 'sole_trader' || formData?.soleTraderStatus === 'yes') {
-            if (!currentUploads?.cestForm?.base64 && !currentUploads?.cestForm?.data) {
+            if (!fileExists(currentUploads?.cestForm)) {
               missing.push('CEST Form (Upload Required for Sole Traders)');
             }
           }
 
           // Passport/ID - Required for Sole Traders
           if (section3?.supplierType === 'sole_trader' || section3?.supplierType === 'individual' || formData?.supplierType === 'sole_trader' || formData?.soleTraderStatus === 'yes') {
-            const hasPassport = currentUploads?.passportPhoto?.base64 || currentUploads?.passportPhoto?.data;
-            const hasLicenceFront = currentUploads?.licenceFront?.base64 || currentUploads?.licenceFront?.data;
-            const hasLicenceBack = currentUploads?.licenceBack?.base64 || currentUploads?.licenceBack?.data;
+            const hasPassport = fileExists(currentUploads?.passportPhoto);
+            const hasLicenceFront = fileExists(currentUploads?.licenceFront);
+            const hasLicenceBack = fileExists(currentUploads?.licenceBack);
 
             // At least passport OR both licence sides required
             if (!hasPassport && !(hasLicenceFront && hasLicenceBack)) {
@@ -963,12 +978,25 @@ const useFormStore = create(
     {
       name: 'nhs-supplier-form-storage',
       partialize: (state) => {
-        // BUG FIX: Include uploadedFiles in Zustand persist (strip non-serializable File objects)
-        // This fixes the race condition where uploadedFiles was reset to {} during rehydration
+        // BUG FIX: Smart persistence strategy to avoid localStorage quota exceeded
+        // - Files under 1MB: Keep base64 (most PDFs, images are under this)
+        // - Files over 1MB: Strip base64, keep metadata only
+        // This ensures small files persist while avoiding quota errors on large files
         const serializedUploads = Object.keys(state.uploadedFiles).reduce((acc, key) => {
           if (state.uploadedFiles[key]) {
-            const { file, ...rest } = state.uploadedFiles[key]; // Remove File object
-            acc[key] = rest; // Keep name, size, type, uploadDate, base64
+            const fileData = state.uploadedFiles[key];
+            const fileSize = fileData.size || 0;
+            const MAX_SIZE_FOR_PERSISTENCE = 1024 * 1024; // 1MB
+
+            if (fileSize < MAX_SIZE_FOR_PERSISTENCE) {
+              // Small file - keep base64 for persistence
+              const { file, ...dataWithBase64 } = fileData;
+              acc[key] = dataWithBase64; // Keep: name, size, type, uploadDate, base64, data
+            } else {
+              // Large file - strip base64 to avoid quota
+              const { file, base64, data, ...metadata } = fileData;
+              acc[key] = metadata; // Keep only: name, size, type, uploadDate
+            }
           }
           return acc;
         }, {});
@@ -976,10 +1004,10 @@ const useFormStore = create(
         return {
           // Only persist these fields
           currentSection: state.currentSection,
-          completedSections: Array.from(state.completedSections),
+          completedSections: Array.from(state.completedSections), // Persist to allow navigation
           visitedSections: state.visitedSections,
           formData: state.formData, // Now includes bank details (user requested persistence on refresh)
-          uploadedFiles: serializedUploads, // NOW PERSISTED (without File objects)
+          uploadedFiles: serializedUploads, // Smart persistence: small files keep base64, large files metadata only
           reviewComments: state.reviewComments,
           authorisationState: state.authorisationState,
           prescreeningProgress: state.prescreeningProgress,

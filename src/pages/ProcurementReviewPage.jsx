@@ -205,8 +205,13 @@ const ProcurementReviewPage = ({
         // Store Alemba reference at top level for easy access
         alembaReference: action === 'approved' ? alembaReference : currentSubmission.alembaReference,
         displayReference: action === 'approved' ? alembaReference : currentSubmission.displayReference,
+        // Update currentStage based on classification
+        currentStage: action === 'approved'
+          ? (supplierClassification === 'opw_ir35' ? 'opw' : 'ap')
+          : 'rejected',
         // Add procurement review
         procurementReview: {
+          classification: supplierClassification, // Store classification for workflow logic
           supplierClassification,
           decision: action,
           comments,
@@ -215,7 +220,10 @@ const ProcurementReviewPage = ({
           date: signatureDate,
           reviewedBy: 'Procurement Team', // In real app, this would come from auth
           reviewedAt: new Date().toISOString(),
+          completedAt: new Date().toISOString(),
         },
+        // Mark requiresOPW based on classification
+        requiresOPW: supplierClassification === 'opw_ir35',
       };
 
       // Save back to localStorage
