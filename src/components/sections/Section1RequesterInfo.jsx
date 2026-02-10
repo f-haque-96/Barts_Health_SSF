@@ -6,7 +6,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Input, QuestionLabel, InfoIcon } from '../common';
+import { Input, QuestionLabel, InfoIcon, Tooltip, HelpCircleIcon } from '../common';
 import { FormNavigation } from '../layout';
 import { section1Schema } from '../../utils/validation';
 import { formatPhoneNumber } from '../../utils/helpers';
@@ -132,7 +132,16 @@ const Section1RequesterInfo = () => {
         <div className="form-row">
           <div style={{ flex: 1 }}>
             <Input
-              label={<QuestionLabel section="1" question="5">NHS Email Address</QuestionLabel>}
+              label={
+                <QuestionLabel section="1" question="5">
+                  NHS Email Address
+                  <Tooltip content="This must be your official NHS email address (e.g., @nhs.net, @nhs.uk, @bartshealth.nhs.uk). All form notifications and updates will be sent to this address.">
+                    <span style={{ marginLeft: '8px', display: 'inline-flex', alignItems: 'center' }}>
+                      <HelpCircleIcon size={16} color="var(--nhs-blue)" />
+                    </span>
+                  </Tooltip>
+                </QuestionLabel>
+              }
               name="nhsEmail"
               type="email"
               {...register('nhsEmail')}
@@ -144,10 +153,6 @@ const Section1RequesterInfo = () => {
               required
               placeholder="firstname.lastname@nhs.net"
             />
-            <div className="info-box">
-              <span className="info-icon"><InfoIcon size={16} color="#3b82f6" /></span>
-              <span>This must be your official NHS email address (ending in @nhs.net)</span>
-            </div>
           </div>
 
           <Input
