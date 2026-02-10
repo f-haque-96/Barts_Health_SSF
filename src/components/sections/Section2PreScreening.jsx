@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { RadioGroup, Textarea, Checkbox, FileUpload, NoticeBox, Button, QuestionLabel, WarningIcon, CheckIcon, ClipboardIcon, ExternalLinkIcon, HelpCircleIcon, Tooltip } from '../common';
+import { RadioGroup, Textarea, Checkbox, FileUpload, NoticeBox, Button, QuestionLabel, WarningIcon, CheckIcon, ClipboardIcon, ExternalLinkIcon, HelpCircleIcon, InfoIcon, Tooltip } from '../common';
 import { FormNavigation } from '../layout';
 import { section2Schema } from '../../utils/validation';
 import { FILE_UPLOAD_CONFIG } from '../../utils/constants';
@@ -514,7 +514,7 @@ const Section2PreScreening = () => {
                     Is the supplier providing a personal service?
                     <Tooltip content="A personal service is when an individual provides their own skills and expertise directly (e.g., sole traders, freelancers, contractors), rather than a company providing a service. This determination affects IR35/OPW assessment.">
                       <span style={{ marginLeft: '8px', display: 'inline-flex', alignItems: 'center' }}>
-                        <HelpCircleIcon size={16} color="var(--nhs-blue)" />
+                        <InfoIcon size={16} color="var(--nhs-blue)" />
                       </span>
                     </Tooltip>
                   </QuestionLabel>

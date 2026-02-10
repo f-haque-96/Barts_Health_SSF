@@ -6,7 +6,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Input, QuestionLabel, InfoIcon, Tooltip, HelpCircleIcon } from '../common';
+import { Input, QuestionLabel, InfoIcon, Tooltip } from '../common';
 import { FormNavigation } from '../layout';
 import { section1Schema } from '../../utils/validation';
 import { formatPhoneNumber } from '../../utils/helpers';
@@ -137,7 +137,7 @@ const Section1RequesterInfo = () => {
                   NHS Email Address
                   <Tooltip content="This must be your official NHS email address (e.g., @nhs.net, @nhs.uk, @bartshealth.nhs.uk). All form notifications and updates will be sent to this address.">
                     <span style={{ marginLeft: '8px', display: 'inline-flex', alignItems: 'center' }}>
-                      <HelpCircleIcon size={16} color="var(--nhs-blue)" />
+                      <InfoIcon size={16} color="var(--nhs-blue)" />
                     </span>
                   </Tooltip>
                 </QuestionLabel>
