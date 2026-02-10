@@ -530,7 +530,7 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
         {/* SECTION 2: Pre-screening */}
         <Text style={styles.sectionHeader}>Section 2: Pre-screening & Authorisation</Text>
         {/* Q2.1 Supplier Connection */}
-        <Field label="2.1 Supplier Connection" value={normalizedData.section2?.supplierConnection || normalizedData.supplierConnection} />
+        <Field label="Supplier Connection" value={normalizedData.section2?.supplierConnection || normalizedData.supplierConnection} />
         {/* Connection Details - Show if supplier has a connection */}
         {(normalizedData.section2?.supplierConnection === 'yes' || normalizedData.supplierConnection === 'yes') &&
          (normalizedData.section2?.connectionDetails || normalizedData.connectionDetails) && (
@@ -539,18 +539,18 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
             <Text style={{ fontSize: 10, color: '#92400e', lineHeight: 1.4 }}>{normalizedData.section2?.connectionDetails || normalizedData.connectionDetails}</Text>
           </View>
         )}
-        {/* Q2.2 Personal Service Status (moved from Q2.5) */}
-        <Field label="2.2 Is the supplier providing a personal service?" value={normalizedData.section2?.soleTraderStatus || normalizedData.soleTraderStatus} />
-        {/* Q2.3 Letterhead (was Q2.2) */}
-        <Field label="2.3 Letterhead Available" value={normalizedData.section2?.letterheadAvailable || normalizedData.letterheadAvailable} />
-        {/* Q2.4 Justification (was Q2.3) */}
-        <TextBlock label="2.4 Justification" content={normalizedData.section2?.justification || normalizedData.justification} />
-        {/* Q2.5 Usage Frequency (was Q2.4) */}
-        <Field label="2.5 Usage Frequency" value={formatUsageFrequency(normalizedData.section2?.usageFrequency || normalizedData.usageFrequency)} raw />
+        {/* Q2.2 Personal Service Status */}
+        <Field label="Is the supplier providing a personal service?" value={normalizedData.section2?.soleTraderStatus || normalizedData.soleTraderStatus} />
+        {/* Q2.3 Letterhead */}
+        <Field label="Letterhead Available" value={normalizedData.section2?.letterheadAvailable || normalizedData.letterheadAvailable} />
+        {/* Q2.4 Justification */}
+        <TextBlock label="Justification" content={normalizedData.section2?.justification || normalizedData.justification} />
+        {/* Q2.5 Usage Frequency */}
+        <Field label="Usage Frequency" value={formatUsageFrequency(normalizedData.section2?.usageFrequency || normalizedData.usageFrequency)} raw />
         {/* Q2.6 Service Category */}
-        <Field label="2.6 Service Category" value={formatServiceCategory(normalizedData.section2?.serviceCategory || normalizedData.serviceCategory)} raw />
+        <Field label="Service Category" value={formatServiceCategory(normalizedData.section2?.serviceCategory || normalizedData.serviceCategory)} raw />
         {/* Q2.7 Procurement Engaged */}
-        <Field label="2.7 Procurement Engaged" value={normalizedData.section2?.procurementEngaged || normalizedData.procurementEngaged} />
+        <Field label="Procurement Engaged" value={normalizedData.section2?.procurementEngaged || normalizedData.procurementEngaged} />
         <Field label="Section 2 Acknowledgement" value={(normalizedData.section2?.prescreeningAcknowledgement || normalizedData.prescreeningAcknowledgement) ? 'Confirmed' : 'Not confirmed'} raw />
 
         {/* SECTION 3: Supplier Classification */}
@@ -589,6 +589,11 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
           <Field label="Charity Number" value={normalizedData.section3?.charityNumber || normalizedData.charityNumber} />
         )}
 
+        {/* ID Type - Only show for sole traders */}
+        {(normalizedData.section3?.supplierType || normalizedData.supplierType) === 'sole_trader' && (normalizedData.section3?.idType || normalizedData.idType) && (
+          <Field label="ID Type" value={(normalizedData.section3?.idType || normalizedData.idType) === 'passport' ? 'Passport' : 'Driving Licence'} />
+        )}
+
         {/* Organisation Type - Only show for public sector */}
         {(normalizedData.section3?.supplierType || normalizedData.supplierType) === 'public_sector' && (normalizedData.section3?.organisationType || normalizedData.organisationType) && (
           <Field label="Organisation Type" value={formatOrganisationType(normalizedData.section3?.organisationType || normalizedData.organisationType)} raw />
@@ -596,6 +601,8 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
 
         <Field label="Annual Value" value={(normalizedData.section3?.annualValue || normalizedData.annualValue) ? formatCurrency(normalizedData.section3?.annualValue || normalizedData.annualValue) : ''} />
         <Field label="Employee Count" value={formatEmployeeCount(normalizedData.section3?.employeeCount || normalizedData.employeeCount)} raw />
+        <Field label="More than 5% interest in Limited Company" value={normalizedData.section3?.limitedCompanyInterest || normalizedData.limitedCompanyInterest} />
+        <Field label="More than 60% interest in Partnership" value={normalizedData.section3?.partnershipInterest || normalizedData.partnershipInterest} />
         {(normalizedData.section3?.interestDeclaration || normalizedData.interestDeclaration) && (
           <TextBlock label="Interest Declaration" content={normalizedData.section3?.interestDeclaration || normalizedData.interestDeclaration} />
         )}
@@ -675,13 +682,6 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
           <>
             <Field label="Coverage Amount" value={(normalizedData.section6?.plCoverage || normalizedData.plCoverage) ? formatCurrency(normalizedData.section6?.plCoverage || normalizedData.plCoverage) : ''} />
             <Field label="Insurance Expiry" value={(normalizedData.section6?.plExpiry || normalizedData.plExpiry) ? formatDate(normalizedData.section6?.plExpiry || normalizedData.plExpiry) : ''} />
-          </>
-        )}
-        {(normalizedData.section6?.professionalIndemnity || normalizedData.professionalIndemnity) === 'yes' && (
-          <>
-            <Field label="Professional Indemnity" value="Yes" />
-            <Field label="PI Coverage" value={(normalizedData.section6?.piCoverage || normalizedData.piCoverage) ? formatCurrency(normalizedData.section6?.piCoverage || normalizedData.piCoverage) : ''} />
-            <Field label="PI Expiry" value={(normalizedData.section6?.piExpiry || normalizedData.piExpiry) ? formatDate(normalizedData.section6?.piExpiry || normalizedData.piExpiry) : ''} />
           </>
         )}
 
