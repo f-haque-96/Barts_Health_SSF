@@ -68,7 +68,7 @@ export const SUPPLIER_TYPES = {
 export const USAGE_FREQUENCIES = [
   { value: 'one-off', label: 'One-off' },
   { value: 'occasional', label: 'Occasional' },
-  { value: 'frequent', label: 'Frequent' },
+  { value: 'regular', label: 'Regular' },
 ];
 
 export const FILE_UPLOAD_CONFIG = {

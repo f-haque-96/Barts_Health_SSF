@@ -1,6 +1,6 @@
 /**
  * DevModeModal Component
- * Development-only modal for quick access to authorization pages and section skipping
+ * Development-only modal for quick access to authorisation pages and section skipping
  * NEVER appears in production builds (!import.meta.env.PROD)
  */
 
@@ -106,7 +106,7 @@ const DevModeModal = ({ isOpen, onClose }) => {
             className={`dev-tab ${activeTab === 'pages' ? 'active' : ''}`}
             onClick={() => setActiveTab('pages')}
           >
-            Authorization Pages
+            Authorisation Pages
           </button>
           <button
             className={`dev-tab ${activeTab === 'sections' ? 'active' : ''}`}
@@ -120,7 +120,7 @@ const DevModeModal = ({ isOpen, onClose }) => {
           {activeTab === 'pages' ? (
             <>
               <p style={{ marginTop: 0, color: '#6b7280', fontSize: '0.875rem' }}>
-                Quick access to all authorization review pages for testing workflows
+                Quick access to all authorisation review pages for testing workflows
               </p>
 
               {/* Submission Selector */}

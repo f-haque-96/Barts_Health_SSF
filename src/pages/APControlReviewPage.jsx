@@ -138,8 +138,8 @@ const APControlReviewPage = ({
       || 'Unknown Company';
 
     // Get existing AP review from localStorage/state, or build from current form state
-    const existingApReview = currentSubmission?.apReview || submission?.apReview;
-    const apReviewForPDF = existingApReview ? {
+    const existingApReview = currentSubmission?.apControlReview || submission?.apControlReview;
+    const apControlReviewForPDF = existingApReview ? {
       ...existingApReview,
       // Override with current state values if they exist
       supplierName: supplierName || existingApReview.supplierName || companyNameFallback,
@@ -183,7 +183,7 @@ const APControlReviewPage = ({
       opwReview: currentSubmission?.opwReview || null,
       contractDrafter: currentSubmission?.contractDrafter || null,
       // Include AP review with proper signature
-      apReview: apReviewForPDF,
+      apControlReview: apControlReviewForPDF,
       // Include supplier number at root level for PDF cover page
       supplierNumber: supplierNumber || existingApReview?.supplierNumber || '',
       // Uploads
@@ -282,16 +282,16 @@ const APControlReviewPage = ({
       }
 
       // Pre-fill if already verified
-      if (propSubmission.apReview) {
-        setBankDetailsVerified(propSubmission.apReview.bankDetailsVerified);
-        setCompanyDetailsVerified(propSubmission.apReview.companyDetailsVerified);
-        setVatVerified(propSubmission.apReview.vatVerified || false);
-        setCisVerified(propSubmission.apReview.cisVerified || false);
-        setInsuranceVerified(propSubmission.apReview.insuranceVerified || false);
-        setNotes(propSubmission.apReview.notes || '');
-        setSupplierName(propSubmission.apReview.supplierName || propSubmission.formData?.companyName || '');
-        setSupplierNumber(propSubmission.apReview.supplierNumber || '');
-        setAdditionalInfo(propSubmission.apReview.additionalInfo || '');
+      if (propSubmission.apControlReview) {
+        setBankDetailsVerified(propSubmission.apControlReview.bankDetailsVerified);
+        setCompanyDetailsVerified(propSubmission.apControlReview.companyDetailsVerified);
+        setVatVerified(propSubmission.apControlReview.vatVerified || false);
+        setCisVerified(propSubmission.apControlReview.cisVerified || false);
+        setInsuranceVerified(propSubmission.apControlReview.insuranceVerified || false);
+        setNotes(propSubmission.apControlReview.notes || '');
+        setSupplierName(propSubmission.apControlReview.supplierName || propSubmission.formData?.companyName || '');
+        setSupplierNumber(propSubmission.apControlReview.supplierNumber || '');
+        setAdditionalInfo(propSubmission.apControlReview.additionalInfo || '');
       }
       setLoading(false);
       return;
@@ -310,16 +310,16 @@ const APControlReviewPage = ({
         }
 
         // Pre-fill if already verified
-        if (parsed.apReview) {
-          setBankDetailsVerified(parsed.apReview.bankDetailsVerified);
-          setCompanyDetailsVerified(parsed.apReview.companyDetailsVerified);
-          setVatVerified(parsed.apReview.vatVerified || false);
-          setCisVerified(parsed.apReview.cisVerified || false);
-          setInsuranceVerified(parsed.apReview.insuranceVerified || false);
-          setNotes(parsed.apReview.notes || '');
-          setSupplierName(parsed.apReview.supplierName || parsed.formData?.companyName || '');
-          setSupplierNumber(parsed.apReview.supplierNumber || '');
-          setAdditionalInfo(parsed.apReview.additionalInfo || '');
+        if (parsed.apControlReview) {
+          setBankDetailsVerified(parsed.apControlReview.bankDetailsVerified);
+          setCompanyDetailsVerified(parsed.apControlReview.companyDetailsVerified);
+          setVatVerified(parsed.apControlReview.vatVerified || false);
+          setCisVerified(parsed.apControlReview.cisVerified || false);
+          setInsuranceVerified(parsed.apControlReview.insuranceVerified || false);
+          setNotes(parsed.apControlReview.notes || '');
+          setSupplierName(parsed.apControlReview.supplierName || parsed.formData?.companyName || '');
+          setSupplierNumber(parsed.apControlReview.supplierNumber || '');
+          setAdditionalInfo(parsed.apControlReview.additionalInfo || '');
         }
       } catch (error) {
         console.error('Error parsing submission:', error);
@@ -356,11 +356,13 @@ const APControlReviewPage = ({
       // Load fresh from localStorage to get any updates
       const currentSubmission = JSON.parse(localStorage.getItem(`submission_${submissionId}`)) || submission;
 
+      const completedTimestamp = new Date().toISOString();
+
       // Update submission with AP review
       const updatedSubmission = {
         ...currentSubmission, // Use fresh data from localStorage
-        // Add AP review
-        apReview: {
+        // Add AP review (using apControlReview to match workflow expectations)
+        apControlReview: {
           bankDetailsVerified,
           companyDetailsVerified,
           vatVerified,
@@ -373,9 +375,16 @@ const APControlReviewPage = ({
           date: signatureDate,
           decision: 'approved',
           reviewedBy: 'AP Control Team', // In real app, this would come from auth
-          reviewedAt: new Date().toISOString(),
-          status: 'verified',
+          reviewedAt: completedTimestamp,
+          verified: true, // CRITICAL: workflow checks for this field
+          completedAt: completedTimestamp, // Workflow checks for this
         },
+        // Update workflow status - CRITICAL for RequesterResponsePage workflow display
+        currentStage: 'complete', // Move to final stage
+        finalStatus: 'complete', // Mark as complete
+        vendorNumber: supplierNumber, // Assign vendor number
+        completedAt: completedTimestamp, // Record completion date
+        apStatus: 'verified', // Legacy status field
       };
 
       // Save back to localStorage
@@ -386,6 +395,10 @@ const APControlReviewPage = ({
       const index = submissions.findIndex(s => s.submissionId === submissionId);
       if (index !== -1) {
         submissions[index].apStatus = 'verified';
+        submissions[index].currentStage = 'complete';
+        submissions[index].finalStatus = 'complete';
+        submissions[index].vendorNumber = supplierNumber;
+        submissions[index].completedAt = completedTimestamp;
         localStorage.setItem('all_submissions', JSON.stringify(submissions));
       }
 
@@ -433,7 +446,7 @@ const APControlReviewPage = ({
       const currentSubmission = JSON.parse(localStorage.getItem(`submission_${submissionId}`)) || submission;
 
       // Build AP rejection data
-      const apReviewData = {
+      const apControlReviewData = {
         decision: 'rejected',
         rejectionReason,
         signature: signatureName,
@@ -445,7 +458,7 @@ const APControlReviewPage = ({
       // Update submission with rejection
       const updatedSubmission = {
         ...currentSubmission,
-        apReview: apReviewData,
+        apControlReview: apControlReviewData,
         status: 'Rejected_AP',
         currentStage: 'Rejected',
       };
@@ -568,7 +581,7 @@ const APControlReviewPage = ({
 
   const formData = submission.formData;
   const isPreview = submission.isPreview === true;
-  const apReview = submission.apReview;
+  const apControlReview = submission.apControlReview;
 
   return (
     <div style={{ padding: 'var(--space-32)', maxWidth: '1200px', margin: '0 auto' }}>
@@ -598,16 +611,16 @@ const APControlReviewPage = ({
 
         {/* Approval Stamp & Actions */}
         <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-12)', alignItems: 'flex-end' }}>
-          {apReview && (
+          {apControlReview && (
             <ApprovalStamp
-              status={apReview.decision === 'rejected' ? 'rejected' : apReview.decision === 'approved' || apReview.status === 'verified' ? 'approved' : 'pending'}
-              date={apReview.date || apReview.reviewedAt}
-              approver={apReview.signature || apReview.reviewedBy}
+              status={apControlReview.decision === 'rejected' ? 'rejected' : apControlReview.decision === 'approved' || apControlReview.status === 'verified' ? 'approved' : 'pending'}
+              date={apControlReview.date || apControlReview.reviewedAt}
+              approver={apControlReview.signature || apControlReview.reviewedBy}
               size="large"
             />
           )}
           {/* Download PDF button - only show if AP review not yet complete */}
-          {!apReview && (
+          {!apControlReview && (
             <PDFDownloadLink
               document={<SupplierFormPDF submission={getFullSubmissionForPDF()} />}
               fileName={`NHS-Supplier-Form-${submission?.formData?.companyName?.replace(/\s+/g, '_') || 'Supplier'}-${new Date().toISOString().split('T')[0]}.pdf`}
@@ -623,43 +636,43 @@ const APControlReviewPage = ({
       </div>
 
       {/* AP Review Status */}
-      {apReview && (
+      {apControlReview && (
         <NoticeBox
-          type={apReview.decision === 'rejected' ? 'error' : 'success'}
+          type={apControlReview.decision === 'rejected' ? 'error' : 'success'}
           style={{ marginBottom: 'var(--space-24)' }}
         >
-          {apReview.decision === 'rejected' ? (
+          {apControlReview.decision === 'rejected' ? (
             <>
               <strong>AP Control Decision: Rejected</strong>
               <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-                <strong>Rejected by:</strong> {apReview.signature || apReview.reviewedBy}
+                <strong>Rejected by:</strong> {apControlReview.signature || apControlReview.reviewedBy}
               </p>
               <p style={{ marginTop: 'var(--space-4)', marginBottom: 0 }}>
-                <strong>Date:</strong> {formatDate(apReview.date || apReview.reviewedAt)}
+                <strong>Date:</strong> {formatDate(apControlReview.date || apControlReview.reviewedAt)}
               </p>
               <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-                <strong>Rejection Reason:</strong> {apReview.rejectionReason}
+                <strong>Rejection Reason:</strong> {apControlReview.rejectionReason}
               </p>
             </>
           ) : (
             <>
               <strong>AP Verification Complete</strong>
               <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-                Verified by {apReview.signature || apReview.reviewedBy} on {formatDate(apReview.date || apReview.reviewedAt)}
+                Verified by {apControlReview.signature || apControlReview.reviewedBy} on {formatDate(apControlReview.date || apControlReview.reviewedAt)}
               </p>
-              {apReview.supplierName && (
+              {apControlReview.supplierName && (
                 <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-                  <strong>Supplier Name:</strong> {apReview.supplierName}
+                  <strong>Supplier Name:</strong> {apControlReview.supplierName}
                 </p>
               )}
-              {apReview.supplierNumber && (
+              {apControlReview.supplierNumber && (
                 <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-                  <strong>Supplier Number:</strong> {apReview.supplierNumber}
+                  <strong>Supplier Number:</strong> {apControlReview.supplierNumber}
                 </p>
               )}
-              {apReview.notes && (
+              {apControlReview.notes && (
                 <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-                  <strong>Notes:</strong> {apReview.notes}
+                  <strong>Notes:</strong> {apControlReview.notes}
                 </p>
               )}
             </>
@@ -668,7 +681,7 @@ const APControlReviewPage = ({
       )}
 
       {/* Download Complete PDF Section - Only show if AP review exists */}
-      {apReview && (
+      {apControlReview && (
         <div className="ap-download-section">
           <div className="download-card">
             <div className="download-info">
@@ -1411,7 +1424,7 @@ const APControlReviewPage = ({
       </div>
 
       {/* AP Verification Checklist */}
-      {!apReview && (
+      {!apControlReview && (
         <div style={{
           marginTop: 'var(--space-32)',
           padding: 'var(--space-24)',
@@ -1637,7 +1650,7 @@ const APControlReviewPage = ({
               procurementReview: submission?.procurementReview || null,
               opwReview: submission?.opwReview || null,
               contractDrafter: submission?.contractDrafter || null,
-              apReview: submission?.apReview || {
+              apControlReview: submission?.apControlReview || {
                 decision: 'verified',
                 supplierName: supplierName,
                 supplierNumber: supplierNumber,

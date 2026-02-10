@@ -18,27 +18,13 @@ const routes = require('./routes');
 const { initializeDatabase, getPool } = require('./config/database');
 const { initializeSharePoint, getSP } = require('./config/sharepoint');
 const { configurePassport } = require('./config/auth');
+const { requireAuth } = require('./middleware/auth');
 const { auditMiddleware } = require('./middleware/audit');
 const { errorHandler } = require('./middleware/errorHandler');
 const logger = require('./config/logger');
 
 const app = express();
 const PORT = process.env.API_PORT || 3001;
-
-// Validate required environment variables on startup
-const requiredEnvVars = [
-  'DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASSWORD',
-  'AZURE_AD_CLIENT_ID', 'AZURE_AD_TENANT_ID',
-  'SP_SITE_URL', 'SP_CLIENT_ID', 'SP_CLIENT_SECRET',
-  'SESSION_SECRET'
-];
-
-const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
-if (missingEnvVars.length > 0) {
-  logger.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
-  logger.error('Please set all required environment variables before starting the server');
-  process.exit(1);
-}
 
 // Security middleware with enhanced CSP
 app.use(helmet({
@@ -94,7 +80,9 @@ const {
   doubleCsrfProtection, // Middleware for protection
 } = doubleCsrf({
   getSecret: () => process.env.SESSION_SECRET, // Use session secret
-  cookieName: '__Host-csrf-token', // Cookie name (secure prefix)
+  cookieName: process.env.NODE_ENV === 'production'
+    ? '__Host-csrf-token'
+    : 'csrf-token', // Use __Host- prefix only in production (requires HTTPS)
   cookieOptions: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -134,12 +122,7 @@ app.get('/health', (req, res) => {
 
 // Detailed health check endpoint (requires authentication)
 // SECURITY: Only authenticated users can see dependency status
-app.get('/api/health/detailed', async (req, res) => {
-  // TODO: Add authentication middleware here (requireAuth)
-  // For now, checking if user is authenticated via session
-  if (!req.user && process.env.NODE_ENV === 'production') {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
+app.get('/api/health/detailed', requireAuth, async (req, res) => {
 
   const health = {
     status: 'healthy',
@@ -208,6 +191,9 @@ function validateEnvironmentVariables() {
     'SP_CLIENT_ID',
     'SP_CLIENT_SECRET',
     'SP_TENANT_ID',
+    'CH_API_KEY',
+    'CH_API_URL',
+    'AP_CONTROL_EMAIL',
   ];
 
   const missing = [];

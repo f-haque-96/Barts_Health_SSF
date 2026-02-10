@@ -7,6 +7,15 @@
 const { body, param, query, validationResult } = require('express-validator');
 
 /**
+ * Custom sanitizer to remove HTML tags
+ * Prevents XSS by stripping all HTML/script tags from user input
+ */
+const sanitizeHTML = (value) => {
+  if (typeof value !== 'string') return value;
+  return value.replace(/<[^>]*>/g, ''); // Remove all HTML tags
+};
+
+/**
  * Middleware to handle validation results
  */
 const validate = (req, res, next) => {
@@ -39,18 +48,20 @@ const validateSubmissionCreate = [
 
   body('jobTitle')
     .trim()
+    .customSanitizer(sanitizeHTML)
     .notEmpty().withMessage('Job title is required')
     .isLength({ max: 100 }).withMessage('Job title must not exceed 100 characters'),
 
   body('department')
     .trim()
+    .customSanitizer(sanitizeHTML)
     .notEmpty().withMessage('Department is required')
     .isLength({ max: 100 }).withMessage('Department must not exceed 100 characters'),
 
   body('nhsEmail')
     .trim()
     .isEmail().withMessage('Invalid email address')
-    .matches(/@nhs\.net$/).withMessage('Email must be an NHS email address ending in @nhs.net'),
+    .matches(/@(nhs\.net|nhs\.uk|bartshealth\.nhs\.uk|nhs\.scot|wales\.nhs\.uk)$/).withMessage('Email must be an NHS email address'),
 
   body('phoneNumber')
     .trim()
@@ -59,6 +70,7 @@ const validateSubmissionCreate = [
   body('companyName')
     .optional()
     .trim()
+    .customSanitizer(sanitizeHTML)
     .isLength({ max: 255 }).withMessage('Company name must not exceed 255 characters'),
 
   validate
@@ -69,7 +81,7 @@ const validateSubmissionCreate = [
  */
 const validateSubmissionUpdate = [
   param('id')
-    .matches(/^SUP-\d{4}-\d{5}$/).withMessage('Invalid submission ID format'),
+    .matches(/^SUP-\d{4}-[0-9A-Fa-f]{8}$/).withMessage('Invalid submission ID format'),
 
   body('status')
     .optional()
@@ -84,6 +96,7 @@ const validateSubmissionUpdate = [
   body('companyName')
     .optional()
     .trim()
+    .customSanitizer(sanitizeHTML)
     .isLength({ max: 255 }).withMessage('Company name must not exceed 255 characters'),
 
   body('crn')
@@ -106,7 +119,7 @@ const validateSubmissionUpdate = [
  */
 const validateDocumentUpload = [
   param('submissionId')
-    .matches(/^SUP-\d{4}-\d{5}$/).withMessage('Invalid submission ID format'),
+    .matches(/^SUP-\d{4}-[0-9A-Fa-f]{8}$/).withMessage('Invalid submission ID format'),
 
   body('documentType')
     .notEmpty().withMessage('Document type is required')
@@ -144,24 +157,11 @@ const validateVendorCheck = [
   validate
 ];
 
-/**
- * Sanitize HTML input to prevent XSS
- */
-const sanitizeHTML = (fieldName) => {
-  return body(fieldName)
-    .customSanitizer(value => {
-      if (typeof value !== 'string') return value;
-      // Remove any HTML tags
-      return value.replace(/<[^>]*>/g, '');
-    });
-};
-
 module.exports = {
   validate,
   validateSubmissionCreate,
   validateSubmissionUpdate,
   validateDocumentUpload,
   validateCRNLookup,
-  validateVendorCheck,
-  sanitizeHTML
+  validateVendorCheck
 };

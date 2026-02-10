@@ -688,7 +688,7 @@ const Section3Classification = () => {
                 control={control}
                 render={({ field }) => (
                   <RadioGroup
-                    label="Do you have more than 5% interest in a Limited Company?"
+                    label={<QuestionLabel section="3" question="8">Do you have more than 5% interest in a Limited Company?</QuestionLabel>}
                     name="limitedCompanyInterest"
                     options={[
                       { value: 'yes', label: 'Yes' },
@@ -711,7 +711,7 @@ const Section3Classification = () => {
                 control={control}
                 render={({ field }) => (
                   <RadioGroup
-                    label="Do you have more than 60% interest in a Partnership?"
+                    label={<QuestionLabel section="3" question="9">Do you have more than 60% interest in a Partnership?</QuestionLabel>}
                     name="partnershipInterest"
                     options={[
                       { value: 'yes', label: 'Yes' },

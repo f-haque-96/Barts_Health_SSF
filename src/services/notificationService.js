@@ -598,19 +598,20 @@ export const markNotificationProcessed = (notificationId) => {
 
 /**
  * Send contract request email to supplier and requester
+ * Updated for offline email-based negotiation workflow
  * @param {object} submission - Submission data
  * @param {object} templateInfo - Agreement template information
- * @param {string} message - Message from contract drafter
+ * @param {string} instructions - Instructions from contract drafter
  * @returns {object} - Notification record
  */
-export const sendContractRequestEmail = (submission, templateInfo, message) => {
+export const sendContractRequestEmail = (submission, templateInfo, instructions) => {
   const requesterEmail = submission.formData?.nhsEmail;
   const requesterName = `${submission.formData?.firstName || ''} ${submission.formData?.lastName || ''}`.trim();
-  const supplierEmail = submission.formData?.contactEmail;
+  const supplierEmail = submission.formData?.contactEmail || submission.formData?.section4?.supplierEmail;
   const supplierName = submission.formData?.companyName || submission.formData?.section4?.companyName || 'Supplier';
   const contractDrafterEmail = DEPARTMENT_EMAILS.contractDrafter;
 
-  const subject = `Contract Review Required - ${submission.submissionId}`;
+  const subject = `Contract Agreement Required - ${submission.submissionId} - ${supplierName}`;
 
   const body = `
 Dear ${supplierName},
@@ -619,24 +620,26 @@ Your supplier setup form has been reviewed. A contract agreement is required to 
 
 SUBMISSION DETAILS:
 - Submission ID: ${submission.submissionId}
+- Supplier Name: ${supplierName}
 - Agreement Type: ${templateInfo.name}
 - Version: ${templateInfo.version}
 
-MESSAGE FROM CONTRACT DRAFTER:
-${message || 'Please review the attached agreement, complete the required fields, and upload the signed document.'}
+INSTRUCTIONS FROM CONTRACT DRAFTER:
+${instructions || 'Please review the attached agreement template and contact us to discuss terms.'}
 
-NEXT STEPS:
-1. Review the attached agreement document
-2. Complete all required fields
-3. Have authorized signatory sign the document
-4. Upload the signed document via the response link below
+NEGOTIATION PROCESS:
+This contract will be negotiated via email correspondence. Please:
+1. Review the agreement template (attached)
+2. Contact the Contract Drafter (${contractDrafterEmail}) with any questions or proposed changes
+3. Negotiate terms via email until agreement is reached
+4. Sign the final agreed version
+5. Return the signed agreement to the Contract Drafter
 
-RESPOND VIA:
-${window.location.origin}/respond/${submission.submissionId}
+CONTACT FOR NEGOTIATION:
+Contract Drafter: ${contractDrafterEmail}
+CC: ${requesterEmail}
 
-The Contract Drafter (${contractDrafterEmail}) is available to answer questions about the agreement terms.
-
-If you need clarification or wish to negotiate any terms, please respond via the link above with your comments.
+Once all parties agree to the terms and the agreement is signed, it will proceed to final verification.
 
 Regards,
 Barts Health NHS Trust
@@ -658,7 +661,8 @@ This is an automated notification from the NHS Supplier Setup System.
       agreementType: templateInfo.name,
       agreementVersion: templateInfo.version,
       templateFilename: templateInfo.filename,
-      responseUrl: `${window.location.origin}/respond/${submission.submissionId}`,
+      contractDrafterEmail,
+      negotiationType: 'offline_email',
     },
   });
 
@@ -679,51 +683,6 @@ This is an automated notification from the NHS Supplier Setup System.
   }
 
   return supplierNotif;
-};
-
-/**
- * Notify contract drafter of supplier response
- * @param {object} submission - Submission data
- * @param {object} exchange - Exchange/response data
- * @returns {object} - Notification record
- */
-export const notifyContractDrafterOfResponse = (submission, exchange) => {
-  const supplierName = submission.formData?.companyName || submission.formData?.section4?.companyName || 'Supplier';
-  const contractDrafterEmail = DEPARTMENT_EMAILS.contractDrafter;
-
-  const hasAttachments = exchange.attachments && exchange.attachments.length > 0;
-  const attachmentInfo = hasAttachments
-    ? `\n\nATTACHMENTS:\n${exchange.attachments.map(a => `- ${a.name}`).join('\n')}`
-    : '';
-
-  return notifyDepartment('contractDrafter', {
-    type: NOTIFICATION_TYPES.CONTRACT_RESPONSE_RECEIVED,
-    submissionId: submission.submissionId,
-    subject: `Contract Response Received - ${supplierName} (${submission.submissionId})`,
-    body: `
-The supplier has responded to the contract agreement.
-
-SUBMISSION DETAILS:
-- Submission ID: ${submission.submissionId}
-- Supplier: ${supplierName}
-- Response Time: ${new Date(exchange.timestamp).toLocaleString('en-GB')}
-
-MESSAGE:
-${exchange.message || 'No message provided'}${attachmentInfo}
-
-Please review the response and take appropriate action:
-${window.location.origin}/contract-review/${submission.submissionId}
-
-Regards,
-NHS Supplier Setup System
-    `.trim(),
-    metadata: {
-      supplierName,
-      hasAttachments,
-      attachmentCount: exchange.attachments?.length || 0,
-      exchangeId: exchange.id,
-    },
-  });
 };
 
 /**
@@ -851,6 +810,5 @@ export default {
   getNotificationHistory,
   markNotificationProcessed,
   sendContractRequestEmail,
-  notifyContractDrafterOfResponse,
   notifyContractApproved,
 };

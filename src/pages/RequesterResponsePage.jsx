@@ -2,14 +2,14 @@
  * Requester & Supplier Response Portal
  * Unified page for both requesters and suppliers to:
  * - View workflow progress
- * - Communicate with authorized personnel
+ * - Communicate with authorised personnel
  * - Respond to information requests (PBP stage - requester only)
  * - Participate in contract negotiation (Contract stage - both parties)
  *
  * Access Control:
  * - Requester: Full access to all stages and exchanges
  * - Supplier: Access from Contract Drafter stage onwards
- * - Sole Trader: Requester IS the supplier (full access)
+ * - Personal Service Provider: Requester IS the supplier (full access)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -317,7 +317,7 @@ const WorkflowStatus = ({ submission }) => {
     const currentStage = submission?.currentStage || submission?.stage || 'pbp';
     const pbpStatus = submission?.pbpReview?.decision || (status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'pending');
     const procurementStatus = submission?.procurementReview?.decision || submission?.procurementStatus;
-    const opwStatus = submission?.opwReview?.decision || submission?.opwStatus;
+    const opwStatus = submission?.opwReview?.ir35Status || submission?.opwReview?.decision || submission?.opwStatus;
     const apStatus = submission?.apControlReview?.verified ? 'verified' : submission?.apStatus;
     const isComplete = submission?.finalStatus === 'complete' || submission?.vendorNumber;
 
@@ -355,10 +355,10 @@ const WorkflowStatus = ({ submission }) => {
         if (!showOPWAndContract) {
           stageStatus = 'skipped';
           statusText = 'Not Required';
-        } else if (opwStatus === 'inside_ir35' || opwStatus === 'outside_ir35') {
+        } else if (opwStatus === 'inside' || opwStatus === 'outside' || opwStatus === 'inside_ir35' || opwStatus === 'outside_ir35') {
           stageStatus = 'completed';
-          statusText = opwStatus === 'outside_ir35' ? 'Outside IR35' : 'Inside IR35';
-          completedDate = submission?.opwReview?.completedAt;
+          statusText = (opwStatus === 'outside' || opwStatus === 'outside_ir35') ? 'Outside IR35' : 'Inside IR35';
+          completedDate = submission?.opwReview?.completedAt || submission?.opwReview?.reviewedAt;
         } else if (currentStage === 'opw') {
           stageStatus = 'active';
           statusText = 'Assessing IR35';
@@ -1134,7 +1134,7 @@ const RequesterResponsePage = ({
               marginBottom: 'var(--space-8)',
               fontWeight: 'var(--font-weight-medium)',
             }}>
-              {isContractStage ? "Upload Signed Contract (Required if finalizing agreement)" : "Attach Documents (Optional)"}
+              {isContractStage ? "Upload Signed Contract (Required if finalising agreement)" : "Attach Documents (Optional)"}
             </label>
             <input
               type="file"

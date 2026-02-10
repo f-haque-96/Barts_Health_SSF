@@ -541,7 +541,7 @@ const OPWReviewPage = ({
       {!isSoleTrader && (
         <NoticeBox type="warning" style={{ marginBottom: 'var(--space-24)' }}>
           <strong>Note:</strong> This supplier is not marked as a sole trader. IR35 determination may not be required.
-          Sole Trader Status: <strong>{formData.soleTraderStatus || 'Not specified'}</strong>
+          Personal Service Provider Status: <strong>{formData.soleTraderStatus || 'Not specified'}</strong>
         </NoticeBox>
       )}
 
@@ -658,9 +658,9 @@ const OPWReviewPage = ({
         </div>
       )}
 
-      {/* Sole Trader Status & Evidence */}
-      <ReviewCard title="Sole Trader Status & Evidence" highlight={isSoleTrader}>
-        <ReviewItem label="Sole Trader Status" value={formData.soleTraderStatus} />
+      {/* Personal Service Status & Evidence */}
+      <ReviewCard title="Personal Service Status & Evidence" highlight={isSoleTrader}>
+        <ReviewItem label="Is the supplier providing a personal service?" value={formData.soleTraderStatus} />
 
         {isSoleTrader && (
           <>

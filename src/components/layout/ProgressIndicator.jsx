@@ -46,7 +46,7 @@ const ProgressIndicator = () => {
     const visited = visitedSections.includes(section);
 
     // Special case: Section 2 should show warning when sole trader is selected in Section 3
-    // This alerts the user that Q2.2 (Sole Trader Status) needs attention
+    // This alerts the user that Q2.2 (Personal Service Status) needs attention
     const isSoleTrader = formData.supplierType === 'sole_trader' || formData.supplierType === 'individual';
     if (section === 2 && isSoleTrader && formData.soleTraderStatus !== 'yes') {
       // Show warning if sole trader selected but Q2.2 not answered as "yes"

@@ -53,7 +53,7 @@ const devBypassAuth = (req, res, next) => {
       oid: 'dev-user',
       email: 'dev@localhost',
       name: 'Development User',
-      roles: ['developer']
+      groups: ['NHS-SupplierForm-Admin']
     };
     logger.info('Dev mode: Bypassing authentication');
     return next();

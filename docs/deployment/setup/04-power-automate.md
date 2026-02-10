@@ -212,7 +212,7 @@ Your NotificationQueue list should now show columns:
 
 ### Step 2: Check Your Environment
 
-Look at the top right - make sure you're in the correct environment (usually "Barts Health" or your organization name).
+Look at the top right - make sure you're in the correct environment (usually "Barts Health" or your organisation name).
 
 ---
 

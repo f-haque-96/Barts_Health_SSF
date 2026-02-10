@@ -524,7 +524,7 @@ const ProcurementReviewPage = ({
         <ReviewItem label="Service Category" value={formatServiceCategory(formData.serviceCategory)} raw />
         <ReviewItem label="Procurement Engaged" value={formData.procurementEngaged} />
         <ReviewItem label="Letterhead Available" value={formData.letterheadAvailable} />
-        <ReviewItem label="Sole Trader Status" value={formData.soleTraderStatus} />
+        <ReviewItem label="Is the supplier providing a personal service?" value={formData.soleTraderStatus} />
         <ReviewItem label="Usage Frequency" value={formatUsageFrequency(formData.usageFrequency)} raw />
         <ReviewItem label="Supplier Connection" value={formData.supplierConnection} />
         {/* Conflict of Interest Warning */}

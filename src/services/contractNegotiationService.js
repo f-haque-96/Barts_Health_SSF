@@ -1,6 +1,7 @@
 /**
  * Contract Negotiation Service
  * Centralized logic for contract workflow management
+ * Simplified for offline email-based negotiation workflow
  */
 
 export const contractNegotiationService = {
@@ -27,24 +28,6 @@ export const contractNegotiationService = {
       },
     };
     return templates[ir35Status] || null;
-  },
-
-  /**
-   * Create new contract exchange entry
-   * @param {object} params - Exchange parameters
-   * @returns {object} Formatted exchange entry
-   */
-  createContractExchange({ type, from, fromName, message, attachments = [], decision = null }) {
-    return {
-      id: `CNT-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-      type, // 'contract_request', 'supplier_response', 'contract_approved', 'changes_requested'
-      from, // 'contract_drafter', 'supplier', 'requester'
-      fromName,
-      message,
-      attachments,
-      decision,
-      timestamp: new Date().toISOString(),
-    };
   },
 
   /**
@@ -100,95 +83,19 @@ export const contractNegotiationService = {
   },
 
   /**
-   * Determine contract status from submission data
-   * @param {object} submission - Submission object
-   * @returns {string} Status: 'not_required', 'pending', 'sent', 'negotiating', 'approved', 'rejected'
-   */
-  getContractStatus(submission) {
-    if (!this.requiresContractStage(submission)) {
-      return 'not_required';
-    }
-
-    const contractData = submission.contractDrafter;
-    if (!contractData) {
-      return 'pending';
-    }
-
-    if (contractData.decision === 'approved') {
-      return 'approved';
-    }
-
-    if (contractData.decision === 'rejected') {
-      return 'rejected';
-    }
-
-    if (contractData.exchanges && contractData.exchanges.length > 0) {
-      return 'negotiating';
-    }
-
-    if (contractData.status === 'sent') {
-      return 'sent';
-    }
-
-    return 'pending';
-  },
-
-  /**
-   * Format contract exchange for display
-   * @param {object} exchange - Exchange object
-   * @returns {object} Formatted exchange with display properties
-   */
-  formatExchangeForDisplay(exchange) {
-    const typeLabels = {
-      contract_request: 'Agreement Sent',
-      supplier_response: 'Supplier Response',
-      changes_requested: 'Changes Requested',
-      contract_approved: 'Contract Approved',
-      contract_rejected: 'Contract Rejected',
-    };
-
-    const badgeColors = {
-      contract_drafter: { bg: '#059669', text: 'white', label: 'CONTRACT DRAFTER' },
-      supplier: { bg: '#3b82f6', text: 'white', label: 'SUPPLIER' },
-      requester: { bg: '#ca8a04', text: 'white', label: 'REQUESTER' },
-    };
-
-    return {
-      ...exchange,
-      typeLabel: typeLabels[exchange.type] || exchange.type,
-      badge: badgeColors[exchange.from] || { bg: '#94a3b8', text: 'white', label: 'UNKNOWN' },
-      formattedDate: new Date(exchange.timestamp).toLocaleString('en-GB', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-    };
-  },
-
-  /**
    * Check if user can approve/reject contract
    * @param {object} submission - Submission object
    * @param {object} user - Current user object
    * @returns {boolean} Whether user has permission
    */
   canApproveContract(submission, user) {
-    // Only contract drafter can approve
-    if (!user.roles?.includes('contract') && !user.roles?.includes('admin')) {
-      return false;
-    }
-
-    // Must have exchanges (supplier must have responded)
-    if (!submission.contractDrafter?.exchanges?.length) {
-      return false;
-    }
-
-    // Must not already be decided
-    if (submission.contractDrafter?.decision) {
-      return false;
-    }
-
+    const userGroups = user.groups || [];
+    const isContract = userGroups.some(g =>
+      ['NHS-SupplierForm-Contract', 'NHS-SupplierForm-Admin'].includes(g)
+    );
+    if (!isContract) return false;
+    if (!submission.contractDrafter?.sentAt) return false;
+    if (submission.contractDrafter?.decision) return false;
     return true;
   },
 };

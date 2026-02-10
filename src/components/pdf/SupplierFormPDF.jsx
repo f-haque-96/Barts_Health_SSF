@@ -494,8 +494,8 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
             {companyName && companyName !== 'Unknown Company' && (
               <Text style={styles.coverInfo}>
                 Supplier: {companyName}
-                {(submission?.supplierNumber || submission?.apReview?.supplierNumber) &&
-                  ` - ${submission?.supplierNumber || submission?.apReview?.supplierNumber}`
+                {(submission?.supplierNumber || submission?.apControlReview?.supplierNumber) &&
+                  ` - ${submission?.supplierNumber || submission?.apControlReview?.supplierNumber}`
                 }
               </Text>
             )}
@@ -539,8 +539,8 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
             <Text style={{ fontSize: 10, color: '#92400e', lineHeight: 1.4 }}>{normalizedData.section2?.connectionDetails || normalizedData.connectionDetails}</Text>
           </View>
         )}
-        {/* Q2.2 Sole Trader Status (moved from Q2.5) */}
-        <Field label="2.2 Sole Trader Status" value={normalizedData.section2?.soleTraderStatus || normalizedData.soleTraderStatus} />
+        {/* Q2.2 Personal Service Status (moved from Q2.5) */}
+        <Field label="2.2 Is the supplier providing a personal service?" value={normalizedData.section2?.soleTraderStatus || normalizedData.soleTraderStatus} />
         {/* Q2.3 Letterhead (was Q2.2) */}
         <Field label="2.3 Letterhead Available" value={normalizedData.section2?.letterheadAvailable || normalizedData.letterheadAvailable} />
         {/* Q2.4 Justification (was Q2.3) */}
@@ -641,7 +641,7 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
           </View>
 
           {/* Badge 2: Verified status (shows when AP Control has verified) */}
-          {submission?.apReview?.bankDetailsVerified && (
+          {submission?.apControlReview?.bankDetailsVerified && (
             <View style={[styles.authBadge, styles.badgeGreen, { display: 'flex', flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start' }]}>
               <Text style={styles.badgeText}>BANK DETAILS VERIFIED</Text>
             </View>
@@ -728,6 +728,19 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
             );
           })}
 
+          {/* Finalised Contract Agreement - if exists */}
+          {submission?.contractDrafter?.finalizedAgreement && (
+            <View style={styles.fileItem}>
+              <View style={styles.fileDetails}>
+                <Text style={styles.fileName}>Finalised Contract Agreement</Text>
+                <Text style={styles.fileMeta}>
+                  {submission.contractDrafter.finalizedAgreement.name} • {formatFileSize(submission.contractDrafter.finalizedAgreement.size)}
+                  {submission.contractDrafter.signedAt && ` • Uploaded: ${formatDate(submission.contractDrafter.signedAt)}`}
+                </Text>
+              </View>
+            </View>
+          )}
+
           <Text style={styles.footer}>
             Page 4 - NHS Barts Health Trust
           </Text>
@@ -735,7 +748,7 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
       )}
 
       {/* AUTHORISATION USE ONLY - Only show if there are any authorisation decisions */}
-      {submission && (submission.pbpReview || submission.procurementReview || submission.opwReview || submission.contractDrafter || submission.apReview) && (
+      {submission && (submission.pbpReview || submission.procurementReview || submission.opwReview || submission.contractDrafter || submission.apControlReview) && (
         <Page size="A4" style={styles.page}>
           <View style={styles.authorisationSection} wrap={false}>
             {/* Header with red underline */}
@@ -913,8 +926,8 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
               </View>
             )}
 
-            {/* 5. AP Control Review - Only show if apReview exists */}
-            {submission.apReview && (
+            {/* 5. AP Control Review - Only show if apControlReview exists */}
+            {submission.apControlReview && (
               <View style={styles.authBlock}>
                 <View style={styles.authBlockHeader}>
                   <Text style={styles.authBlockTitle}>AP Control Verification</Text>
@@ -922,18 +935,18 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
                     <Text style={styles.badgeText}>VERIFIED</Text>
                   </View>
                 </View>
-                {submission.apReview.supplierNumber && (
-                  <Text style={styles.authField}>Supplier Number: {submission.apReview.supplierNumber}</Text>
+                {submission.apControlReview.supplierNumber && (
+                  <Text style={styles.authField}>Supplier Number: {submission.apControlReview.supplierNumber}</Text>
                 )}
-                {submission.apReview.notes && (
-                  <Text style={styles.authComments}>Notes: {submission.apReview.notes}</Text>
+                {submission.apControlReview.notes && (
+                  <Text style={styles.authComments}>Notes: {submission.apControlReview.notes}</Text>
                 )}
                 <View style={styles.signatureRow}>
-                  <Text>Signature: {submission.apReview.signature || '_______________'}</Text>
+                  <Text>Signature: {submission.apControlReview.signature || '_______________'}</Text>
                   <Text>
                     Date:{' '}
-                    {submission.apReview.date
-                      ? formatDate(submission.apReview.date)
+                    {submission.apControlReview.date
+                      ? formatDate(submission.apControlReview.date)
                       : '_______________'}
                   </Text>
                 </View>

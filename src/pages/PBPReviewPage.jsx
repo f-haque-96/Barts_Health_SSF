@@ -962,7 +962,7 @@ const PBPReviewPage = ({
           value={capitalizeWords(submission.section2Summary?.usageFrequency || formData.usageFrequency)}
         />
         <ReviewField
-          label="Q2.5 - Sole Trader Status"
+          label="Q2.2 - Is the supplier providing a personal service?"
           value={formatYesNo(submission.section2Summary?.soleTraderStatus || formData.soleTraderStatus)}
         />
         <ReviewField

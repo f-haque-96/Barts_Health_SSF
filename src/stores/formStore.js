@@ -529,9 +529,6 @@ const useFormStore = create(
         if (!formData.vatRegistered) return false;
         if (formData.vatRegistered === 'yes' && !formData.vatNumber) return false;
 
-        if (!formData.cisRegistered) return false;
-        if (formData.cisRegistered === 'yes' && !formData.utrNumber) return false;
-
         // All validations passed
         return true;
       },
@@ -592,7 +589,7 @@ const useFormStore = create(
             if (!formData.serviceCategory) missing.push('Service Category');
             if (!formData.procurementEngaged) missing.push('Procurement Engagement');
             if (!formData.letterheadAvailable) missing.push('Letterhead Available');
-            if (!formData.soleTraderStatus) missing.push('Sole Trader Status');
+            if (!formData.soleTraderStatus) missing.push('Is the supplier providing a personal service?');
             if (!formData.usageFrequency) missing.push('Usage Frequency');
             if (!formData.supplierConnection) missing.push('Supplier Connection');
 

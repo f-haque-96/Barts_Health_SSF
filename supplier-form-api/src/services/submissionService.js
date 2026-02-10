@@ -257,14 +257,17 @@ async function getWorkQueue(stage, user) {
       return `@${paramName}`;
     }).join(',');
 
-    const result = await request.query(`
-      SELECT SubmissionID, DisplayReference, Status, CurrentStage,
-             CompanyName, RequesterFirstName, RequesterLastName,
-             RequesterEmail, CreatedAt, UpdatedAt
-      FROM Submissions
-      WHERE Status IN (${placeholders})
-      ORDER BY CreatedAt ASC
-    `);
+    const result = await request
+      .input('CurrentStage', sql.NVarChar(50), stage)
+      .query(`
+        SELECT SubmissionID, DisplayReference, Status, CurrentStage,
+               CompanyName, RequesterFirstName, RequesterLastName,
+               RequesterEmail, CreatedAt, UpdatedAt
+        FROM Submissions
+        WHERE Status IN (${placeholders})
+          AND CurrentStage = @CurrentStage
+        ORDER BY CreatedAt ASC
+      `);
 
     return result.recordset;
   } catch (error) {

@@ -187,7 +187,9 @@ export const validators = {
 
   nhsEmail: (value) => {
     if (!value) return null;
-    return !value.endsWith('@nhs.net') ? 'Must be an NHS email address (@nhs.net)' : null;
+    const allowedDomains = ['@nhs.net', '@nhs.uk', '@bartshealth.nhs.uk', '@nhs.scot', '@wales.nhs.uk'];
+    const hasValidDomain = allowedDomains.some(domain => value.toLowerCase().endsWith(domain));
+    return !hasValidDomain ? 'Must be an NHS email address (@nhs.net, @nhs.uk, @bartshealth.nhs.uk, @nhs.scot, or @wales.nhs.uk)' : null;
   },
 
   phone: (value) => {

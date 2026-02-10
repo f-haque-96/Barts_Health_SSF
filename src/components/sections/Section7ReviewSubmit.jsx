@@ -151,7 +151,7 @@ const ReviewCard = ({ title, children, sectionNumber }) => {
         }}>
           <p style={{ margin: 0, color: '#92400e', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <WarningIcon size={16} color="#f59e0b" />
-            <span><strong>Sole Trader selected in Section 3.</strong> Please confirm Q2.2 "Is the supplier a Sole Trader?" is answered as "Yes" and upload the required CEST form.</span>
+            <span><strong>Sole Trader selected in Section 3.</strong> Please confirm Q2.2 "Is the supplier providing a personal service?" is answered as "Yes" and upload the required CEST form.</span>
           </p>
         </div>
       )}
@@ -577,7 +577,7 @@ const Section7ReviewSubmit = () => {
               </p>
             )}
             <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-12)' }}>
-              Test authorization workflow: PBP → Procurement → OPW → Contract Drafter → AP Control
+              Test authorisation workflow: PBP → Procurement → OPW → Contract Drafter → AP Control
             </p>
             <div style={{ display: 'flex', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
               <Button variant="outline" onClick={() => handlePreviewAuthorisation('pbp')} style={{ color: 'var(--nhs-blue)' }}>
@@ -655,8 +655,8 @@ const Section7ReviewSubmit = () => {
             <p style={{ margin: 'var(--space-8) 0 0 0', color: '#92400e' }}>{formData.connectionDetails}</p>
           </div>
         )}
-        {/* Q2.2 Sole Trader Status (moved from Q2.5) */}
-        <ReviewItem label="2.2 Sole Trader Status" value={formData.soleTraderStatus} />
+        {/* Q2.2 Personal Service Status (moved from Q2.5) */}
+        <ReviewItem label="2.2 Is the supplier providing a personal service?" value={formData.soleTraderStatus} />
         {/* Q2.3 Letterhead (was Q2.2) */}
         <ReviewItem label="2.3 Letterhead Available" value={formData.letterheadAvailable} />
         {/* Q2.4 Justification (was Q2.3) */}

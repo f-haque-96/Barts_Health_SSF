@@ -21,6 +21,7 @@ const submissionService = require('../services/submissionService');
 const { logAudit, getAuditTrail } = require('../services/auditService');
 const documentService = require('../services/documentService');
 const sharePointService = require('../services/sharePointService');
+const logger = require('../config/logger');
 
 // Configure multer for file uploads (memory storage for SharePoint upload)
 const upload = multer({
@@ -219,7 +220,8 @@ router.post('/reviews/:stage/:id', requireAuth, async (req, res, next) => {
         'pbp': 'procurement',
         'procurement': 'opw',
         'opw': 'contract',
-        'contract': 'ap'
+        'contract': 'ap',
+        'ap': 'completed'
       };
       updateData.currentStage = nextStages[stage] || stage;
       updateData.status = `${stage}_approved`;
@@ -425,31 +427,55 @@ router.get('/documents/:submissionId/alemba-eligible', requireAuth, canAccessSub
  */
 router.delete('/documents/:documentId', requireAuth, async (req, res, next) => {
   try {
+    const { documentId } = req.params;
+
     // Get document to find its submission ID
-    const document = await documentService.getDocumentById(req.params.documentId);
+    const document = await documentService.getDocumentById(documentId);
 
     if (!document) {
-      return res.status(404).json({ error: 'Document not found' });
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Document not found' });
     }
 
     // Check if user has access to the submission this document belongs to
-    const submission = await submissionService.getById(document.submissionId);
+    const submission = await submissionService.getById(document.SubmissionID);
 
     if (!submission) {
-      return res.status(404).json({ error: 'Parent submission not found' });
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Parent submission not found' });
     }
 
-    // Use RBAC middleware logic to check access
-    const hasAccess = await canAccessSubmission(req, res, () => {}, submission);
+    // Perform authorization check using same logic as canAccessSubmission middleware
+    const user = req.user;
+    const { ROLE_GROUPS } = require('../middleware/rbac');
 
-    if (!hasAccess) {
+    // Admins can access everything
+    const isAdmin = (user.groups || []).some(g => ROLE_GROUPS.admin.includes(g));
+
+    // Check if user is the owner
+    const isOwner = submission.RequesterEmail?.toLowerCase() === user.email?.toLowerCase();
+
+    // Check stage-based access
+    const stage = submission.CurrentStage?.toLowerCase();
+    const userGroups = user.groups || [];
+    const stageRoleMap = {
+      'pbp': ROLE_GROUPS.pbp,
+      'procurement': ROLE_GROUPS.procurement,
+      'opw': ROLE_GROUPS.opw,
+      'contract': ROLE_GROUPS.contract,
+      'ap_control': ROLE_GROUPS.apControl,
+      'ap': ROLE_GROUPS.apControl
+    };
+    const allowedGroups = stageRoleMap[stage] || [];
+    const hasStageAccess = userGroups.some(g => allowedGroups.includes(g));
+
+    if (!isAdmin && !isOwner && !hasStageAccess) {
+      logger.warn(`Unauthorized document deletion attempt: ${user.email} tried to delete document ${documentId}`);
       return res.status(403).json({
-        error: 'FORBIDDEN',
+        error: 'ACCESS_DENIED',
         message: 'You do not have permission to delete this document'
       });
     }
 
-    const result = await documentService.deleteDocument(req.params.documentId, req.user);
+    const result = await documentService.deleteDocument(documentId, req.user);
     res.json(result);
   } catch (error) {
     next(error);
@@ -462,6 +488,152 @@ router.delete('/documents/:documentId', requireAuth, async (req, res, next) => {
  */
 router.get('/document-types', requireAuth, (req, res) => {
   res.json(documentService.DOCUMENT_TYPES);
+});
+
+// ===========================================
+// CONTRACT ROUTES
+// ===========================================
+
+/**
+ * POST /api/contracts/:submissionId/send-to-supplier
+ * Send contract agreement template to supplier (State A -> State B)
+ */
+router.post('/contracts/:submissionId/send-to-supplier', requireAuth, requireRole('contract'), async (req, res, next) => {
+  try {
+    const { submissionId } = req.params;
+    const { templateName, instructions } = req.body;
+
+    // Validate inputs
+    if (!templateName || !instructions) {
+      return res.status(400).json({
+        error: 'VALIDATION_ERROR',
+        message: 'Template name and instructions are required'
+      });
+    }
+
+    // Get submission
+    const submission = await submissionService.getById(submissionId);
+    if (!submission) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Submission not found' });
+    }
+
+    // Check if already sent
+    if (submission.ContractDrafterData && JSON.parse(submission.ContractDrafterData).sentAt) {
+      return res.status(400).json({
+        error: 'INVALID_STATE',
+        message: 'Agreement already sent to supplier'
+      });
+    }
+
+    // Update submission with contract data
+    const contractData = {
+      sentAt: new Date().toISOString(),
+      sentBy: req.user.email,
+      templateUsed: templateName,
+      instructions: instructions.trim()
+    };
+
+    await submissionService.update(submissionId, {
+      ContractDrafterData: JSON.stringify(contractData),
+      CurrentStage: 'contract'
+    }, req.user);
+
+    // Log audit
+    await logAudit({
+      submissionId,
+      action: 'CONTRACT_SENT',
+      user: req.user.email,
+      details: { templateName }
+    });
+
+    // In production, trigger notification email via Power Automate
+    // Power Automate monitors ContractDrafterData changes
+
+    res.json({
+      success: true,
+      sentAt: contractData.sentAt
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/contracts/:submissionId/approve
+ * Approve contract and forward to AP Control (State B -> State C)
+ */
+router.post('/contracts/:submissionId/approve', requireAuth, requireRole('contract'), async (req, res, next) => {
+  try {
+    const { submissionId } = req.params;
+    const { digitalSignature, comments, finalAgreement } = req.body;
+
+    // Validate inputs
+    if (!digitalSignature || !comments || !finalAgreement) {
+      return res.status(400).json({
+        error: 'VALIDATION_ERROR',
+        message: 'Digital signature, comments, and final agreement are required'
+      });
+    }
+
+    // Get submission
+    const submission = await submissionService.getById(submissionId);
+    if (!submission) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Submission not found' });
+    }
+
+    // Check if agreement was sent
+    const existingData = submission.ContractDrafterData ? JSON.parse(submission.ContractDrafterData) : {};
+    if (!existingData.sentAt) {
+      return res.status(400).json({
+        error: 'INVALID_STATE',
+        message: 'Agreement must be sent before approval'
+      });
+    }
+
+    // Check if already approved
+    if (existingData.decision) {
+      return res.status(400).json({
+        error: 'INVALID_STATE',
+        message: 'Contract already decided'
+      });
+    }
+
+    // Update submission with approval data
+    const updatedContractData = {
+      ...existingData,
+      decision: 'approved',
+      decidedBy: req.user.email,
+      decidedAt: new Date().toISOString(),
+      digitalSignature: digitalSignature.trim(),
+      signedAt: new Date().toISOString(),
+      approvalComments: comments.trim(),
+      finalizedAgreement: finalAgreement
+    };
+
+    await submissionService.update(submissionId, {
+      ContractDrafterData: JSON.stringify(updatedContractData),
+      CurrentStage: 'ap',
+      Status: 'contract_approved'
+    }, req.user);
+
+    // Log audit
+    await logAudit({
+      submissionId,
+      action: 'CONTRACT_APPROVED',
+      user: req.user.email,
+      newStatus: 'contract_approved'
+    });
+
+    // In production, trigger notification emails via Power Automate
+    // Power Automate monitors ContractDrafterData changes
+
+    res.json({
+      success: true,
+      approvedAt: updatedContractData.decidedAt
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 module.exports = router;

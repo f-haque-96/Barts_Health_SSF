@@ -13,7 +13,7 @@
 - [🧪 Development Mode Guide](getting-started/DEV_MODE_TESTING_GUIDE.md) - Testing without production infrastructure
 
 ### For Developers
-- [🏗️ Project Structure](../PROJECT_STRUCTURE.md) - Codebase organization
+- [🏗️ Project Structure](../PROJECT_STRUCTURE.md) - Codebase organisation
 - [⚙️ Development Auth Guide](getting-started/DEVELOPMENT_AUTH_GUIDE.md) - Local authentication setup
 - [🔍 CRN Setup Guide](getting-started/CRN_SETUP_GUIDE.md) - Companies House integration
 
@@ -99,7 +99,7 @@
 ## 📚 Reference Documentation
 
 ### Architecture & Design
-- [Project Structure](../PROJECT_STRUCTURE.md) - Codebase organization
+- [Project Structure](../PROJECT_STRUCTURE.md) - Codebase organisation
 - [Roadmap](reference/ROADMAP.md) - Future enhancements
 - [Validation Verification](reference/VALIDATION_VERIFICATION.md) - All validation rules documented
 
@@ -290,7 +290,7 @@
 - ✅ Added PDF security fix documentation
 - ✅ Added validation verification
 - ✅ Added bank details badges documentation
-- ✅ Organized all docs into folders
+- ✅ Organised all docs into folders
 - ✅ Created comprehensive index
 
 ### February 5, 2026 - v1.5

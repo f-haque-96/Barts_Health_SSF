@@ -99,6 +99,30 @@ async function saveDocumentMetadata(documentData, user) {
 }
 
 /**
+ * Get document by ID
+ */
+async function getDocumentById(documentId) {
+  try {
+    const pool = getPool();
+
+    const result = await pool.request()
+      .input('DocumentID', sql.Int, documentId)
+      .query(`
+        SELECT DocumentID, SubmissionID, DocumentType, FileName, SharePointPath,
+               SharePointLibrary, IsSensitive, AllowAlembaSync,
+               UploadedBy, UploadedAt
+        FROM SubmissionDocuments
+        WHERE DocumentID = @DocumentID
+      `);
+
+    return result.recordset[0];
+  } catch (error) {
+    logger.error('Failed to get document by ID:', error);
+    throw error;
+  }
+}
+
+/**
  * Get documents for a submission
  */
 async function getDocumentsBySubmission(submissionId) {
@@ -194,6 +218,7 @@ module.exports = {
   isSensitiveDocument,
   getSharePointLibrary,
   saveDocumentMetadata,
+  getDocumentById,
   getDocumentsBySubmission,
   getAlembaEligibleDocuments,
   deleteDocument

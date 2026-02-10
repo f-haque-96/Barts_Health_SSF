@@ -120,16 +120,54 @@ class LocalStorageProvider {
 class ApiStorageProvider {
   constructor(baseUrl) {
     this.baseUrl = baseUrl || import.meta.env.VITE_API_URL || '';
+    this.csrfToken = null;
+  }
+
+  /**
+   * Get CSRF token from server
+   */
+  async _getCSRFToken() {
+    if (this.csrfToken) return this.csrfToken;
+
+    try {
+      const response = await fetch(`${this.baseUrl}/api/csrf-token`, {
+        credentials: 'include'
+      });
+      const data = await response.json();
+      this.csrfToken = data.csrfToken;
+      return this.csrfToken;
+    } catch (error) {
+      console.error('Failed to get CSRF token:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Clear cached CSRF token (call this on 403 errors to retry with fresh token)
+   */
+  _clearCSRFToken() {
+    this.csrfToken = null;
   }
 
   async request(endpoint, options = {}) {
+    // For state-changing requests, include CSRF token
+    const needsCSRF = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method);
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers
+    };
+
+    if (needsCSRF) {
+      const token = await this._getCSRFToken();
+      if (token) {
+        headers['X-CSRF-Token'] = token;
+      }
+    }
+
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
       credentials: 'include', // Important for auth cookies
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      }
+      headers
     });
 
     if (response.status === 401) {
@@ -137,6 +175,8 @@ class ApiStorageProvider {
     }
 
     if (response.status === 403) {
+      // Clear CSRF token on 403 to force refresh on retry
+      this._clearCSRFToken();
       throw new Error('ACCESS_DENIED');
     }
 
@@ -187,11 +227,24 @@ class ApiStorageProvider {
     formData.append('documentType', documentType);
     formData.append('submissionId', submissionId);
 
-    const response = await fetch(`${this.baseUrl}/api/documents/upload`, {
+    // Get CSRF token for upload
+    const token = await this._getCSRFToken();
+    const headers = {};
+    if (token) {
+      headers['X-CSRF-Token'] = token;
+    }
+
+    const response = await fetch(`${this.baseUrl}/api/documents/${submissionId}`, {
       method: 'POST',
       credentials: 'include',
+      headers,
       body: formData
     });
+
+    if (response.status === 403) {
+      this._clearCSRFToken();
+      throw new Error('ACCESS_DENIED');
+    }
 
     if (!response.ok) {
       throw new Error('UPLOAD_FAILED');

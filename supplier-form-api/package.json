@@ -8,8 +8,9 @@
     "dev": "nodemon src/app.js"
   },
   "dependencies": {
-    "@pnp/nodejs": "^3.21.0",
-    "@pnp/sp": "^3.21.0",
+    "@pnp/nodejs": "^2.15.0",
+    "@pnp/sp": "^2.15.0",
+    "connect-mssql-v2": "^2.0.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "csrf-csrf": "^3.2.2",

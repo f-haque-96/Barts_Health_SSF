@@ -322,7 +322,7 @@ Before finishing, verify:
 
 🎉 **Congratulations!** You have:
 
-1. Exported your organization's existing supplier data
+1. Exported your organisation's existing supplier data
 2. Cleaned and formatted it for database import
 3. Prepared it for duplicate detection feature
 
@@ -373,7 +373,7 @@ You only need 6 columns. Delete all the others in Excel before saving as CSV.
 
 ### "VAT numbers have different formats"
 
-Standardize them all to GB + 9 digits:
+Standardise them all to GB + 9 digits:
 - `GB 123 456 789` → `GB123456789`
 - `123456789` → `GB123456789`
 - `UK123456789` → `GB123456789`

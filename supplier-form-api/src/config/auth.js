@@ -6,7 +6,9 @@
 const passport = require('passport');
 const { BearerStrategy } = require('passport-azure-ad');
 const session = require('express-session');
+const MSSQLStore = require('connect-mssql-v2');
 const logger = require('./logger');
+const { getPool } = require('./database');
 
 const azureConfig = {
   identityMetadata: `https://login.microsoftonline.com/${process.env.AZURE_AD_TENANT_ID}/v2.0/.well-known/openid-configuration`,
@@ -23,8 +25,8 @@ function configurePassport(app) {
     throw new Error('SESSION_SECRET environment variable is required');
   }
 
-  // Session configuration
-  app.use(session({
+  // Session configuration with SQL Server store
+  const sessionConfig = {
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -34,7 +36,31 @@ function configurePassport(app) {
       sameSite: 'strict',
       maxAge: 8 * 60 * 60 * 1000 // 8 hours
     }
-  }));
+  };
+
+  // Use SQL Server session store in production
+  if (process.env.NODE_ENV === 'production') {
+    try {
+      const pool = getPool();
+      sessionConfig.store = new MSSQLStore({
+        client: pool,
+        ttl: 8 * 60 * 60, // 8 hours in seconds
+        autoRemove: true,
+        autoRemoveInterval: 60 * 60 * 1000, // Clean up expired sessions every hour
+        autoRemoveCallback: (err) => {
+          if (err) logger.error('Session cleanup error:', err);
+        }
+      });
+      logger.info('SQL Server session store configured');
+    } catch (error) {
+      logger.error('Failed to configure SQL Server session store:', error);
+      logger.warn('Falling back to in-memory session store (not recommended for production)');
+    }
+  } else {
+    logger.warn('Using in-memory session store (development mode)');
+  }
+
+  app.use(session(sessionConfig));
 
   app.use(passport.initialize());
   app.use(passport.session());

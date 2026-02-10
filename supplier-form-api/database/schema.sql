@@ -14,6 +14,8 @@
 -- SUBMISSIONS TABLE
 -- Main table for all supplier setup requests
 -- =============================================================================
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Submissions]') AND type in (N'U'))
+BEGIN
 CREATE TABLE Submissions (
     ID INT IDENTITY(1,1) PRIMARY KEY,
     SubmissionID NVARCHAR(50) NOT NULL UNIQUE,
@@ -118,12 +120,15 @@ CREATE TABLE Submissions (
     INDEX IX_Submissions_CreatedAt (CreatedAt),
     INDEX IX_Submissions_CompanyName (CompanyName)
 );
+END
 GO
 
 -- =============================================================================
 -- SUBMISSION DOCUMENTS TABLE
 -- Tracks all uploaded documents with governance flags
 -- =============================================================================
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SubmissionDocuments]') AND type in (N'U'))
+BEGIN
 CREATE TABLE SubmissionDocuments (
     DocumentID INT IDENTITY(1,1) PRIMARY KEY,
     SubmissionID NVARCHAR(50) NOT NULL,
@@ -156,12 +161,15 @@ CREATE TABLE SubmissionDocuments (
     INDEX IX_Documents_IsSensitive (IsSensitive),
     INDEX IX_Documents_AllowAlembaSync (AllowAlembaSync)
 );
+END
 GO
 
 -- =============================================================================
 -- AUDIT TRAIL TABLE
 -- Comprehensive logging for compliance
 -- =============================================================================
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AuditTrail]') AND type in (N'U'))
+BEGIN
 CREATE TABLE AuditTrail (
     AuditID INT IDENTITY(1,1) PRIMARY KEY,
 
@@ -194,12 +202,15 @@ CREATE TABLE AuditTrail (
     INDEX IX_Audit_PerformedAt (PerformedAt),
     INDEX IX_Audit_PerformedBy (PerformedBy)
 );
+END
 GO
 
 -- =============================================================================
 -- VENDORS REFERENCE TABLE
 -- For duplicate detection and fuzzy matching
 -- =============================================================================
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[VendorsReference]') AND type in (N'U'))
+BEGIN
 CREATE TABLE VendorsReference (
     VendorID INT IDENTITY(1,1) PRIMARY KEY,
 
@@ -226,12 +237,15 @@ CREATE TABLE VendorsReference (
     INDEX IX_Vendors_CRN (CRN),
     INDEX IX_Vendors_VATNumber (VATNumber)
 );
+END
 GO
 
 -- =============================================================================
 -- NOTIFICATION QUEUE TABLE
 -- For Power Automate triggers via SharePoint list changes
 -- =============================================================================
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[NotificationQueue]') AND type in (N'U'))
+BEGIN
 CREATE TABLE NotificationQueue (
     NotificationID INT IDENTITY(1,1) PRIMARY KEY,
 
@@ -257,6 +271,36 @@ CREATE TABLE NotificationQueue (
     INDEX IX_Notification_Processed (Processed),
     INDEX IX_Notification_SubmissionID (SubmissionID)
 );
+END
+GO
+
+-- =============================================================================
+-- SESSIONS TABLE
+-- For session management and authentication tracking
+-- =============================================================================
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Sessions]') AND type in (N'U'))
+BEGIN
+CREATE TABLE Sessions (
+    SessionID NVARCHAR(255) PRIMARY KEY,
+
+    -- User Information
+    UserEmail NVARCHAR(255) NOT NULL,
+    UserName NVARCHAR(200) NULL,
+    UserGroups NVARCHAR(MAX) NULL,
+
+    -- Session Data
+    SessionData NVARCHAR(MAX) NULL,
+
+    -- Metadata
+    CreatedAt DATETIME DEFAULT GETDATE(),
+    ExpiresAt DATETIME NOT NULL,
+    LastAccessedAt DATETIME DEFAULT GETDATE(),
+
+    -- Indexes
+    INDEX IX_Sessions_UserEmail (UserEmail),
+    INDEX IX_Sessions_ExpiresAt (ExpiresAt)
+);
+END
 GO
 
 -- =============================================================================
@@ -264,6 +308,43 @@ GO
 -- =============================================================================
 
 -- Function to normalize company names for duplicate detection
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[NormalizeCompanyName]') AND type in (N'FN', N'IF', N'TF'))
+BEGIN
+    EXEC('CREATE FUNCTION dbo.NormalizeCompanyName(@name NVARCHAR(255))
+RETURNS NVARCHAR(255)
+AS
+BEGIN
+    DECLARE @result NVARCHAR(255) = LOWER(@name);
+
+    -- Remove common suffixes
+    SET @result = REPLACE(@result, '' limited'', '''');
+    SET @result = REPLACE(@result, '' ltd'', '''');
+    SET @result = REPLACE(@result, '' plc'', '''');
+    SET @result = REPLACE(@result, '' llp'', '''');
+    SET @result = REPLACE(@result, '' inc'', '''');
+    SET @result = REPLACE(@result, '' corp'', '''');
+    SET @result = REPLACE(@result, '' uk'', '''');
+
+    -- Remove special characters
+    SET @result = REPLACE(@result, ''.'', '''');
+    SET @result = REPLACE(@result, '','', '''');
+    SET @result = REPLACE(@result, '''''''', '''');
+    SET @result = REPLACE(@result, ''"'', '''');
+    SET @result = REPLACE(@result, ''&'', ''and'');
+
+    -- Trim whitespace
+    SET @result = LTRIM(RTRIM(@result));
+
+    RETURN @result;
+END;')
+END
+GO
+
+-- Drop and recreate if it exists (workaround for function updates)
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[NormalizeCompanyName]') AND type in (N'FN', N'IF', N'TF'))
+DROP FUNCTION dbo.NormalizeCompanyName
+GO
+
 CREATE FUNCTION dbo.NormalizeCompanyName(@name NVARCHAR(255))
 RETURNS NVARCHAR(255)
 AS
@@ -299,6 +380,10 @@ GO
 
 -- Procedure to check for duplicate vendors
 -- DI-01: Fixed SQL wildcard injection vulnerability by escaping special characters
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CheckDuplicateVendor]') AND type in (N'P', N'PC'))
+DROP PROCEDURE dbo.CheckDuplicateVendor
+GO
+
 CREATE PROCEDURE dbo.CheckDuplicateVendor
     @CompanyName NVARCHAR(255),
     @VATNumber NVARCHAR(20) = NULL,
@@ -344,6 +429,10 @@ GO
 -- =============================================================================
 
 -- View for PBP work queue
+IF EXISTS (SELECT * FROM sys.views WHERE object_id = OBJECT_ID(N'[dbo].[vw_PBPWorkQueue]'))
+DROP VIEW vw_PBPWorkQueue
+GO
+
 CREATE VIEW vw_PBPWorkQueue AS
 SELECT
     SubmissionID,
@@ -362,6 +451,10 @@ WHERE Status IN ('pending_review', 'pending_pbp_review', 'info_required')
 GO
 
 -- View for Procurement work queue
+IF EXISTS (SELECT * FROM sys.views WHERE object_id = OBJECT_ID(N'[dbo].[vw_ProcurementWorkQueue]'))
+DROP VIEW vw_ProcurementWorkQueue
+GO
+
 CREATE VIEW vw_ProcurementWorkQueue AS
 SELECT
     SubmissionID,
@@ -380,6 +473,10 @@ WHERE Status IN ('approved', 'pending_procurement_review', 'pbp_approved')
 GO
 
 -- View for AP Control work queue
+IF EXISTS (SELECT * FROM sys.views WHERE object_id = OBJECT_ID(N'[dbo].[vw_APControlWorkQueue]'))
+DROP VIEW vw_APControlWorkQueue
+GO
+
 CREATE VIEW vw_APControlWorkQueue AS
 SELECT
     SubmissionID,

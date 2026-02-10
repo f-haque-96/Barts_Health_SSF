@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { RadioGroup, Textarea, Checkbox, FileUpload, NoticeBox, Button, QuestionLabel, WarningIcon, CheckIcon, ClipboardIcon, ExternalLinkIcon, HelpCircleIcon } from '../common';
+import { RadioGroup, Textarea, Checkbox, FileUpload, NoticeBox, Button, QuestionLabel, WarningIcon, CheckIcon, ClipboardIcon, ExternalLinkIcon, HelpCircleIcon, Tooltip } from '../common';
 import { FormNavigation } from '../layout';
 import { section2Schema } from '../../utils/validation';
 import { FILE_UPLOAD_CONFIG } from '../../utils/constants';
@@ -111,7 +111,7 @@ const Section2PreScreening = () => {
   }, [prescreeningProgress.questionnaireId, prescreeningProgress.procurementApproved, updatePrescreeningProgress]);
 
   // Determine which questions should be active/locked (strict one-by-one)
-  // ORDER: Q2.1 Supplier Connection, Q2.2 Sole Trader, Q2.3 Letterhead, Q2.4 Justification,
+  // ORDER: Q2.1 Supplier Connection, Q2.2 Personal Service, Q2.3 Letterhead, Q2.4 Justification,
   // Q2.5 Usage Frequency, Q2.6 Service Category, Q2.7 Procurement, Q2.8 Acknowledgement
 
   const isBlockedByLetterhead = letterheadAvailable === 'no';
@@ -133,7 +133,7 @@ const Section2PreScreening = () => {
       locked: false,
       reason: ''
     },
-    // Q2.2 - Sole Trader Status (unlocks after Q2.1)
+    // Q2.2 - Personal Service Status (unlocks after Q2.1)
     q2_soleTrader: {
       locked: !supplierConnection || connectionDetailsMissing,
       reason: connectionDetailsMissing
@@ -500,12 +500,8 @@ const Section2PreScreening = () => {
           </div>
         </div>
 
-        {/* QUESTION 2: Sole Trader Status (MOVED FROM Q2.5 TO Q2.2) */}
-        {/* Highlight this question when sole trader is selected in Section 3 but not confirmed here */}
-        <div className={`${getQuestionClass(questionStatus.q2_soleTrader.locked)} ${
-          (formData.supplierType === 'sole_trader' || formData.supplierType === 'individual') &&
-          soleTraderStatus !== 'yes' ? 'question-highlight-warning' : ''
-        }`}>
+        {/* QUESTION 2: Personal Service Status (MOVED FROM Q2.5 TO Q2.2) */}
+        <div className={getQuestionClass(questionStatus.q2_soleTrader.locked)}>
           {questionStatus.q2_soleTrader.locked && <LockOverlay reason={questionStatus.q2_soleTrader.reason} />}
 
           <Controller
@@ -513,7 +509,16 @@ const Section2PreScreening = () => {
             control={control}
             render={({ field }) => (
               <RadioGroup
-                label={<QuestionLabel section="2" question="2">Is the supplier a Sole Trader or an individual providing personal services?</QuestionLabel>}
+                label={
+                  <QuestionLabel section="2" question="2">
+                    Is the supplier providing a personal service?
+                    <Tooltip content="A personal service is when an individual provides their own skills and expertise directly (e.g., sole traders, freelancers, contractors), rather than a company providing a service. This determination affects IR35/OPW assessment.">
+                      <span style={{ marginLeft: '8px', display: 'inline-flex', alignItems: 'center' }}>
+                        <HelpCircleIcon size={16} color="var(--nhs-blue)" />
+                      </span>
+                    </Tooltip>
+                  </QuestionLabel>
+                }
                 name="soleTraderStatus"
                 options={[
                   { value: 'no', label: 'No' },

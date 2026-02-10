@@ -222,7 +222,7 @@ Frontend checks mock data first
     NO → Show error message + fallback to manual entry
 ```
 
-### Fallback Behavior
+### Fallback Behaviour
 
 If CRN verification fails (API down, CORS error, invalid key):
 - ✅ Form still works
@@ -252,7 +252,7 @@ If CRN verification fails (API down, CORS error, invalid key):
 
 **Cause:** Browser blocking direct API calls from frontend
 
-**Solution:** This is expected behavior
+**Solution:** This is expected behaviour
 - Backend API proxies the request
 - If backend is not running, CORS error will occur
 - Frontend falls back to mock data automatically
@@ -322,7 +322,7 @@ If you exceed rate limits frequently:
 2. Request higher rate limit
 3. Discuss pricing (typically £££ per month)
 
-**Note:** Most organizations NEVER need paid tier.
+**Note:** Most organisations NEVER need paid tier.
 
 ---
 
@@ -358,7 +358,7 @@ If you exceed rate limits frequently:
 **Once per year:**
 1. Check API usage in Companies House portal
 2. Verify rate limits are sufficient
-3. Rotate API key (security best practice)
+3. Rotate API key (security best practise)
 4. Update documentation if API changes
 
 ---
