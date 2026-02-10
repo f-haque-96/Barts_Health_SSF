@@ -601,8 +601,8 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
 
         <Field label="Annual Value" value={(normalizedData.section3?.annualValue || normalizedData.annualValue) ? formatCurrency(normalizedData.section3?.annualValue || normalizedData.annualValue) : ''} />
         <Field label="Employee Count" value={formatEmployeeCount(normalizedData.section3?.employeeCount || normalizedData.employeeCount)} raw />
-        <Field label="More than 5% interest in Limited Company" value={normalizedData.section3?.limitedCompanyInterest || normalizedData.limitedCompanyInterest} />
-        <Field label="More than 60% interest in Partnership" value={normalizedData.section3?.partnershipInterest || normalizedData.partnershipInterest} />
+        <Field label="More than 5% interest in Limited Company" value={normalizedData.section3?.limitedCompanyInterest || normalizedData.limitedCompanyInterest || 'Not provided'} />
+        <Field label="More than 60% interest in Partnership" value={normalizedData.section3?.partnershipInterest || normalizedData.partnershipInterest || 'Not provided'} />
         {(normalizedData.section3?.interestDeclaration || normalizedData.interestDeclaration) && (
           <TextBlock label="Interest Declaration" content={normalizedData.section3?.interestDeclaration || normalizedData.interestDeclaration} />
         )}
