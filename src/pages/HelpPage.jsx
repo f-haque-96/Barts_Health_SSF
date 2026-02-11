@@ -27,11 +27,10 @@ const HelpPage = () => {
           <h4 style={{ marginTop: '15px', color: '#005EB8' }}>Section 2: Pre-screening Information</h4>
           <ul style={{ marginLeft: '20px' }}>
             <li>Whether the supplier is providing a <strong>personal service</strong> (i.e., an individual providing their own skills directly, such as sole traders, freelancers, or contractors)</li>
-            <li>Confirmation that supplier has official <strong>company letterhead</strong> available (required for bank details)</li>
+            <li>Confirmation that supplier has official <strong>company letterhead</strong> available (They will need to send this as a PDF)</li>
             <li><strong>Justification</strong> for using this specific supplier (business case)</li>
             <li><strong>Usage frequency</strong> (one-off, occasional, regular, ongoing contract)</li>
-            <li><strong>Service category</strong> (clinical, non-clinical, IT, estates, HR, etc.)</li>
-            <li>Whether <strong>Procurement team has been engaged</strong> (yes/no)</li>
+            <li><strong>Service category</strong> (clinical or non-clinical)</li>
           </ul>
 
           <h4 style={{ marginTop: '15px', color: '#005EB8' }}>Section 3: Supplier Classification</h4>
@@ -111,13 +110,12 @@ const HelpPage = () => {
             <ul style={{ margin: '5px 0 10px 20px', paddingLeft: '0' }}>
               <li style={{ marginBottom: '3px' }}>Detailed description of the goods/services you will provide to us</li>
               <li style={{ marginBottom: '3px' }}>Type of service (Goods, Services, Construction, Consultancy, Temporary Staff)</li>
-              <li style={{ marginBottom: '3px' }}>Confirmation whether you are providing a <strong>personal service</strong> (i.e., an individual providing your own skills and expertise directly, such as freelancer, contractor, or sole trader, rather than a company providing a service)</li>
             </ul>
 
             <p style={{ margin: '15px 0 5px 0' }}><strong>FINANCIAL INFORMATION (CRITICAL):</strong></p>
             <ul style={{ margin: '5px 0 10px 20px', paddingLeft: '0' }}>
               <li style={{ marginBottom: '8px' }}>
-                <strong>Official company letterhead showing bank details:</strong>
+                <strong>PDF copy of official company letterhead showing bank details:</strong>
                 <ul style={{ margin: '5px 0 0 20px', paddingLeft: '0' }}>
                   <li style={{ marginBottom: '3px' }}>Bank name</li>
                   <li style={{ marginBottom: '3px' }}>Sort code (UK suppliers) or IBAN (international suppliers)</li>
