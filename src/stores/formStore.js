@@ -913,15 +913,18 @@ const useFormStore = create(
             }
           }
 
-          // CEST Form - Required for Sole Traders
-          if (section3?.supplierType === 'sole_trader' || section3?.supplierType === 'individual' || formData?.supplierType === 'sole_trader' || formData?.soleTraderStatus === 'yes') {
+          // CEST Form - Required if providing personal service (Section 2)
+          if (section2?.soleTraderStatus === 'yes' || formData?.soleTraderStatus === 'yes') {
             if (!fileExists(currentUploads?.cestForm)) {
-              missing.push('CEST Form (Upload Required for Sole Traders)');
+              missing.push('CEST Form (Upload Required for Personal Service)');
             }
           }
 
-          // Passport/ID - Required for Sole Traders
-          if (section3?.supplierType === 'sole_trader' || section3?.supplierType === 'individual' || formData?.supplierType === 'sole_trader' || formData?.soleTraderStatus === 'yes') {
+          // Passport/ID - Required ONLY for Sole Trader supplier type (Section 3) NOT registered with Companies House
+          const isSoleTraderType = section3?.supplierType === 'sole_trader' || formData?.supplierType === 'sole_trader';
+          const notRegisteredCompaniesHouse = section3?.companiesHouseRegistered === 'no' || formData?.companiesHouseRegistered === 'no';
+
+          if (isSoleTraderType && notRegisteredCompaniesHouse) {
             const hasPassport = fileExists(currentUploads?.passportPhoto);
             const hasLicenceFront = fileExists(currentUploads?.licenceFront);
             const hasLicenceBack = fileExists(currentUploads?.licenceBack);

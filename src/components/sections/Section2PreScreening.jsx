@@ -44,6 +44,7 @@ const Section2PreScreening = () => {
     reValidateMode: 'onChange',
     resolver: zodResolver(section2Schema),
     defaultValues: {
+      substantivePosition: formData.substantivePosition || '',
       serviceCategory: formData.serviceCategory || '',
       procurementEngaged: formData.procurementEngaged || '',
       letterheadAvailable: formData.letterheadAvailable || '',
@@ -56,6 +57,7 @@ const Section2PreScreening = () => {
   });
 
   // Watch fields for conditional rendering and progressive disclosure
+  const substantivePosition = watch('substantivePosition');
   const serviceCategory = watch('serviceCategory');
   const procurementEngaged = watch('procurementEngaged');
   const letterheadAvailable = watch('letterheadAvailable');
@@ -111,8 +113,12 @@ const Section2PreScreening = () => {
   }, [prescreeningProgress.questionnaireId, prescreeningProgress.procurementApproved, updatePrescreeningProgress]);
 
   // Determine which questions should be active/locked (strict one-by-one)
-  // ORDER: Q2.1 Supplier Connection, Q2.2 Personal Service, Q2.3 Letterhead, Q2.4 Justification,
-  // Q2.5 Usage Frequency, Q2.6 Service Category, Q2.7 Procurement, Q2.8 Acknowledgement
+  // ORDER: Q2.1 Substantive Position (BLOCKING), Q2.2 Supplier Connection, Q2.3 Personal Service,
+  // Q2.4 Letterhead, Q2.5 Justification, Q2.6 Usage Frequency, Q2.7 Service Category,
+  // Q2.8 Procurement, Q2.9 Acknowledgement
+
+  // CRITICAL BLOCKING CHECK: If substantive position is 'yes', block ALL subsequent questions
+  const isBlockedBySubstantivePosition = substantivePosition === 'yes';
 
   const isBlockedByLetterhead = letterheadAvailable === 'no';
 
@@ -128,25 +134,37 @@ const Section2PreScreening = () => {
   const isQuestionnaireComplete = questionnaireCompleted || prescreeningProgress.questionnaireSubmitted;
 
   const questionStatus = {
-    // Q2.1 - Supplier Connection (always unlocked, first question)
-    q1_supplierConnection: {
+    // Q2.1 - Substantive Position (always unlocked, BLOCKING question)
+    q1_substantivePosition: {
       locked: false,
       reason: ''
     },
-    // Q2.2 - Personal Service Status (unlocks after Q2.1)
-    q2_soleTrader: {
-      locked: !supplierConnection || connectionDetailsMissing,
-      reason: connectionDetailsMissing
+    // Q2.2 - Supplier Connection (unlocks after Q2.1 if answer is 'no')
+    q2_supplierConnection: {
+      locked: !substantivePosition || isBlockedBySubstantivePosition,
+      reason: isBlockedBySubstantivePosition
+        ? 'Cannot proceed - substantive position holders must use NHS payroll'
+        : 'Please answer the substantive position question first'
+    },
+    // Q2.3 - Personal Service Status (unlocks after Q2.2)
+    q3_soleTrader: {
+      locked: isBlockedBySubstantivePosition || !supplierConnection || connectionDetailsMissing,
+      reason: isBlockedBySubstantivePosition
+        ? 'Cannot proceed - substantive position holders must use NHS payroll'
+        : connectionDetailsMissing
         ? 'Please describe your connection to this supplier first'
         : 'Please answer the supplier connection question first'
     },
-    // Q2.3 - Letterhead with Bank Details (unlocks after Q2.2)
-    q3_letterhead: {
-      locked: !supplierConnection ||
+    // Q2.4 - Letterhead with Bank Details (unlocks after Q2.3)
+    q4_letterhead: {
+      locked: isBlockedBySubstantivePosition ||
+              !supplierConnection ||
               connectionDetailsMissing ||
               !soleTraderStatus ||
               (soleTraderStatus === 'yes' && !uploadedFiles.cestForm),
-      reason: !supplierConnection
+      reason: isBlockedBySubstantivePosition
+        ? 'Cannot proceed - substantive position holders must use NHS payroll'
+        : !supplierConnection
         ? 'Please answer the supplier connection question first'
         : connectionDetailsMissing
         ? 'Please describe your connection to this supplier first'
@@ -156,16 +174,19 @@ const Section2PreScreening = () => {
         ? 'Please upload the CEST form'
         : 'Please complete all previous questions'
     },
-    // Q2.4 - Justification
-    q4_justification: {
-      locked: !supplierConnection ||
+    // Q2.5 - Justification
+    q5_justification: {
+      locked: isBlockedBySubstantivePosition ||
+              !supplierConnection ||
               connectionDetailsMissing ||
               !soleTraderStatus ||
               (soleTraderStatus === 'yes' && !uploadedFiles.cestForm) ||
               isBlockedByLetterhead ||
               !letterheadAvailable ||
               (letterheadAvailable === 'yes' && !uploadedFiles.letterhead),
-      reason: !supplierConnection
+      reason: isBlockedBySubstantivePosition
+        ? 'Cannot proceed - substantive position holders must use NHS payroll'
+        : !supplierConnection
         ? 'Please answer the supplier connection question first'
         : connectionDetailsMissing
         ? 'Please describe your connection to this supplier first'
@@ -179,9 +200,10 @@ const Section2PreScreening = () => {
         ? 'Please upload the letterhead document'
         : 'Answer the letterhead question first'
     },
-    // Q2.5 - Usage Frequency
-    q5_usageFrequency: {
-      locked: !supplierConnection ||
+    // Q2.6 - Usage Frequency
+    q6_usageFrequency: {
+      locked: isBlockedBySubstantivePosition ||
+              !supplierConnection ||
               connectionDetailsMissing ||
               !soleTraderStatus ||
               (soleTraderStatus === 'yes' && !uploadedFiles.cestForm) ||
@@ -189,7 +211,9 @@ const Section2PreScreening = () => {
               !letterheadAvailable ||
               (letterheadAvailable === 'yes' && !uploadedFiles.letterhead) ||
               !isJustificationValid,
-      reason: !supplierConnection
+      reason: isBlockedBySubstantivePosition
+        ? 'Cannot proceed - substantive position holders must use NHS payroll'
+        : !supplierConnection
         ? 'Please answer the supplier connection question first'
         : connectionDetailsMissing
         ? 'Please describe your connection to this supplier first'
@@ -205,9 +229,10 @@ const Section2PreScreening = () => {
         ? 'Please provide justification (minimum 10 characters)'
         : 'Answer the letterhead question first'
     },
-    // Q2.6 - Service Category (Clinical/Non-clinical)
-    q6_serviceCategory: {
-      locked: !supplierConnection ||
+    // Q2.7 - Service Category (Clinical/Non-clinical)
+    q7_serviceCategory: {
+      locked: isBlockedBySubstantivePosition ||
+              !supplierConnection ||
               connectionDetailsMissing ||
               !soleTraderStatus ||
               (soleTraderStatus === 'yes' && !uploadedFiles.cestForm) ||
@@ -216,7 +241,9 @@ const Section2PreScreening = () => {
               (letterheadAvailable === 'yes' && !uploadedFiles.letterhead) ||
               !isJustificationValid ||
               !usageFrequency,
-      reason: !supplierConnection
+      reason: isBlockedBySubstantivePosition
+        ? 'Cannot proceed - substantive position holders must use NHS payroll'
+        : !supplierConnection
         ? 'Please answer the supplier connection question first'
         : connectionDetailsMissing
         ? 'Please describe your connection to this supplier first'
@@ -234,9 +261,10 @@ const Section2PreScreening = () => {
         ? 'Please select usage frequency first'
         : 'Please complete all previous questions'
     },
-    // Q2.7 - Procurement Engagement
-    q7_procurement: {
-      locked: !supplierConnection ||
+    // Q2.8 - Procurement Engagement
+    q8_procurement: {
+      locked: isBlockedBySubstantivePosition ||
+              !supplierConnection ||
               connectionDetailsMissing ||
               !soleTraderStatus ||
               (soleTraderStatus === 'yes' && !uploadedFiles.cestForm) ||
@@ -246,7 +274,9 @@ const Section2PreScreening = () => {
               !isJustificationValid ||
               !usageFrequency ||
               !serviceCategory,
-      reason: !supplierConnection
+      reason: isBlockedBySubstantivePosition
+        ? 'Cannot proceed - substantive position holders must use NHS payroll'
+        : !supplierConnection
         ? 'Please answer the supplier connection question first'
         : connectionDetailsMissing
         ? 'Please describe your connection to this supplier first'
@@ -266,11 +296,12 @@ const Section2PreScreening = () => {
         ? 'Please select service category first'
         : 'Please complete all previous questions'
     },
-    // Q2.8 - Acknowledgement
+    // Q2.9 - Acknowledgement
     // ONLY unlocks when: procurement = "yes" AND approval document uploaded
     // If "no" is selected, user must complete questionnaire, wait for PBP approval, then come back and select "yes" with certificate
-    q8_acknowledgement: {
-      locked: !supplierConnection ||
+    q9_acknowledgement: {
+      locked: isBlockedBySubstantivePosition ||
+              !supplierConnection ||
               connectionDetailsMissing ||
               !soleTraderStatus ||
               (soleTraderStatus === 'yes' && !uploadedFiles.cestForm) ||
@@ -278,7 +309,9 @@ const Section2PreScreening = () => {
               !procurementEngaged ||
               procurementEngaged === 'no' ||
               (procurementEngaged === 'yes' && !uploadedFiles.procurementApproval),
-      reason: !supplierConnection
+      reason: isBlockedBySubstantivePosition
+        ? 'Cannot proceed - substantive position holders must use NHS payroll'
+        : !supplierConnection
         ? 'Please answer the supplier connection question first'
         : connectionDetailsMissing
         ? 'Please describe your connection to this supplier first'
@@ -315,6 +348,12 @@ const Section2PreScreening = () => {
   );
 
   const onSubmit = (data) => {
+    // CRITICAL: Block submission if substantive position is 'yes'
+    if (data.substantivePosition === 'yes') {
+      alert('Cannot proceed with supplier setup. Substantive position holders must be paid via NHS payroll (ESR), not as external suppliers.');
+      return;
+    }
+
     // Validate connection details if supplier connection is 'yes'
     if (data.supplierConnection === 'yes') {
       const connectionDetails = formData.connectionDetails?.trim();
@@ -367,7 +406,7 @@ const Section2PreScreening = () => {
   // Handle questionnaire modal
   const handleOpenQuestionnaire = () => {
     if (!serviceCategory) {
-      alert('Please select Clinical or Non-clinical service first (Q2.6)');
+      alert('Please select Clinical or Non-clinical service first (Q2.7)');
       return;
     }
     setIsQuestionnaireModalOpen(true);
@@ -391,7 +430,7 @@ const Section2PreScreening = () => {
       if (serviceCategory) {
         setIsQuestionnaireModalOpen(true);
       } else {
-        alert('Please select Clinical or Non-clinical service first (Q2.6)');
+        alert('Please select Clinical or Non-clinical service first (Q2.7)');
       }
     }
   };
@@ -409,10 +448,78 @@ const Section2PreScreening = () => {
       </NoticeBox>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        {/* QUESTION 1: Supplier Connection (CONFLICT OF INTEREST - NOW FIRST) */}
-        <div className={getQuestionClass(questionStatus.q1_supplierConnection.locked)}>
+        {/* QUESTION 1: Substantive Position (BLOCKING QUESTION) */}
+        <div className={getQuestionClass(questionStatus.q1_substantivePosition.locked)}>
           <div className="form-group">
             <QuestionLabel section="2" question="1">
+              Does the worker hold a substantive position at any NHS organisation?
+            </QuestionLabel>
+
+            {/* Explanation text */}
+            <div className="info-notice" style={{
+              background: '#f0f7ff',
+              border: '1px solid #3b82f6',
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+              marginTop: '12px'
+            }}>
+              <p style={{ margin: '0 0 8px 0' }}>
+                <strong>What is a substantive position?</strong>
+              </p>
+              <p style={{ margin: '0' }}>
+                A substantive position means the worker has a permanent or fixed-term employment contract
+                with an NHS organisation (including Barts Health or any other NHS Trust).
+                This includes staff on ESR (NHS payroll) who have an ongoing employment relationship.
+              </p>
+            </div>
+
+            {/* Radio buttons */}
+            <Controller
+              name="substantivePosition"
+              control={control}
+              render={({ field }) => (
+                <RadioGroup
+                  label=""
+                  name="substantivePosition"
+                  options={[
+                    { value: 'no', label: 'No - This worker does not hold a substantive NHS position' },
+                    { value: 'yes', label: 'Yes - This worker has a substantive NHS position' },
+                  ]}
+                  value={field.value}
+                  onChange={(value) => {
+                    field.onChange(value);
+                    handleFieldChange('substantivePosition', value);
+                  }}
+                  error={errors.substantivePosition?.message}
+                  required
+                />
+              )}
+            />
+
+            {/* Show blocking warning if Yes selected */}
+            {substantivePosition === 'yes' && (
+              <NoticeBox type="error" style={{ marginTop: '16px' }}>
+                <strong style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <WarningIcon size={16} color="#dc2626" /> Cannot Proceed
+                </strong>
+                <p style={{ margin: '8px 0 0 0' }}>
+                  Workers who hold a substantive NHS position cannot be set up as external suppliers.
+                  They must be paid via NHS payroll (ESR). Please contact HR/Payroll for assistance with setting up
+                  additional payments or secondments for substantive NHS staff.
+                </p>
+              </NoticeBox>
+            )}
+          </div>
+        </div>
+
+        {/* QUESTION 2: Supplier Connection (CONFLICT OF INTEREST) */}
+        <div className={getQuestionClass(questionStatus.q2_supplierConnection.locked)}>
+          {questionStatus.q2_supplierConnection.locked && (
+            <LockOverlay reason={questionStatus.q2_supplierConnection.reason} />
+          )}
+          <div className="form-group">
+            <QuestionLabel section="2" question="2">
               Do you have any personal or financial connection to this supplier?
             </QuestionLabel>
 
@@ -500,9 +607,9 @@ const Section2PreScreening = () => {
           </div>
         </div>
 
-        {/* QUESTION 2: Personal Service Status (MOVED FROM Q2.5 TO Q2.2) */}
-        <div className={getQuestionClass(questionStatus.q2_soleTrader.locked)}>
-          {questionStatus.q2_soleTrader.locked && <LockOverlay reason={questionStatus.q2_soleTrader.reason} />}
+        {/* QUESTION 3: Personal Service Status */}
+        <div className={getQuestionClass(questionStatus.q3_soleTrader.locked)}>
+          {questionStatus.q3_soleTrader.locked && <LockOverlay reason={questionStatus.q3_soleTrader.reason} />}
 
           <Controller
             name="soleTraderStatus"
@@ -510,7 +617,7 @@ const Section2PreScreening = () => {
             render={({ field }) => (
               <RadioGroup
                 label={
-                  <QuestionLabel section="2" question="2">
+                  <QuestionLabel section="2" question="3">
                     Is the supplier providing a personal service?
                     <Tooltip content="A personal service is when an individual provides their own skills and expertise directly (e.g., sole traders, freelancers, contractors), rather than a company providing a service. This determination affects IR35/OPW assessment.">
                       <span style={{ marginLeft: '4px', display: 'inline-flex', alignItems: 'center' }}>
@@ -537,7 +644,7 @@ const Section2PreScreening = () => {
           />
 
           {/* CEST Form Upload - Required if Sole Trader */}
-          {soleTraderStatus === 'yes' && !questionStatus.q2_soleTrader.locked && (
+          {soleTraderStatus === 'yes' && !questionStatus.q3_soleTrader.locked && (
             <>
               <NoticeBox type="warning" style={{ marginTop: '16px', marginBottom: '16px' }}>
                 <strong>IR35 / Off-Payroll Working Rules Apply</strong>
@@ -573,16 +680,16 @@ const Section2PreScreening = () => {
           )}
         </div>
 
-        {/* QUESTION 3: Letterhead with Bank Details (WAS Q2.2) */}
-        <div className={getQuestionClass(questionStatus.q3_letterhead.locked)}>
-          {questionStatus.q3_letterhead.locked && <LockOverlay reason={questionStatus.q3_letterhead.reason} />}
+        {/* QUESTION 4: Letterhead with Bank Details */}
+        <div className={getQuestionClass(questionStatus.q4_letterhead.locked)}>
+          {questionStatus.q4_letterhead.locked && <LockOverlay reason={questionStatus.q4_letterhead.reason} />}
 
           <Controller
             name="letterheadAvailable"
             control={control}
             render={({ field }) => (
               <RadioGroup
-                label={<QuestionLabel section="2" question="3">Do you have a letterhead with bank details from the supplier?</QuestionLabel>}
+                label={<QuestionLabel section="2" question="4">Do you have a letterhead with bank details from the supplier?</QuestionLabel>}
                 name="letterheadAvailable"
                 options={[
                   { value: 'yes', label: 'Yes' },
@@ -604,7 +711,7 @@ const Section2PreScreening = () => {
             )}
           />
 
-          {letterheadAvailable === 'no' && !questionStatus.q3_letterhead.locked && (
+          {letterheadAvailable === 'no' && !questionStatus.q4_letterhead.locked && (
             <div className="blocking-warning" style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                 <span className="warning-icon"><WarningIcon size={18} color="#dc2626" /></span>
@@ -628,7 +735,7 @@ const Section2PreScreening = () => {
             </div>
           )}
 
-          {letterheadAvailable === 'yes' && !questionStatus.q3_letterhead.locked && (
+          {letterheadAvailable === 'yes' && !questionStatus.q4_letterhead.locked && (
             <FileUpload
               label="Upload Letterhead Document"
               name="letterhead"
@@ -644,16 +751,16 @@ const Section2PreScreening = () => {
           )}
         </div>
 
-        {/* QUESTION 4: Justification (WAS Q2.3) */}
-        <div className={getQuestionClass(questionStatus.q4_justification.locked)}>
-          {questionStatus.q4_justification.locked && <LockOverlay reason={questionStatus.q4_justification.reason} />}
+        {/* QUESTION 5: Justification */}
+        <div className={getQuestionClass(questionStatus.q5_justification.locked)}>
+          {questionStatus.q5_justification.locked && <LockOverlay reason={questionStatus.q5_justification.reason} />}
 
           <Controller
             name="justification"
             control={control}
             render={({ field }) => (
               <Textarea
-                label={<QuestionLabel section="2" question="4">Why do you need this supplier?</QuestionLabel>}
+                label={<QuestionLabel section="2" question="5">Why do you need this supplier?</QuestionLabel>}
                 name="justification"
                 value={field.value}
                 onChange={(e) => {
@@ -673,16 +780,16 @@ const Section2PreScreening = () => {
           />
         </div>
 
-        {/* QUESTION 5: Usage Frequency (WAS Q2.4) */}
-        <div className={getQuestionClass(questionStatus.q5_usageFrequency.locked)}>
-          {questionStatus.q5_usageFrequency.locked && <LockOverlay reason={questionStatus.q5_usageFrequency.reason} />}
+        {/* QUESTION 6: Usage Frequency */}
+        <div className={getQuestionClass(questionStatus.q6_usageFrequency.locked)}>
+          {questionStatus.q6_usageFrequency.locked && <LockOverlay reason={questionStatus.q6_usageFrequency.reason} />}
 
           <Controller
             name="usageFrequency"
             control={control}
             render={({ field }) => (
               <RadioGroup
-                label={<QuestionLabel section="2" question="5">How often will you use this supplier?</QuestionLabel>}
+                label={<QuestionLabel section="2" question="6">How often will you use this supplier?</QuestionLabel>}
                 name="usageFrequency"
                 options={[
                   {
@@ -713,7 +820,7 @@ const Section2PreScreening = () => {
             )}
           />
 
-          {usageFrequency === 'one-off' && !questionStatus.q5_usageFrequency.locked && (
+          {usageFrequency === 'one-off' && !questionStatus.q6_usageFrequency.locked && (
             <NoticeBox type="info">
               For one-off purchases, you may be able to use a credit card instead of setting up a new supplier.
               <p style={{ margin: '8px 0 0 0' }}>
@@ -724,15 +831,15 @@ const Section2PreScreening = () => {
         </div>
 
         {/* QUESTION 6: Service Category (Clinical/Non-clinical) */}
-        <div className={getQuestionClass(questionStatus.q6_serviceCategory.locked)}>
-          {questionStatus.q6_serviceCategory.locked && <LockOverlay reason={questionStatus.q6_serviceCategory.reason} />}
+        <div className={getQuestionClass(questionStatus.q7_serviceCategory.locked)}>
+          {questionStatus.q7_serviceCategory.locked && <LockOverlay reason={questionStatus.q7_serviceCategory.reason} />}
 
           <Controller
             name="serviceCategory"
             control={control}
             render={({ field }) => (
               <RadioGroup
-                label={<QuestionLabel section="2" question="6">Is this service Clinical or Non-clinical?</QuestionLabel>}
+                label={<QuestionLabel section="2" question="7">Is this service Clinical or Non-clinical?</QuestionLabel>}
                 name="serviceCategory"
                 options={[
                   { value: 'clinical', label: 'Clinical' },
@@ -752,8 +859,8 @@ const Section2PreScreening = () => {
         </div>
 
         {/* QUESTION 7: Procurement Engagement */}
-        <div className={getQuestionClass(questionStatus.q7_procurement.locked)}>
-          {questionStatus.q7_procurement.locked && <LockOverlay reason={questionStatus.q7_procurement.reason} />}
+        <div className={getQuestionClass(questionStatus.q8_procurement.locked)}>
+          {questionStatus.q8_procurement.locked && <LockOverlay reason={questionStatus.q8_procurement.reason} />}
 
 
           <Controller
@@ -761,7 +868,7 @@ const Section2PreScreening = () => {
             control={control}
             render={({ field }) => (
               <RadioGroup
-                label={<QuestionLabel section="2" question="7">Have you engaged with the Procurement team?</QuestionLabel>}
+                label={<QuestionLabel section="2" question="8">Have you engaged with the Procurement team?</QuestionLabel>}
                 name="procurementEngaged"
                 options={[
                   { value: 'yes', label: 'Yes - I have procurement approval' },
@@ -777,7 +884,7 @@ const Section2PreScreening = () => {
           />
 
           {/* If Yes - show procurement approval upload */}
-          {procurementEngaged === 'yes' && !questionStatus.q7_procurement.locked && (
+          {procurementEngaged === 'yes' && !questionStatus.q8_procurement.locked && (
             <FileUpload
               label="Upload Procurement Approval Document"
               name="procurementApproval"
@@ -793,7 +900,7 @@ const Section2PreScreening = () => {
           )}
 
           {/* If No - show questionnaire status */}
-          {procurementEngaged === 'no' && !questionStatus.q7_procurement.locked && (
+          {procurementEngaged === 'no' && !questionStatus.q8_procurement.locked && (
             <>
               {isQuestionnaireComplete ? (
                 <div style={{ marginTop: '16px' }}>
@@ -912,15 +1019,15 @@ const Section2PreScreening = () => {
         </div>
 
         {/* QUESTION 8: Pre-screening Acknowledgement */}
-        <div className={getQuestionClass(questionStatus.q8_acknowledgement.locked)} style={{ marginTop: 'var(--space-32)', paddingTop: 'var(--space-24)', borderTop: '2px solid var(--color-border)' }}>
-          {questionStatus.q8_acknowledgement.locked && <LockOverlay reason={questionStatus.q8_acknowledgement.reason} />}
+        <div className={getQuestionClass(questionStatus.q9_acknowledgement.locked)} style={{ marginTop: 'var(--space-32)', paddingTop: 'var(--space-24)', borderTop: '2px solid var(--color-border)' }}>
+          {questionStatus.q9_acknowledgement.locked && <LockOverlay reason={questionStatus.q9_acknowledgement.reason} />}
 
           <Controller
             name="prescreeningAcknowledgement"
             control={control}
             render={({ field }) => (
               <Checkbox
-                label={<QuestionLabel section="2" question="8">I confirm that all information provided is accurate and complete to the best of my knowledge</QuestionLabel>}
+                label={<QuestionLabel section="2" question="9">I confirm that all information provided is accurate and complete to the best of my knowledge</QuestionLabel>}
                 name="prescreeningAcknowledgement"
                 checked={field.value}
                 onChange={(checked) => {

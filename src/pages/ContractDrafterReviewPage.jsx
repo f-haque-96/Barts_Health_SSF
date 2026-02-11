@@ -238,7 +238,7 @@ const ContractDrafterReviewPage = ({ user, readOnly = false }) => {
   }
 
   const supplierName = submission.formData?.companyName || submission.formData?.section4?.companyName || 'Supplier';
-  const ir35Status = submission.opwReview?.ir35Status;
+  const opwReview = submission.opwReview;
   const contractStatus = submission.contractDrafter?.decision;
   const sentAt = submission.contractDrafter?.sentAt;
   const templateUsed = submission.contractDrafter?.templateUsed;
@@ -264,16 +264,93 @@ const ContractDrafterReviewPage = ({ user, readOnly = false }) => {
         </p>
       </div>
 
-      {/* IR35 Status */}
-      {ir35Status && (
+      {/* OPW Determination Context */}
+      {opwReview && (
         <div style={{
           padding: 'var(--space-16)',
           backgroundColor: '#f0f7ff',
-          border: '1px solid #dbeafe',
+          border: '2px solid #3b82f6',
           borderRadius: 'var(--radius-base)',
           marginBottom: 'var(--space-24)',
         }}>
-          <strong>IR35 Status:</strong> {ir35Status === 'outside_ir35' ? 'Outside IR35 (Consultancy Agreement)' : 'Inside IR35 (Sole Trader Agreement)'}
+          <h4 style={{ margin: '0 0 var(--space-12) 0', color: 'var(--nhs-blue)' }}>
+            OPW Panel Determination
+          </h4>
+
+          {/* Worker Classification */}
+          <div style={{ marginBottom: 'var(--space-8)' }}>
+            <strong>Worker Classification:</strong>{' '}
+            <span style={{
+              display: 'inline-block',
+              padding: '4px 12px',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: opwReview.workerClassification === 'sole_trader' ? '#3b82f6' : '#8b5cf6',
+              color: 'white',
+              fontWeight: 'var(--font-weight-semibold)',
+              fontSize: 'var(--font-size-xs)',
+            }}>
+              {opwReview.workerClassification === 'sole_trader' ? 'SOLE TRADER' : 'INTERMEDIARY'}
+            </span>
+          </div>
+
+          {/* Intermediary Path - IR35 Status */}
+          {opwReview.workerClassification === 'intermediary' && opwReview.ir35Determination && (
+            <div style={{ marginBottom: 'var(--space-8)' }}>
+              <strong>IR35 Status:</strong>{' '}
+              <span style={{
+                display: 'inline-block',
+                padding: '4px 12px',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: opwReview.ir35Determination === 'outside' ? '#22c55e' : '#dc2626',
+                color: 'white',
+                fontWeight: 'var(--font-weight-semibold)',
+                fontSize: 'var(--font-size-xs)',
+              }}>
+                {opwReview.ir35Determination === 'outside' ? 'OUTSIDE IR35' : 'INSIDE IR35'}
+              </span>
+              {opwReview.ir35Determination === 'outside' && (
+                <span style={{ marginLeft: 'var(--space-8)', color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
+                  (Requires Consultancy Agreement)
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Sole Trader Path - Employment Status */}
+          {opwReview.workerClassification === 'sole_trader' && opwReview.employmentStatus && (
+            <div style={{ marginBottom: 'var(--space-8)' }}>
+              <strong>Employment Status:</strong>{' '}
+              <span style={{
+                display: 'inline-block',
+                padding: '4px 12px',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: opwReview.employmentStatus === 'self_employed' ? '#22c55e' : '#dc2626',
+                color: 'white',
+                fontWeight: 'var(--font-weight-semibold)',
+                fontSize: 'var(--font-size-xs)',
+              }}>
+                {opwReview.employmentStatus === 'self_employed' ? 'SELF-EMPLOYED' : 'EMPLOYED'}
+              </span>
+              {opwReview.employmentStatus === 'self_employed' && (
+                <span style={{ marginLeft: 'var(--space-8)', color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
+                  (Requires Sole Trader Agreement)
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Contract Required Flag */}
+          {opwReview.contractRequired && (
+            <div style={{
+              marginTop: 'var(--space-12)',
+              padding: 'var(--space-8)',
+              backgroundColor: '#fef3c7',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: 'var(--font-size-sm)',
+            }}>
+              📄 <strong>Contract Required:</strong> {opwReview.contractRequired === 'yes' ? 'Yes' : 'No'}
+            </div>
+          )}
         </div>
       )}
 

@@ -66,31 +66,24 @@ const ReviewCard = ({ title, children, sectionNumber }) => {
   const missingFields = getMissingFields(sectionNumber);
   const isIncomplete = missingFields.length > 0;
 
-  // Check for sole trader warning on Section 2
-  const isSoleTrader = formData.supplierType === 'sole_trader' || formData.supplierType === 'individual';
-  const needsSoleTraderAttention = sectionNumber === 2 && isSoleTrader && formData.soleTraderStatus !== 'yes';
-
   // Determine border color and background
   const getBorderColor = () => {
     if (isIncomplete) return '#DA291C';
-    if (needsSoleTraderAttention) return '#f59e0b';
     return 'var(--color-border)';
   };
 
   const getBackgroundColor = () => {
-    if (needsSoleTraderAttention && !isIncomplete) return '#fffbeb';
     return 'var(--color-surface)';
   };
 
   const getHeaderColor = () => {
     if (isIncomplete) return '#DA291C';
-    if (needsSoleTraderAttention) return '#b45309';
     return 'var(--nhs-blue)';
   };
 
   return (
     <div
-      className={isIncomplete ? 'section-card section-card--incomplete' : needsSoleTraderAttention ? 'section-card section-card--warning' : 'section-card'}
+      className={isIncomplete ? 'section-card section-card--incomplete' : 'section-card'}
       style={{
         padding: 'var(--space-24)',
         borderRadius: 'var(--radius-base)',
@@ -100,27 +93,10 @@ const ReviewCard = ({ title, children, sectionNumber }) => {
         position: 'relative',
       }}
     >
-      {/* Attention badge for sole trader warning */}
-      {needsSoleTraderAttention && !isIncomplete && (
-        <div style={{
-          position: 'absolute',
-          top: '-10px',
-          left: '16px',
-          background: '#f59e0b',
-          color: 'white',
-          fontSize: '0.75rem',
-          fontWeight: 600,
-          padding: '2px 8px',
-          borderRadius: '4px',
-        }}>
-          Attention Required
-        </div>
-      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-16)' }}>
         <h4 className={isIncomplete ? 'section-card-header' : ''} style={{ margin: 0, color: getHeaderColor() }}>
           Section {sectionNumber}: {title}
           {isIncomplete && <span style={{ marginLeft: '8px', fontSize: '0.9rem', fontWeight: 400, display: 'inline-flex', alignItems: 'center', gap: '4px' }}><WarningIcon size={14} color="#DA291C" /> Incomplete</span>}
-          {needsSoleTraderAttention && !isIncomplete && <span style={{ marginLeft: '8px', fontSize: '0.9rem', fontWeight: 400, display: 'inline-flex', alignItems: 'center', gap: '4px' }}><WarningIcon size={14} color="#f59e0b" /> Review Q2.2</span>}
         </h4>
         <Button
           variant="outline"
@@ -139,20 +115,6 @@ const ReviewCard = ({ title, children, sectionNumber }) => {
               <li key={index} className="missing-field">{field}</li>
             ))}
           </ul>
-        </div>
-      )}
-      {needsSoleTraderAttention && !isIncomplete && (
-        <div style={{
-          marginTop: 'var(--space-16)',
-          padding: 'var(--space-12)',
-          background: '#fef3c7',
-          borderRadius: 'var(--radius-base)',
-          border: '1px solid #f59e0b',
-        }}>
-          <p style={{ margin: 0, color: '#92400e', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <WarningIcon size={16} color="#f59e0b" />
-            <span><strong>Sole Trader selected in Section 3.</strong> Please confirm Q2.2 "Is the supplier providing a personal service?" is answered as "Yes" and upload the required CEST form.</span>
-          </p>
         </div>
       )}
     </div>
@@ -683,6 +645,57 @@ const Section7ReviewSubmit = () => {
             label="CRN"
             value={formData.crn}
             badge={<CRNStatusBadge crn={formData.crn} verificationData={formData.crnVerification} />}
+          />
+        )}
+
+        {/* Limited Company Interest - Only show for Limited Company */}
+        {formData.supplierType === 'limited_company' && formData.limitedCompanyInterest && (
+          <ReviewItem
+            label="Does the supplier have more than 5% interest in this Limited Company?"
+            value={formData.limitedCompanyInterest}
+            badge={formData.limitedCompanyInterest === 'yes' && (
+              <span style={{
+                padding: '4px 8px',
+                borderRadius: '4px',
+                fontSize: '0.85em',
+                fontWeight: 'bold',
+                backgroundColor: '#fff3cd',
+                color: '#856404',
+                border: '1px solid #ffeaa7'
+              }}>
+                IR35 RELEVANT
+              </span>
+            )}
+          />
+        )}
+
+        {/* CRN - Partnership */}
+        {formData.crn && formData.supplierType === 'partnership' && (
+          <ReviewItem
+            label="CRN"
+            value={formData.crn}
+            badge={<CRNStatusBadge crn={formData.crn} verificationData={formData.crnVerification} />}
+          />
+        )}
+
+        {/* Partnership Interest - Only show for Partnership */}
+        {formData.supplierType === 'partnership' && formData.partnershipInterest && (
+          <ReviewItem
+            label="Does the supplier have more than 60% interest in this Partnership?"
+            value={formData.partnershipInterest}
+            badge={formData.partnershipInterest === 'yes' && (
+              <span style={{
+                padding: '4px 8px',
+                borderRadius: '4px',
+                fontSize: '0.85em',
+                fontWeight: 'bold',
+                backgroundColor: '#fff3cd',
+                color: '#856404',
+                border: '1px solid #ffeaa7'
+              }}>
+                IR35 RELEVANT
+              </span>
+            )}
           />
         )}
 

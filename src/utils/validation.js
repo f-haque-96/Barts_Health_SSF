@@ -107,31 +107,55 @@ export const section3BaseSchema = z.object({
   companiesHouseRegistered: z.enum(['yes', 'no'], {
     required_error: 'Please select an option',
   }),
-  supplierType: z.enum(['limited_company', 'charity', 'sole_trader', 'public_sector'], {
+  supplierType: z.enum(['limited_company', 'partnership', 'charity', 'sole_trader', 'public_sector'], {
     required_error: 'Please select a supplier type',
   }),
   annualValue: z.number().positive('Please enter a valid amount'),
   employeeCount: z.enum(['micro', 'small', 'medium', 'large'], {
     required_error: 'Please select an option',
   }),
-  limitedCompanyInterest: z.enum(['yes', 'no'], {
-    required_error: 'Please select an option',
-  }),
-  partnershipInterest: z.enum(['yes', 'no'], {
-    required_error: 'Please select an option',
-  }),
+  // Optional fields - only required for specific supplier types
+  limitedCompanyInterest: z.enum(['yes', 'no']).optional(),
+  partnershipInterest: z.enum(['yes', 'no']).optional(),
 });
 
 // Dynamic schema based on supplier type
+// CRITICAL: Use .omit() to exclude fields that are NOT displayed for each type
 export const getLimitedCompanySchema = () =>
-  section3BaseSchema.extend({
-    crn: crnSchema,
-  });
+  section3BaseSchema
+    .omit({ partnershipInterest: true })  // Exclude partnership field
+    .extend({
+      crn: crnSchema,
+      limitedCompanyInterest: z.enum(['yes', 'no'], {
+        required_error: 'Please select an option',
+      }),
+    });
+
+export const getPartnershipSchema = (companiesHouse) => {
+  const base = section3BaseSchema
+    .omit({ limitedCompanyInterest: true })  // Exclude limited company field
+    .extend({
+      partnershipInterest: z.enum(['yes', 'no'], {
+        required_error: 'Please select an option',
+      }),
+    });
+
+  // If registered with Companies House, CRN is required
+  if (companiesHouse === 'yes') {
+    return base.extend({
+      crn: crnSchema,
+    });
+  }
+
+  return base;
+};
 
 export const getCharitySchema = (companiesHouse) => {
-  const base = section3BaseSchema.extend({
-    charityNumber: z.string().min(1, 'Charity number is required').max(8, 'Maximum 8 digits'),
-  });
+  const base = section3BaseSchema
+    .omit({ limitedCompanyInterest: true, partnershipInterest: true })  // Exclude both interest fields
+    .extend({
+      charityNumber: z.string().min(1, 'Charity number is required').max(8, 'Maximum 8 digits'),
+    });
 
   if (companiesHouse === 'yes') {
     return base.extend({
@@ -143,16 +167,20 @@ export const getCharitySchema = (companiesHouse) => {
 };
 
 export const getSoleTraderSchema = () =>
-  section3BaseSchema.extend({
-    idType: z.enum(['passport', 'driving_licence'], {
-      required_error: 'Please select ID type',
-    }),
-  });
+  section3BaseSchema
+    .omit({ limitedCompanyInterest: true, partnershipInterest: true })  // Exclude both interest fields
+    .extend({
+      idType: z.enum(['passport', 'driving_licence'], {
+        required_error: 'Please select ID type',
+      }),
+    });
 
 export const getPublicSectorSchema = () =>
-  section3BaseSchema.extend({
-    organisationType: z.string().min(1, 'Please select organisation type'),
-  });
+  section3BaseSchema
+    .omit({ limitedCompanyInterest: true, partnershipInterest: true })  // Exclude both interest fields
+    .extend({
+      organisationType: z.string().min(1, 'Please select organisation type'),
+    });
 
 // ===== Section 4: Supplier Details =====
 

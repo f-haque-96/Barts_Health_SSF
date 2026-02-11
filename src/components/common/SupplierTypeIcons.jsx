@@ -27,7 +27,7 @@ export const LimitedCompanyIcon = ({ size = 48, color = 'currentColor' }) => (
   </svg>
 );
 
-// Partnership - Handshake Icon
+// Partnership - Two People/Users Icon (representing partnership)
 export const PartnershipIcon = ({ size = 48, color = 'currentColor' }) => (
   <svg
     width={size}
@@ -39,12 +39,12 @@ export const PartnershipIcon = ({ size = 48, color = 'currentColor' }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    <path d="M11 12h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 14" />
-    <path d="m7 18 1.6-1.4c.3-.4.8-.6 1.4-.6h2" />
-    <path d="m16 8 3-3 3 3" />
-    <path d="m21 5v5c0 .6-.4 1-1 1h-5" />
-    <path d="m7 8-3-3-3 3" />
-    <path d="m3 5v5c0 .6.4 1 1 1h5" />
+    {/* First person */}
+    <circle cx="9" cy="7" r="3" />
+    <path d="M3 21v-2c0-2.2 1.8-4 4-4h4c2.2 0 4 1.8 4 4v2" />
+    {/* Second person */}
+    <circle cx="16" cy="7" r="3" />
+    <path d="M23 21v-2c0-2.2-1.8-4-4-4" />
   </svg>
 );
 

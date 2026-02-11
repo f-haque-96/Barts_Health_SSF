@@ -551,7 +551,7 @@ const ProcurementReviewPage = ({
       <ReviewCard title="Section 3: Supplier Classification">
         <ReviewItem label="Companies House Registered" value={formData.companiesHouseRegistered} />
         <ReviewItem label="Supplier Type" value={formatSupplierType(formData.supplierType)} raw />
-        {formData.crn && formData.supplierType === 'limited_company' && (
+        {formData.crn && (formData.supplierType === 'limited_company' || formData.supplierType === 'partnership') && (
           <ReviewItem
             label="CRN"
             value={formData.crn}
@@ -586,6 +586,48 @@ const ProcurementReviewPage = ({
           />
         )}
         {formData.charityNumber && <ReviewItem label="Charity Number" value={formData.charityNumber} />}
+
+        {/* Phase 4: Show intermediary classification fields */}
+        {formData.supplierType === 'limited_company' && formData.limitedCompanyInterest && (
+          <ReviewItem
+            label="Does the worker have more than 5% interest in this Limited Company?"
+            value={formData.limitedCompanyInterest}
+            badge={formData.limitedCompanyInterest === 'yes' && (
+              <span style={{
+                padding: '4px 8px',
+                borderRadius: '4px',
+                fontSize: '0.85em',
+                fontWeight: 'bold',
+                backgroundColor: '#fff3cd',
+                color: '#856404',
+                border: '1px solid #ffeaa7'
+              }}>
+                IR35 RELEVANT
+              </span>
+            )}
+          />
+        )}
+
+        {formData.supplierType === 'partnership' && formData.partnershipInterest && (
+          <ReviewItem
+            label="Does the worker have more than 60% interest in this Partnership?"
+            value={formData.partnershipInterest}
+            badge={formData.partnershipInterest === 'yes' && (
+              <span style={{
+                padding: '4px 8px',
+                borderRadius: '4px',
+                fontSize: '0.85em',
+                fontWeight: 'bold',
+                backgroundColor: '#fff3cd',
+                color: '#856404',
+                border: '1px solid #ffeaa7'
+              }}>
+                IR35 RELEVANT
+              </span>
+            )}
+          />
+        )}
+
         <ReviewItem label="Annual Value" value={formData.annualValue ? formatCurrency(formData.annualValue) : ''} />
         <ReviewItem label="Employee Count" value={formatEmployeeCount(formData.employeeCount)} raw />
       </ReviewCard>

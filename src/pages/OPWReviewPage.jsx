@@ -74,6 +74,15 @@ const OPWReviewPage = ({
   const [rejectionReason, setRejectionReason] = useState('');
   const [actionSelected, setActionSelected] = useState(false); // Track if user clicked proceed to sign
 
+  // Phase 2: New OPW determination fields
+  const [workerClassification, setWorkerClassification] = useState(''); // 'sole_trader' | 'intermediary'
+  const [employmentStatus, setEmploymentStatus] = useState(''); // 'employed' | 'self_employed' (for sole traders)
+  const [contractRequired, setContractRequired] = useState(''); // 'yes' | 'no'
+  const [sdsIssued, setSdsIssued] = useState(false); // For Inside IR35 tracking
+  const [sdsIssuedDate, setSdsIssuedDate] = useState('');
+  const [sdsResponseReceived, setSdsResponseReceived] = useState(false);
+  const [sdsResponseDate, setSdsResponseDate] = useState('');
+
   // Handle document preview
   const handlePreviewDocument = (file) => {
     if (!file) {
@@ -186,7 +195,31 @@ const OPWReviewPage = ({
     setLoading(false);
   }, [submissionId, propSubmission]);
 
+  // Automatically determine worker classification based on supplier type
+  useEffect(() => {
+    if (!submission || !submission.formData) return;
+
+    const supplierType = submission.formData.supplierType;
+    const soleTraderStatus = submission.formData.soleTraderStatus;
+
+    // Determine classification based on supplier type and personal service status
+    if (soleTraderStatus === 'yes' && (supplierType === 'sole_trader' || !supplierType)) {
+      // Personal service sole trader = direct worker (not intermediary)
+      setWorkerClassification('sole_trader');
+    } else if (supplierType === 'limited_company' || supplierType === 'partnership') {
+      // Limited Company or Partnership = intermediary
+      setWorkerClassification('intermediary');
+    } else if (supplierType === 'sole_trader' && soleTraderStatus === 'no') {
+      // Sole trader NOT providing personal service = intermediary trading structure
+      setWorkerClassification('intermediary');
+    } else {
+      // Charity, Public Sector, or unclear cases = treat as intermediary
+      setWorkerClassification('intermediary');
+    }
+  }, [submission]);
+
   const handleSubmitDetermination = async () => {
+    // Basic validation
     if (!signatureName.trim()) {
       alert('Please provide your digital signature (full name)');
       return;
@@ -194,11 +227,6 @@ const OPWReviewPage = ({
 
     if (!signatureDate) {
       alert('Please select a date for your signature');
-      return;
-    }
-
-    if (!ir35Determination) {
-      alert('Please select an IR35 determination');
       return;
     }
 
@@ -217,9 +245,39 @@ const OPWReviewPage = ({
       if (!confirmReject) return;
     }
 
-    // Validation for inside/outside determinations
-    if ((ir35Determination === 'inside' || ir35Determination === 'outside') && !rationale.trim()) {
-      alert('Please provide a rationale for your determination');
+    // Path-specific validation
+    if (workerClassification === 'sole_trader') {
+      // Sole trader path: must select employment status
+      if (!employmentStatus) {
+        alert('Please indicate whether the worker is Employed or Self-Employed');
+        return;
+      }
+    } else if (workerClassification === 'intermediary') {
+      // Intermediary path: must select IR35 determination
+      if (!ir35Determination) {
+        alert('Please select an IR35 determination');
+        return;
+      }
+
+      // Must provide rationale for inside/outside determinations
+      if ((ir35Determination === 'inside' || ir35Determination === 'outside') && !rationale.trim()) {
+        alert('Please provide a rationale for your determination');
+        return;
+      }
+
+      // Must select contract required for both inside and outside
+      if ((ir35Determination === 'inside' || ir35Determination === 'outside') && !contractRequired) {
+        alert('Please indicate whether a contract is required');
+        return;
+      }
+
+      // For Inside IR35, must track SDS if issued
+      if (ir35Determination === 'inside' && sdsIssued && !sdsIssuedDate) {
+        alert('Please provide the SDS issued date');
+        return;
+      }
+    } else {
+      alert('Unable to determine worker classification. Please contact support.');
       return;
     }
 
@@ -290,45 +348,136 @@ const OPWReviewPage = ({
         return;
       }
 
-      // Build OPW review data for inside/outside determinations
-      const opwReviewData = {
-        ir35Status: ir35Determination,
-        rationale,
-        decision: 'approved', // OPW panel approved to proceed
-        signature: signatureName,
-        date: signatureDate,
-        reviewedBy: 'OPW Panel Member', // In real app, this would come from auth
-        reviewedAt: new Date().toISOString(),
-      };
+      // ========== NEW PHASE 2 LOGIC: SOLE TRADER VS INTERMEDIARY ROUTING ==========
 
-      // If OUTSIDE IR35 - add the special process data
-      if (ir35Determination === 'outside') {
-        opwReviewData.outsideIR35Process = {
-          emailSentToSupplier: true,
-          emailSentDate: new Date().toISOString(),
-          supplierEmail: currentSubmission?.formData?.contactEmail || currentSubmission?.formData?.section4?.contactEmail,
-          supplierName: currentSubmission?.formData?.contactName || currentSubmission?.formData?.section4?.contactName,
-          requesterEmail: currentSubmission?.formData?.nhsEmail || currentSubmission?.formData?.section1?.nhsEmail,
-          requesterName: `${currentSubmission?.formData?.firstName || currentSubmission?.formData?.section1?.firstName || ''} ${currentSubmission?.formData?.lastName || currentSubmission?.formData?.section1?.lastName || ''}`.trim(),
-          contractDrafterCC: 'peter.persaud@nhs.net',
-          status: 'Awaiting_Consultancy_Agreement',
+      let opwReviewData = {};
+      let updatedSubmission = {};
+      let successMessage = '';
+
+      // ===== PATH 1: SOLE TRADER (DIRECT WORKER) =====
+      if (workerClassification === 'sole_trader') {
+        opwReviewData = {
+          workerClassification: 'sole_trader',
+          employmentStatus,
+          decision: 'approved',
+          signature: signatureName,
+          date: signatureDate,
+          reviewedBy: 'OPW Panel Member',
+          reviewedAt: new Date().toISOString(),
         };
-      }
 
-      // Update submission with OPW review - route to contract stage
-      const updatedSubmission = {
-        ...currentSubmission, // Use fresh data from localStorage
-        opwReview: opwReviewData,
-        currentStage: 'contract', // Route to contract drafter for agreement
-        contractDrafter: {
-          status: 'pending_review',
+        if (employmentStatus === 'employed') {
+          // EMPLOYED SOLE TRADER → PAYROLL/ESR ROUTE (TERMINAL STATE)
+          updatedSubmission = {
+            ...currentSubmission,
+            opwReview: opwReviewData,
+            status: 'Completed_Payroll',
+            currentStage: 'Completed',
+            completedAt: new Date().toISOString(),
+          };
+
+          successMessage = 'OPW Determination Complete: EMPLOYED\n\n' +
+            'This worker is employed and must be paid via NHS payroll (ESR).\n\n' +
+            '⚠️ DO NOT create an Oracle supplier record.\n' +
+            'The worker should be set up on ESR by HR/Payroll.\n\n' +
+            'This supplier request is now complete.';
+
+        } else {
+          // SELF-EMPLOYED SOLE TRADER → AP CONTROL (CREATE ORACLE SUPPLIER)
+          updatedSubmission = {
+            ...currentSubmission,
+            opwReview: opwReviewData,
+            status: 'Pending_AP',
+            currentStage: 'ap',
+          };
+
+          successMessage = 'OPW Determination Complete: SELF-EMPLOYED\n\n' +
+            'This worker is self-employed and can be paid as a supplier.\n\n' +
+            'The request has been forwarded to AP Control for bank details verification.\n' +
+            'An Oracle supplier record will be created upon AP approval.';
+        }
+      }
+      // ===== PATH 2: INTERMEDIARY (LIMITED COMPANY, PARTNERSHIP) =====
+      else if (workerClassification === 'intermediary') {
+        opwReviewData = {
+          workerClassification: 'intermediary',
           ir35Status: ir35Determination,
-          requiredTemplate: ir35Determination === 'outside'
-            ? 'BartsConsultancyAgreement.1.2.docx'
-            : 'Sole Trader Agreement latest version 22.docx',
-          assignedTo: 'peter.persaud@nhs.net',
-        },
-      };
+          rationale,
+          contractRequired,
+          decision: 'approved',
+          signature: signatureName,
+          date: signatureDate,
+          reviewedBy: 'OPW Panel Member',
+          reviewedAt: new Date().toISOString(),
+        };
+
+        // Add SDS tracking if issued (for Inside IR35)
+        if (ir35Determination === 'inside' && sdsIssued) {
+          opwReviewData.sdsTracking = {
+            sdsIssued: true,
+            sdsIssuedDate,
+            sdsResponseReceived,
+            sdsResponseDate: sdsResponseDate || null,
+            daysSinceIssued: sdsIssuedDate ? Math.floor((new Date() - new Date(sdsIssuedDate)) / (1000 * 60 * 60 * 24)) : 0,
+          };
+        }
+
+        if (ir35Determination === 'inside') {
+          // INSIDE IR35 → PAYROLL/ESR ROUTE (TERMINAL STATE)
+          updatedSubmission = {
+            ...currentSubmission,
+            opwReview: opwReviewData,
+            status: 'Completed_Payroll',
+            currentStage: 'Completed',
+            completedAt: new Date().toISOString(),
+          };
+
+          successMessage = 'IR35 Determination: INSIDE IR35\n\n' +
+            'This engagement falls inside IR35. The worker must be paid via NHS payroll (ESR).\n\n' +
+            '⚠️ DO NOT create an Oracle supplier record.\n' +
+            'The worker should be set up on ESR by HR/Payroll.\n\n' +
+            (sdsIssued ? 'SDS has been issued and tracked.\n\n' : '') +
+            'This supplier request is now complete.';
+
+        } else if (ir35Determination === 'outside') {
+          // OUTSIDE IR35 → CONTRACT (IF REQUIRED) OR AP CONTROL
+          if (contractRequired === 'yes') {
+            // Route to Contract Drafter
+            updatedSubmission = {
+              ...currentSubmission,
+              opwReview: opwReviewData,
+              status: 'Pending_Contract',
+              currentStage: 'contract',
+              contractDrafter: {
+                status: 'pending_review',
+                ir35Status: 'outside',
+                requiredTemplate: 'BartsConsultancyAgreement.1.2.docx',
+                assignedTo: 'peter.persaud@nhs.net',
+              },
+            };
+
+            successMessage = 'IR35 Determination: OUTSIDE IR35\n\n' +
+              'This engagement falls outside IR35. The worker operates as a genuine business.\n\n' +
+              'Contract Required: YES\n' +
+              'The request has been forwarded to the Contract Drafter for agreement negotiation.\n' +
+              'After contract approval, an Oracle supplier record will be created.';
+          } else {
+            // Skip contract, route directly to AP Control
+            updatedSubmission = {
+              ...currentSubmission,
+              opwReview: opwReviewData,
+              status: 'Pending_AP',
+              currentStage: 'ap',
+            };
+
+            successMessage = 'IR35 Determination: OUTSIDE IR35\n\n' +
+              'This engagement falls outside IR35. The worker operates as a genuine business.\n\n' +
+              'Contract Required: NO\n' +
+              'The request has been forwarded to AP Control for bank details verification.\n' +
+              'An Oracle supplier record will be created upon AP approval.';
+          }
+        }
+      }
 
       // Save back to localStorage
       localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
@@ -337,24 +486,21 @@ const OPWReviewPage = ({
       const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
       const index = submissions.findIndex(s => s.submissionId === submissionId);
       if (index !== -1) {
-        submissions[index].ir35Status = ir35Determination;
         submissions[index].status = updatedSubmission.status;
+        submissions[index].currentStage = updatedSubmission.currentStage;
+        // Store classification and routing info
+        if (workerClassification === 'sole_trader') {
+          submissions[index].employmentStatus = employmentStatus;
+        } else {
+          submissions[index].ir35Status = ir35Determination;
+        }
         localStorage.setItem('all_submissions', JSON.stringify(submissions));
       }
 
       setSubmission(updatedSubmission);
 
-      // Notify contract drafter
-      const supplierName = currentSubmission?.formData?.companyName ||
-        currentSubmission?.formData?.section4?.companyName ||
-        'Supplier';
-
-      // Show message based on determination
-      if (ir35Determination === 'outside') {
-        alert(`Outside IR35 Determination Submitted.\n\nContract Drafter has been notified to send the Barts Consultancy Agreement to the supplier.\n\nThe agreement will be negotiated through the system with full audit trail.`);
-      } else {
-        alert(`Inside IR35 Determination Submitted.\n\nContract Drafter has been notified to send the Sole Trader Agreement to the supplier.\n\nThe agreement will be negotiated through the system with full audit trail.`);
-      }
+      // Show success message
+      alert(successMessage);
     } catch (error) {
       console.error('Error updating submission:', error);
       alert('Failed to update submission. Please try again.');
@@ -925,7 +1071,7 @@ const OPWReviewPage = ({
         )}
       </div>
 
-      {/* IR35 Determination Panel */}
+      {/* ========== PHASE 2: NEW OPW DETERMINATION PANEL ========== */}
       {!opwReview && (
         <div style={{
           marginTop: 'var(--space-32)',
@@ -935,72 +1081,257 @@ const OPWReviewPage = ({
           border: '2px solid var(--color-border)',
         }}>
           <h4 style={{ margin: '0 0 var(--space-16) 0', color: 'var(--nhs-blue)' }}>
-            IR35 Determination
+            OPW / IR35 Determination
           </h4>
 
-          <NoticeBox type="info" style={{ marginBottom: 'var(--space-16)' }}>
-            <strong>IR35 Guidance:</strong>
-            <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-              Based on the CEST form, determine whether this engagement falls inside or outside IR35.
-              Consider factors such as control, substitution, mutuality of obligation, and the nature of the working relationship.
+          {/* Worker Classification Display (Read-Only) */}
+          <NoticeBox type={workerClassification === 'sole_trader' ? 'warning' : 'info'} style={{ marginBottom: 'var(--space-16)' }}>
+            <strong>Worker Classification:</strong>{' '}
+            <span style={{ fontSize: '1.1em', fontWeight: 'bold' }}>
+              {workerClassification === 'sole_trader' ? 'SOLE TRADER (Direct Worker)' : 'INTERMEDIARY (Limited Company/Partnership)'}
+            </span>
+            <p style={{ marginTop: 'var(--space-8)', marginBottom: 0, fontSize: '0.95em' }}>
+              {workerClassification === 'sole_trader' ? (
+                <>Automatically classified based on personal service status. Determine employment status to route correctly.</>
+              ) : (
+                <>Automatically classified based on supplier type. Perform IR35 assessment to determine tax treatment.</>
+              )}
             </p>
           </NoticeBox>
 
-          <div style={{ marginBottom: 'var(--space-16)' }}>
-            <RadioGroup
-              label="IR35 Determination"
-              name="ir35Determination"
-              options={[
-                {
-                  value: 'outside',
-                  label: 'Outside IR35',
-                  description: 'Worker is genuinely self-employed - operates own business with control, risk, and multiple clients'
-                },
-                {
-                  value: 'inside',
-                  label: 'Inside IR35',
-                  description: 'Worker operates like an employee - subject to control, no business risk, single client relationship'
-                },
-                {
-                  value: 'rejected',
-                  label: 'Reject Request',
-                  description: 'Insufficient evidence, non-compliance, or other issues prevent approval',
-                  variant: 'danger'
-                },
-              ]}
-              value={ir35Determination}
-              onChange={setIr35Determination}
-              required
-            />
-          </div>
+          {/* ===== SOLE TRADER PATH ===== */}
+          {workerClassification === 'sole_trader' && (
+            <>
+              <NoticeBox type="info" style={{ marginBottom: 'var(--space-16)' }}>
+                <strong>Sole Trader Guidance:</strong>
+                <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+                  Determine whether this sole trader should be classified as <strong>Employed</strong> (paid via NHS payroll/ESR)
+                  or <strong>Self-Employed</strong> (paid as Oracle supplier). Consider the working relationship, control, and HMRC guidance.
+                </p>
+              </NoticeBox>
 
-          {/* Outside IR35 Warning Box */}
-          {ir35Determination === 'outside' && (
-            <div style={{
-              background: '#fef3c7',
-              border: '1px solid #f59e0b',
-              padding: '16px',
-              borderRadius: '8px',
-              marginBottom: '16px'
-            }}>
-              <h4 style={{ color: '#92400e', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '8px' }}><WarningIcon size={18} color="#92400e" /> Outside IR35 Process</h4>
-              <p style={{ margin: '0', color: '#78350f' }}>
-                Upon submission, an email will be sent to the supplier with the Sole Trader/Consultancy Agreement form.
-              </p>
-              <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px', color: '#78350f' }}>
-                <li><strong>To:</strong> {submission?.formData?.contactEmail || submission?.formData?.section4?.contactEmail || 'Supplier Email'} ({submission?.formData?.contactName || submission?.formData?.section4?.contactName || 'Supplier'})</li>
-                <li><strong>CC:</strong> {submission?.formData?.nhsEmail || submission?.formData?.section1?.nhsEmail || 'Requester'} (Requester)</li>
-                <li><strong>CC:</strong> peter.persaud@nhs.net (Contract Drafter)</li>
-              </ul>
-              <p style={{ margin: '8px 0 0 0', color: '#78350f', fontSize: '0.9rem' }}>
-                The contract negotiation will happen offline via email. Once the agreement is signed,
-                the Contract Drafter will upload it to proceed to AP Control.
-              </p>
-            </div>
+              <div style={{ marginBottom: 'var(--space-16)' }}>
+                <RadioGroup
+                  label="Employment Status Determination"
+                  name="employmentStatus"
+                  options={[
+                    {
+                      value: 'self_employed',
+                      label: 'Self-Employed',
+                      description: 'Worker operates their own business - can be paid as a supplier (Oracle record created)'
+                    },
+                    {
+                      value: 'employed',
+                      label: 'Employed',
+                      description: 'Worker should be on NHS payroll - must use ESR (NO Oracle supplier record)'
+                    },
+                    {
+                      value: 'rejected',
+                      label: 'Reject Request',
+                      description: 'Insufficient evidence or non-compliance',
+                      variant: 'danger'
+                    },
+                  ]}
+                  value={employmentStatus}
+                  onChange={setEmploymentStatus}
+                  required
+                />
+              </div>
+
+              {/* Warning for Employed */}
+              {employmentStatus === 'employed' && (
+                <NoticeBox type="error" style={{ marginBottom: 'var(--space-16)' }}>
+                  <strong>⚠️ EMPLOYED - Payroll Route (Terminal State)</strong>
+                  <p style={{ marginTop: '8px', marginBottom: 0 }}>
+                    This worker will be routed to HR/Payroll for ESR setup. <strong>NO Oracle supplier record will be created.</strong>
+                    This supplier request will be marked as complete after your determination.
+                  </p>
+                </NoticeBox>
+              )}
+
+              {/* Info for Self-Employed */}
+              {employmentStatus === 'self_employed' && (
+                <NoticeBox type="success" style={{ marginBottom: 'var(--space-16)' }}>
+                  <strong>✓ Self-Employed - Supplier Route</strong>
+                  <p style={{ marginTop: '8px', marginBottom: 0 }}>
+                    This worker will proceed to AP Control for bank details verification. An Oracle supplier record will be created upon AP approval.
+                  </p>
+                </NoticeBox>
+              )}
+            </>
           )}
 
-          {/* Rejection Reason Box - Only shown when Reject is selected */}
-          {ir35Determination === 'rejected' && (
+          {/* ===== INTERMEDIARY PATH ===== */}
+          {workerClassification === 'intermediary' && (
+            <>
+              <NoticeBox type="info" style={{ marginBottom: 'var(--space-16)' }}>
+                <strong>IR35 Guidance:</strong>
+                <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+                  Based on the CEST form, determine whether this engagement falls inside or outside IR35.
+                  Consider control, substitution, mutuality of obligation, and the working relationship nature.
+                </p>
+              </NoticeBox>
+
+              <div style={{ marginBottom: 'var(--space-16)' }}>
+                <RadioGroup
+                  label="IR35 Determination"
+                  name="ir35Determination"
+                  options={[
+                    {
+                      value: 'outside',
+                      label: 'Outside IR35',
+                      description: 'Worker genuinely self-employed - operates own business with control, risk, multiple clients'
+                    },
+                    {
+                      value: 'inside',
+                      label: 'Inside IR35',
+                      description: 'Worker operates like employee - subject to control, no business risk, single client'
+                    },
+                    {
+                      value: 'rejected',
+                      label: 'Reject Request',
+                      description: 'Insufficient evidence, non-compliance, or other issues',
+                      variant: 'danger'
+                    },
+                  ]}
+                  value={ir35Determination}
+                  onChange={setIr35Determination}
+                  required
+                />
+              </div>
+
+              {/* Contract Required Question (for Inside and Outside) */}
+              {(ir35Determination === 'inside' || ir35Determination === 'outside') && (
+                <div style={{ marginBottom: 'var(--space-16)' }}>
+                  <RadioGroup
+                    label="Is a Contract Required?"
+                    name="contractRequired"
+                    options={[
+                      { value: 'yes', label: 'Yes - Contract negotiation needed' },
+                      { value: 'no', label: 'No - Proceed without contract' },
+                    ]}
+                    value={contractRequired}
+                    onChange={setContractRequired}
+                    required
+                  />
+                </div>
+              )}
+
+              {/* Inside IR35 Warning + SDS Tracking */}
+              {ir35Determination === 'inside' && (
+                <NoticeBox type="error" style={{ marginBottom: 'var(--space-16)' }}>
+                  <strong>⚠️ INSIDE IR35 - Payroll Route (Terminal State)</strong>
+                  <p style={{ marginTop: '8px', marginBottom: 0 }}>
+                    This worker will be routed to HR/Payroll for ESR setup. <strong>NO Oracle supplier record will be created.</strong>
+                    A Status Determination Statement (SDS) must be issued. This supplier request will be marked as complete after your determination.
+                  </p>
+
+                  {/* SDS Tracking */}
+                  <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #fca5a5' }}>
+                    <h5 style={{ margin: '0 0 12px 0', fontSize: '0.95em' }}>Status Determination Statement (SDS) Tracking</h5>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                      <input
+                        type="checkbox"
+                        checked={sdsIssued}
+                        onChange={(e) => setSdsIssued(e.target.checked)}
+                      />
+                      <span>SDS has been issued to the worker</span>
+                    </label>
+
+                    {sdsIssued && (
+                      <div>
+                        <div style={{ marginBottom: '12px' }}>
+                          <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9em', fontWeight: 'bold' }}>
+                            SDS Issued Date
+                          </label>
+                          <input
+                            type="date"
+                            value={sdsIssuedDate}
+                            onChange={(e) => setSdsIssuedDate(e.target.value)}
+                            style={{
+                              padding: '8px 12px',
+                              borderRadius: '4px',
+                              border: '1px solid #d1d5db',
+                              fontSize: '0.95em'
+                            }}
+                          />
+                        </div>
+
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                          <input
+                            type="checkbox"
+                            checked={sdsResponseReceived}
+                            onChange={(e) => setSdsResponseReceived(e.target.checked)}
+                          />
+                          <span>Worker response received (within 14 days)</span>
+                        </label>
+
+                        {sdsResponseReceived && (
+                          <div style={{ marginBottom: '12px' }}>
+                            <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9em', fontWeight: 'bold' }}>
+                              Response Received Date
+                            </label>
+                            <input
+                              type="date"
+                              value={sdsResponseDate}
+                              onChange={(e) => setSdsResponseDate(e.target.value)}
+                              style={{
+                                padding: '8px 12px',
+                                borderRadius: '4px',
+                                border: '1px solid #d1d5db',
+                                fontSize: '0.95em'
+                              }}
+                            />
+                          </div>
+                        )}
+
+                        {sdsIssuedDate && (
+                          <p style={{ fontSize: '0.85em', color: '#7f1d1d', margin: '8px 0 0 0' }}>
+                            <strong>Days since SDS issued:</strong> {Math.floor((new Date() - new Date(sdsIssuedDate)) / (1000 * 60 * 60 * 24))} days
+                            {(Math.floor((new Date() - new Date(sdsIssuedDate)) / (1000 * 60 * 60 * 24)) > 14) && !sdsResponseReceived && (
+                              <span> <strong style={{ color: '#991b1b' }}>⚠️ 14-day response window expired</strong></span>
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </NoticeBox>
+              )}
+
+              {/* Outside IR35 Info */}
+              {ir35Determination === 'outside' && (
+                <NoticeBox type="success" style={{ marginBottom: 'var(--space-16)' }}>
+                  <strong>✓ Outside IR35 - Supplier Route</strong>
+                  <p style={{ marginTop: '8px', marginBottom: 0 }}>
+                    This worker operates a genuine business and can be paid as a supplier.
+                    {contractRequired === 'yes' && ' Will proceed to Contract Drafter for agreement negotiation.'}
+                    {contractRequired === 'no' && ' Will proceed directly to AP Control for bank details verification.'}
+                    {!contractRequired && ' Please indicate if a contract is required.'}
+                  </p>
+                </NoticeBox>
+              )}
+
+              {/* Rationale */}
+              {(ir35Determination === 'inside' || ir35Determination === 'outside') && (
+                <Textarea
+                  label="Rationale for IR35 Determination (Required)"
+                  value={rationale}
+                  onChange={(e) => setRationale(e.target.value)}
+                  rows={6}
+                  placeholder="Provide detailed rationale for your IR35 determination, referencing the CEST form and evidence. Explain key factors: control, substitution rights, mutuality of obligation, financial risk..."
+                  required
+                  maxLength={1000}
+                  showCharCount
+                  style={{ marginBottom: 'var(--space-16)' }}
+                />
+              )}
+            </>
+          )}
+
+          {/* Rejection Reason (Common for Both Paths) */}
+          {(employmentStatus === 'rejected' || ir35Determination === 'rejected') && (
             <div style={{
               marginBottom: 'var(--space-16)',
               padding: 'var(--space-16)',
@@ -1017,7 +1348,7 @@ const OPWReviewPage = ({
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 rows={5}
-                placeholder="Explain why this supplier request is being rejected by the OPW Panel (e.g., insufficient IR35 evidence, invalid CEST form, non-compliance with OPW policies, missing required documentation)..."
+                placeholder="Explain why this request is being rejected (e.g., insufficient evidence, invalid CEST form, non-compliance with OPW policies, missing documentation)..."
                 required
                 maxLength={1000}
                 showCharCount
@@ -1025,34 +1356,21 @@ const OPWReviewPage = ({
             </div>
           )}
 
-          {/* Rationale - Only shown for Inside/Outside IR35 determinations */}
-          {(ir35Determination === 'inside' || ir35Determination === 'outside') && (
-            <Textarea
-              label="Rationale for Determination (Required)"
-              value={rationale}
-              onChange={(e) => setRationale(e.target.value)}
-              rows={6}
-              placeholder="Provide a detailed rationale for your IR35 determination, referencing the CEST form and evidence provided. Explain key factors considered such as control, substitution rights, mutuality of obligation, and financial risk..."
-              required
-              maxLength={1000}
-              showCharCount
-              style={{ marginBottom: 'var(--space-16)' }}
-            />
-          )}
-
-          {/* Initial "Proceed to Sign" Button - Only shown before signing */}
+          {/* Proceed to Sign Button */}
           {!actionSelected && (
             <div style={{ display: 'flex', gap: 'var(--space-12)', marginTop: 'var(--space-16)' }}>
               <Button
-                variant={ir35Determination === 'rejected' ? 'danger' : 'primary'}
+                variant={(employmentStatus === 'rejected' || ir35Determination === 'rejected') ? 'danger' : 'primary'}
                 onClick={() => setActionSelected(true)}
                 disabled={
-                  !ir35Determination ||
-                  (ir35Determination === 'rejected' && !rejectionReason.trim()) ||
-                  ((ir35Determination === 'inside' || ir35Determination === 'outside') && !rationale.trim())
+                  (workerClassification === 'sole_trader' && !employmentStatus) ||
+                  (workerClassification === 'intermediary' && !ir35Determination) ||
+                  ((employmentStatus === 'rejected' || ir35Determination === 'rejected') && !rejectionReason.trim()) ||
+                  (workerClassification === 'intermediary' && (ir35Determination === 'inside' || ir35Determination === 'outside') && !rationale.trim()) ||
+                  (workerClassification === 'intermediary' && (ir35Determination === 'inside' || ir35Determination === 'outside') && !contractRequired)
                 }
               >
-                {ir35Determination === 'rejected' ? 'Proceed to Sign Rejection' : 'Proceed to Sign Determination'}
+                {(employmentStatus === 'rejected' || ir35Determination === 'rejected') ? 'Proceed to Sign Rejection' : 'Proceed to Sign Determination'}
               </Button>
               <Button
                 variant="outline"

@@ -12,6 +12,7 @@ import { FormNavigation } from '../layout';
 import {
   section3BaseSchema,
   getLimitedCompanySchema,
+  getPartnershipSchema,
   getCharitySchema,
   getSoleTraderSchema,
   getPublicSectorSchema,
@@ -37,13 +38,16 @@ const Section3Classification = () => {
   const [companiesHouseValue, setCompaniesHouseValue] = useState(formData.companiesHouseRegistered || '');
   const [idConsentGiven, setIdConsentGiven] = useState(formData.idConsentGiven || false);
 
-  // Determine which schema to use based on supplier type
-  const getValidationSchema = () => {
+  // Dynamically create validation schema based on supplier type
+  // Using useMemo ensures the schema updates when dependencies change
+  const validationSchema = React.useMemo(() => {
     if (!selectedSupplierType) return section3BaseSchema;
 
     switch (selectedSupplierType) {
       case 'limited_company':
         return getLimitedCompanySchema();
+      case 'partnership':
+        return getPartnershipSchema(companiesHouseValue);
       case 'charity':
         return getCharitySchema(companiesHouseValue);
       case 'sole_trader':
@@ -53,7 +57,7 @@ const Section3Classification = () => {
       default:
         return section3BaseSchema;
     }
-  };
+  }, [selectedSupplierType, companiesHouseValue]);
 
   const {
     control,
@@ -61,11 +65,13 @@ const Section3Classification = () => {
     handleSubmit,
     watch,
     setValue,
+    trigger,
+    clearErrors,
     formState: { errors },
   } = useForm({
     mode: 'onBlur',
     reValidateMode: 'onChange',
-    resolver: zodResolver(getValidationSchema()),
+    resolver: zodResolver(validationSchema),
     defaultValues: {
       companiesHouseRegistered: formData.companiesHouseRegistered || '',
       supplierType: formData.supplierType || '',
@@ -86,6 +92,8 @@ const Section3Classification = () => {
   const watchCRN = watch('crn');
   const watchCRNCharity = watch('crnCharity');
   const watchIdType = watch('idType');
+  const watchLimitedCompanyInterest = watch('limitedCompanyInterest');
+  const watchPartnershipInterest = watch('partnershipInterest');
 
   // Update states when form values change
   useEffect(() => {
@@ -107,9 +115,39 @@ const Section3Classification = () => {
     }
   }, [watchSupplierType, updateFormData]);
 
-  // Verify CRN when it changes (for limited company)
+  // Sync limitedCompanyInterest to formData
   useEffect(() => {
-    if (watchSupplierType === 'limited_company' && watchCRN && watchCRN.length >= 7) {
+    if (watchLimitedCompanyInterest !== undefined && watchLimitedCompanyInterest !== '') {
+      updateFormData('limitedCompanyInterest', watchLimitedCompanyInterest);
+    }
+  }, [watchLimitedCompanyInterest, updateFormData]);
+
+  // Sync partnershipInterest to formData
+  useEffect(() => {
+    if (watchPartnershipInterest !== undefined && watchPartnershipInterest !== '') {
+      updateFormData('partnershipInterest', watchPartnershipInterest);
+    }
+  }, [watchPartnershipInterest, updateFormData]);
+
+  // Trigger validation when supplier type or schema changes to clear errors on hidden fields
+  useEffect(() => {
+    if (selectedSupplierType) {
+      // Clear errors for ALL conditional fields first (not just some)
+      // This ensures no leftover validation errors from previous supplier type selections
+      clearErrors(['limitedCompanyInterest', 'partnershipInterest', 'crn', 'crnCharity', 'charityNumber', 'organisationType', 'idType']);
+
+      // Wait for next tick to ensure state has updated, then trigger validation with new schema
+      const timer = setTimeout(() => {
+        trigger();
+      }, 0);
+
+      return () => clearTimeout(timer);
+    }
+  }, [selectedSupplierType, validationSchema, clearErrors, trigger]);
+
+  // Verify CRN when it changes (for limited company and partnership)
+  useEffect(() => {
+    if ((watchSupplierType === 'limited_company' || watchSupplierType === 'partnership') && watchCRN && watchCRN.length >= 7) {
       const timer = setTimeout(() => {
         verify(watchCRN);
       }, 500); // Debounce
@@ -184,8 +222,10 @@ const Section3Classification = () => {
 
     if (companiesHouseValue === 'yes') {
       types.push(SUPPLIER_TYPES.LIMITED_COMPANY);
+      types.push(SUPPLIER_TYPES.PARTNERSHIP);
       types.push(SUPPLIER_TYPES.CHARITY);
     } else {
+      types.push(SUPPLIER_TYPES.PARTNERSHIP);
       types.push(SUPPLIER_TYPES.CHARITY);
       types.push(SUPPLIER_TYPES.SOLE_TRADER);
       types.push(SUPPLIER_TYPES.PUBLIC_SECTOR);
@@ -259,28 +299,50 @@ const Section3Classification = () => {
                         setSelectedSupplierType(type.value);
                         handleFieldChange('supplierType', type.value);
 
-                        // Clear irrelevant fields when supplier type changes
-                        if (['sole_trader', 'individual'].includes(type.value)) {
-                          // Clear CRN for sole traders and individuals
+                        // Clear CRN only for types that don't use it
+                        // Limited Company and Partnership both use CRN when Companies House = yes
+                        if (!['limited_company', 'partnership'].includes(type.value) && companiesHouseValue !== 'yes') {
                           setValue('crn', '');
+                          clearErrors('crn');
                           handleFieldChange('crn', '');
                         }
+
+                        // Clear charity-specific fields
                         if (type.value !== 'charity') {
-                          // Clear charity fields if not a charity
                           setValue('charityNumber', '');
                           setValue('crnCharity', '');
+                          clearErrors('charityNumber');
+                          clearErrors('crnCharity');
                           handleFieldChange('charityNumber', '');
                           handleFieldChange('crnCharity', '');
                         }
+
+                        // Clear public sector organisation type
                         if (type.value !== 'public_sector') {
-                          // Clear organisation type if not public sector
                           setValue('organisationType', '');
+                          clearErrors('organisationType');
                           handleFieldChange('organisationType', '');
                         }
+
+                        // Clear sole trader ID fields
                         if (type.value !== 'sole_trader') {
-                          // Clear ID type fields if not sole trader
                           setValue('idType', '');
+                          clearErrors('idType');
                           handleFieldChange('idType', '');
+                        }
+
+                        // Clear limited company interest field (but keep CRN)
+                        if (type.value !== 'limited_company') {
+                          setValue('limitedCompanyInterest', '');
+                          clearErrors('limitedCompanyInterest');
+                          handleFieldChange('limitedCompanyInterest', '');
+                        }
+
+                        // Clear partnership interest field (but keep CRN)
+                        if (type.value !== 'partnership') {
+                          setValue('partnershipInterest', '');
+                          clearErrors('partnershipInterest');
+                          handleFieldChange('partnershipInterest', '');
                         }
                       }}
                       role="button"
@@ -292,24 +354,50 @@ const Section3Classification = () => {
                           setSelectedSupplierType(type.value);
                           handleFieldChange('supplierType', type.value);
 
-                          // Clear irrelevant fields when supplier type changes
-                          if (['sole_trader', 'individual'].includes(type.value)) {
+                          // Clear CRN only for types that don't use it
+                          // Limited Company and Partnership both use CRN when Companies House = yes
+                          if (!['limited_company', 'partnership'].includes(type.value) && companiesHouseValue !== 'yes') {
                             setValue('crn', '');
+                            clearErrors('crn');
                             handleFieldChange('crn', '');
                           }
+
+                          // Clear charity-specific fields
                           if (type.value !== 'charity') {
                             setValue('charityNumber', '');
                             setValue('crnCharity', '');
+                            clearErrors('charityNumber');
+                            clearErrors('crnCharity');
                             handleFieldChange('charityNumber', '');
                             handleFieldChange('crnCharity', '');
                           }
+
+                          // Clear public sector organisation type
                           if (type.value !== 'public_sector') {
                             setValue('organisationType', '');
+                            clearErrors('organisationType');
                             handleFieldChange('organisationType', '');
                           }
+
+                          // Clear sole trader ID fields
                           if (type.value !== 'sole_trader') {
                             setValue('idType', '');
+                            clearErrors('idType');
                             handleFieldChange('idType', '');
+                          }
+
+                          // Clear limited company interest field (but keep CRN)
+                          if (type.value !== 'limited_company') {
+                            setValue('limitedCompanyInterest', '');
+                            clearErrors('limitedCompanyInterest');
+                            handleFieldChange('limitedCompanyInterest', '');
+                          }
+
+                          // Clear partnership interest field (but keep CRN)
+                          if (type.value !== 'partnership') {
+                            setValue('partnershipInterest', '');
+                            clearErrors('partnershipInterest');
+                            handleFieldChange('partnershipInterest', '');
                           }
                         }
                       }}
@@ -331,8 +419,8 @@ const Section3Classification = () => {
           </>
         )}
 
-        {/* CRN Field - Only show if Companies House registered AND supplier type is limited_company */}
-        {companiesHouseValue === 'yes' && selectedSupplierType === 'limited_company' && (
+        {/* CRN Field - Only show if Companies House registered AND supplier type is limited_company or partnership */}
+        {companiesHouseValue === 'yes' && (selectedSupplierType === 'limited_company' || selectedSupplierType === 'partnership') && (
           <>
             <div className="form-group">
               <Input
@@ -683,51 +771,57 @@ const Section3Classification = () => {
                 placeholder="Select employee count"
               />
 
-              <Controller
-                name="limitedCompanyInterest"
-                control={control}
-                render={({ field }) => (
-                  <RadioGroup
-                    label={<QuestionLabel section="3" question="8">Do you have more than 5% interest in a Limited Company?</QuestionLabel>}
-                    name="limitedCompanyInterest"
-                    options={[
-                      { value: 'yes', label: 'Yes' },
-                      { value: 'no', label: 'No' },
-                    ]}
-                    value={field.value}
-                    onChange={(value) => {
-                      field.onChange(value);
-                      handleFieldChange('limitedCompanyInterest', value);
-                    }}
-                    error={errors.limitedCompanyInterest?.message}
-                    required
-                    horizontal
-                  />
-                )}
-              />
+              {/* Q3.8 - Only show for Limited Company */}
+              {selectedSupplierType === 'limited_company' && (
+                <Controller
+                  name="limitedCompanyInterest"
+                  control={control}
+                  render={({ field }) => (
+                    <RadioGroup
+                      label={<QuestionLabel section="3" question="8">Does the supplier have more than 5% interest in a Limited Company?</QuestionLabel>}
+                      name="limitedCompanyInterest"
+                      options={[
+                        { value: 'yes', label: 'Yes' },
+                        { value: 'no', label: 'No' },
+                      ]}
+                      value={field.value}
+                      onChange={(value) => {
+                        field.onChange(value);
+                        handleFieldChange('limitedCompanyInterest', value);
+                      }}
+                      error={errors.limitedCompanyInterest?.message}
+                      required
+                      horizontal
+                    />
+                  )}
+                />
+              )}
 
-              <Controller
-                name="partnershipInterest"
-                control={control}
-                render={({ field }) => (
-                  <RadioGroup
-                    label={<QuestionLabel section="3" question="9">Do you have more than 60% interest in a Partnership?</QuestionLabel>}
-                    name="partnershipInterest"
-                    options={[
-                      { value: 'yes', label: 'Yes' },
-                      { value: 'no', label: 'No' },
-                    ]}
-                    value={field.value}
-                    onChange={(value) => {
-                      field.onChange(value);
-                      handleFieldChange('partnershipInterest', value);
-                    }}
-                    error={errors.partnershipInterest?.message}
-                    required
-                    horizontal
-                  />
-                )}
-              />
+              {/* Q3.9 - Only show for Partnership */}
+              {selectedSupplierType === 'partnership' && (
+                <Controller
+                  name="partnershipInterest"
+                  control={control}
+                  render={({ field }) => (
+                    <RadioGroup
+                      label={<QuestionLabel section="3" question="9">Does the supplier have more than 60% interest in a Partnership?</QuestionLabel>}
+                      name="partnershipInterest"
+                      options={[
+                        { value: 'yes', label: 'Yes' },
+                        { value: 'no', label: 'No' },
+                      ]}
+                      value={field.value}
+                      onChange={(value) => {
+                        field.onChange(value);
+                        handleFieldChange('partnershipInterest', value);
+                      }}
+                      error={errors.partnershipInterest?.message}
+                      required
+                      horizontal
+                    />
+                  )}
+                />
+              )}
             </div>
           </>
         )}

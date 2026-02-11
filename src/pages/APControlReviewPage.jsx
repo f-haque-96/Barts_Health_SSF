@@ -635,6 +635,25 @@ const APControlReviewPage = ({
         </div>
       </div>
 
+      {/* Terminal State Notice - Completed_Payroll (No Oracle supplier record needed) */}
+      {submission.status === 'Completed_Payroll' && (
+        <NoticeBox
+          type="info"
+          style={{ marginBottom: 'var(--space-24)', backgroundColor: '#fffbeb', borderColor: '#f59e0b' }}
+        >
+          <h4 style={{ margin: '0 0 var(--space-8) 0', display: 'flex', alignItems: 'center', gap: '8px', color: '#92400e' }}>
+            <WarningIcon size={20} color="#f59e0b" />
+            Terminal State: Completed (Payroll)
+          </h4>
+          <p style={{ margin: '0 0 var(--space-8) 0', color: '#78350f' }}>
+            This submission has been completed by the OPW Panel and <strong>does not require AP Control verification</strong>.
+          </p>
+          <p style={{ margin: 0, color: '#78350f', fontWeight: 'var(--font-weight-semibold)' }}>
+            ⚠️ <strong>DO NOT create an Oracle supplier record.</strong> This worker should be processed via NHS payroll (ESR) by HR/Payroll.
+          </p>
+        </NoticeBox>
+      )}
+
       {/* AP Review Status */}
       {apControlReview && (
         <NoticeBox
@@ -1010,30 +1029,142 @@ const APControlReviewPage = ({
               borderRadius: 'var(--radius-base)',
               border: '1px solid var(--color-border)',
             }}>
-              {/* OPW Panel / IR35 Section */}
+              {/* OPW Panel Section */}
               <h4 style={{ margin: '0 0 var(--space-12) 0', color: 'var(--nhs-blue)', fontSize: 'var(--font-size-base)' }}>
-                OPW Panel / IR35
+                OPW Panel Assessment
               </h4>
               <div style={{ fontSize: 'var(--font-size-sm)' }}>
+                {/* Worker Classification */}
                 <p style={{ marginBottom: 'var(--space-8)' }}>
-                  <strong>IR35 Status:</strong>{' '}
+                  <strong>Worker Classification:</strong>{' '}
                   <span style={{
                     display: 'inline-block',
                     padding: '4px 12px',
                     borderRadius: 'var(--radius-sm)',
-                    backgroundColor: submission.opwReview.ir35Status === 'outside' ? '#22c55e' : '#ef4444',
+                    backgroundColor: submission.opwReview.workerClassification === 'sole_trader' ? '#3b82f6' : '#8b5cf6',
                     color: 'white',
                     fontWeight: 'var(--font-weight-semibold)',
                     fontSize: 'var(--font-size-xs)',
                   }}>
-                    {submission.opwReview.ir35Status === 'inside' ? 'INSIDE IR35' : 'OUTSIDE IR35'}
+                    {submission.opwReview.workerClassification === 'sole_trader' ? 'SOLE TRADER' : 'INTERMEDIARY'}
                   </span>
                 </p>
+
+                {/* Sole Trader Path - Employment Status */}
+                {submission.opwReview.workerClassification === 'sole_trader' && submission.opwReview.employmentStatus && (
+                  <>
+                    <p style={{ marginBottom: 'var(--space-8)' }}>
+                      <strong>Employment Status:</strong>{' '}
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '4px 12px',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: submission.opwReview.employmentStatus === 'employed' ? '#dc2626' : '#22c55e',
+                        color: 'white',
+                        fontWeight: 'var(--font-weight-semibold)',
+                        fontSize: 'var(--font-size-xs)',
+                      }}>
+                        {submission.opwReview.employmentStatus === 'employed' ? 'EMPLOYED (ESR/Payroll)' : 'SELF-EMPLOYED'}
+                      </span>
+                    </p>
+                    {submission.opwReview.employmentStatus === 'employed' && (
+                      <div style={{
+                        marginTop: 'var(--space-12)',
+                        padding: 'var(--space-12)',
+                        backgroundColor: '#fef2f2',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid #fecaca'
+                      }}>
+                        <p style={{ margin: 0, fontSize: 'var(--font-size-xs)', color: '#991b1b' }}>
+                          ⚠️ <strong>Payroll Route:</strong> Worker classified as employed. Must be paid via NHS payroll (ESR).
+                          No Oracle supplier record required.
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Intermediary Path - IR35 Status */}
+                {submission.opwReview.workerClassification === 'intermediary' && submission.opwReview.ir35Determination && (
+                  <>
+                    <p style={{ marginBottom: 'var(--space-8)' }}>
+                      <strong>IR35 Status:</strong>{' '}
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '4px 12px',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: submission.opwReview.ir35Determination === 'outside' ? '#22c55e' : '#dc2626',
+                        color: 'white',
+                        fontWeight: 'var(--font-weight-semibold)',
+                        fontSize: 'var(--font-size-xs)',
+                      }}>
+                        {submission.opwReview.ir35Determination === 'inside' ? 'INSIDE IR35 (Payroll)' : 'OUTSIDE IR35'}
+                      </span>
+                    </p>
+
+                    {/* SDS Tracking - Only for Inside IR35 */}
+                    {submission.opwReview.ir35Determination === 'inside' && submission.opwReview.sdsTracking && (
+                      <div style={{
+                        marginTop: 'var(--space-12)',
+                        padding: 'var(--space-12)',
+                        backgroundColor: '#fef2f2',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid #fecaca'
+                      }}>
+                        <p style={{ margin: '0 0 var(--space-8) 0', fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', color: '#991b1b' }}>
+                          Status Determination Statement (SDS) Tracking:
+                        </p>
+                        {submission.opwReview.sdsTracking.sdsIssued && (
+                          <>
+                            <p style={{ margin: '0 0 var(--space-4) 0', fontSize: 'var(--font-size-xs)', color: '#7f1d1d' }}>
+                              • <strong>SDS Issued:</strong> {formatDate(submission.opwReview.sdsTracking.sdsIssuedDate)}
+                            </p>
+                            {submission.opwReview.sdsTracking.sdsResponseReceived ? (
+                              <p style={{ margin: '0 0 var(--space-4) 0', fontSize: 'var(--font-size-xs)', color: '#7f1d1d' }}>
+                                • <strong>Response Received:</strong> {formatDate(submission.opwReview.sdsTracking.sdsResponseDate)} ✓
+                              </p>
+                            ) : (
+                              <p style={{ margin: '0 0 var(--space-4) 0', fontSize: 'var(--font-size-xs)', color: '#7f1d1d' }}>
+                                • <strong>Response Status:</strong> Awaiting response
+                                {submission.opwReview.sdsTracking.daysSinceIssued !== undefined &&
+                                  ` (${submission.opwReview.sdsTracking.daysSinceIssued} days elapsed${submission.opwReview.sdsTracking.daysSinceIssued > 14 ? ' - OVERDUE' : ''})`
+                                }
+                              </p>
+                            )}
+                          </>
+                        )}
+                        <p style={{ margin: 'var(--space-8) 0 0 0', fontSize: 'var(--font-size-xs)', color: '#991b1b' }}>
+                          ⚠️ <strong>Payroll Route:</strong> Inside IR35 determination. Must be paid via NHS payroll (ESR).
+                          No Oracle supplier record required.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Outside IR35 - Contract Required */}
+                    {submission.opwReview.ir35Determination === 'outside' && submission.opwReview.contractRequired === 'yes' && (
+                      <div style={{
+                        marginTop: 'var(--space-12)',
+                        padding: 'var(--space-12)',
+                        backgroundColor: '#f0fdf4',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid #86efac'
+                      }}>
+                        <p style={{ margin: 0, fontSize: 'var(--font-size-xs)', color: '#166534' }}>
+                          ✓ <strong>Contract Required:</strong> Agreement must be approved by Contract Drafter before AP verification.
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Rationale/Comments */}
                 {submission.opwReview.rationale && (
-                  <p style={{ marginBottom: 'var(--space-8)' }}>
+                  <p style={{ marginTop: 'var(--space-12)', marginBottom: 'var(--space-8)' }}>
                     <strong>Rationale:</strong> {submission.opwReview.rationale}
                   </p>
                 )}
+
+                {/* Signature */}
                 <div style={{
                   marginTop: 'var(--space-12)',
                   paddingTop: 'var(--space-12)',

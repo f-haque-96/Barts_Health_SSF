@@ -66,8 +66,8 @@ const UploadedDocuments = () => {
     });
   }
 
-  // CEST Form - Required for Sole Traders
-  if (formData?.supplierType === 'sole_trader' || formData?.soleTraderStatus === 'yes') {
+  // CEST Form - Required if providing personal service (Section 2)
+  if (formData?.soleTraderStatus === 'yes') {
     requiredUploads.push({
       fieldName: 'cestForm',
       label: 'CEST Form',
@@ -76,8 +76,11 @@ const UploadedDocuments = () => {
     });
   }
 
-  // Passport/ID - Required for Sole Traders
-  if (formData?.supplierType === 'sole_trader' || formData?.soleTraderStatus === 'yes') {
+  // Passport/ID - Required ONLY for Sole Trader supplier type (Section 3) NOT registered with Companies House
+  const isSoleTraderType = formData?.supplierType === 'sole_trader';
+  const notRegisteredCompaniesHouse = formData?.companiesHouseRegistered === 'no';
+
+  if (isSoleTraderType && notRegisteredCompaniesHouse) {
     // Check for file existence (name indicates file was uploaded, even if base64 stripped after refresh)
     const hasPassport = !!(uploadedFiles?.passportPhoto?.name || uploadedFiles?.passportPhoto?.base64 || uploadedFiles?.passportPhoto?.data || uploadedFiles?.passportPhoto?.file);
     const hasLicenceFront = !!(uploadedFiles?.licenceFront?.name || uploadedFiles?.licenceFront?.base64 || uploadedFiles?.licenceFront?.data || uploadedFiles?.licenceFront?.file);

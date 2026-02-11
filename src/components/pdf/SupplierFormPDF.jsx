@@ -848,17 +848,14 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
             {submission.procurementReview?.supplierClassification === 'opw_ir35' && submission.opwReview && (
               <View style={styles.authBlock}>
                 <View style={styles.authBlockHeader}>
-                  <Text style={styles.authBlockTitle}>OPW Panel / IR35</Text>
-                  <View
-                    style={[
-                      styles.authBadge,
-                      submission.opwReview.ir35Status === 'outside' ? styles.badgeGreen : styles.badgeOrange,
-                    ]}
-                  >
+                  <Text style={styles.authBlockTitle}>OPW Panel Assessment</Text>
+                  {/* Worker Classification Badge */}
+                  <View style={[styles.authBadge, styles.badgeBlue]}>
                     <Text style={styles.badgeText}>
-                      {submission.opwReview.ir35Status === 'inside' ? 'Inside IR35' : 'Outside IR35'}
+                      {submission.opwReview.workerClassification === 'sole_trader' ? 'SOLE TRADER' : 'INTERMEDIARY'}
                     </Text>
                   </View>
+                  {/* Decision Badge */}
                   <View
                     style={[
                       styles.authBadge,
@@ -870,19 +867,82 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
                     </Text>
                   </View>
                 </View>
+
+                {/* Sole Trader Path - Employment Status */}
+                {submission.opwReview.workerClassification === 'sole_trader' && submission.opwReview.employmentStatus && (
+                  <View style={{ marginTop: 6 }}>
+                    <Text style={styles.authField}>
+                      Employment Status:{' '}
+                      <Text style={{ fontWeight: 'bold', color: submission.opwReview.employmentStatus === 'employed' ? '#dc2626' : '#22c55e' }}>
+                        {submission.opwReview.employmentStatus === 'employed' ? 'EMPLOYED (ESR/Payroll)' : 'SELF-EMPLOYED'}
+                      </Text>
+                    </Text>
+                    {submission.opwReview.employmentStatus === 'employed' && (
+                      <View style={{ marginTop: 4, padding: 6, backgroundColor: '#fef2f2', borderRadius: 4 }}>
+                        <Text style={{ fontSize: 8, color: '#991b1b', fontWeight: 'bold' }}>
+                          ⚠ PAYROLL ROUTE: Worker classified as employed. Must be paid via NHS payroll (ESR). No Oracle supplier record created.
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                {/* Intermediary Path - IR35 Status */}
+                {submission.opwReview.workerClassification === 'intermediary' && submission.opwReview.ir35Determination && (
+                  <View style={{ marginTop: 6 }}>
+                    <Text style={styles.authField}>
+                      IR35 Status:{' '}
+                      <Text style={{ fontWeight: 'bold', color: submission.opwReview.ir35Determination === 'outside' ? '#22c55e' : '#dc2626' }}>
+                        {submission.opwReview.ir35Determination === 'inside' ? 'INSIDE IR35 (Payroll)' : 'OUTSIDE IR35'}
+                      </Text>
+                    </Text>
+
+                    {/* SDS Tracking - Only for Inside IR35 */}
+                    {submission.opwReview.ir35Determination === 'inside' && submission.opwReview.sdsTracking && (
+                      <View style={{ marginTop: 4, padding: 6, backgroundColor: '#fef2f2', borderRadius: 4 }}>
+                        <Text style={{ fontSize: 8, fontWeight: 'bold', color: '#991b1b', marginBottom: 3 }}>
+                          Status Determination Statement (SDS) Tracking:
+                        </Text>
+                        {submission.opwReview.sdsTracking.sdsIssued && (
+                          <>
+                            <Text style={{ fontSize: 8, color: '#7f1d1d' }}>
+                              • SDS Issued: {formatDate(submission.opwReview.sdsTracking.sdsIssuedDate)}
+                            </Text>
+                            {submission.opwReview.sdsTracking.sdsResponseReceived ? (
+                              <Text style={{ fontSize: 8, color: '#7f1d1d' }}>
+                                • Response Received: {formatDate(submission.opwReview.sdsTracking.sdsResponseDate)} ✓
+                              </Text>
+                            ) : (
+                              <Text style={{ fontSize: 8, color: '#7f1d1d' }}>
+                                • Response Status: Awaiting response
+                                {submission.opwReview.sdsTracking.daysSinceIssued !== undefined &&
+                                  ` (${submission.opwReview.sdsTracking.daysSinceIssued} days elapsed${submission.opwReview.sdsTracking.daysSinceIssued > 14 ? ' - OVERDUE' : ''})`
+                                }
+                              </Text>
+                            )}
+                          </>
+                        )}
+                        <Text style={{ fontSize: 8, color: '#991b1b', marginTop: 3, fontWeight: 'bold' }}>
+                          ⚠ PAYROLL ROUTE: Inside IR35 determination. Must be paid via NHS payroll (ESR). No Oracle supplier record created.
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Outside IR35 - Contract Required */}
+                    {submission.opwReview.ir35Determination === 'outside' && submission.opwReview.contractRequired && (
+                      <Text style={[styles.authField, { marginTop: 4 }]}>
+                        Contract Required: {submission.opwReview.contractRequired === 'yes' ? 'Yes' : 'No'}
+                      </Text>
+                    )}
+                  </View>
+                )}
+
+                {/* Rationale */}
                 {submission.opwReview.rationale && (
                   <Text style={styles.authComments}>Rationale: {submission.opwReview.rationale}</Text>
                 )}
-                {/* Outside IR35 Process Details */}
-                {submission.opwReview.ir35Status === 'outside' && submission.opwReview.outsideIR35Process && (
-                  <View style={{ marginTop: 6, padding: 8, backgroundColor: '#fef3c7', borderRadius: 4 }}>
-                    <Text style={{ fontSize: 8, fontWeight: 'bold', color: '#92400e', marginBottom: 4 }}>Outside IR35 - Email Process:</Text>
-                    <Text style={{ fontSize: 8, color: '#78350f' }}>To: {submission.opwReview.outsideIR35Process.supplierEmail || 'Supplier'}</Text>
-                    <Text style={{ fontSize: 8, color: '#78350f' }}>CC: {submission.opwReview.outsideIR35Process.requesterEmail || 'Requester'}</Text>
-                    <Text style={{ fontSize: 8, color: '#78350f' }}>CC: {submission.opwReview.outsideIR35Process.contractDrafterCC || 'peter.persaud@nhs.net'}</Text>
-                    <Text style={{ fontSize: 8, color: '#78350f', marginTop: 4 }}>Status: {submission.opwReview.outsideIR35Process.status?.replace(/_/g, ' ') || 'Awaiting Agreement'}</Text>
-                  </View>
-                )}
+
+                {/* Signature */}
                 <View style={styles.signatureRow}>
                   <Text>Signature: {submission.opwReview.signature || '_______________'}</Text>
                   <Text>
