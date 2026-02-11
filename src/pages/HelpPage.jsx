@@ -24,12 +24,26 @@ const HelpPage = () => {
         <div>
           <p><strong>You'll need the following information from your supplier to complete the form:</strong></p>
 
+          <h4 style={{ marginTop: '15px', color: '#005EB8' }}>Section 2: Pre-screening Information</h4>
+          <ul style={{ marginLeft: '20px' }}>
+            <li>Whether the supplier is providing a <strong>personal service</strong> (i.e., an individual providing their own skills directly, such as sole traders, freelancers, or contractors)</li>
+            <li>Confirmation that supplier has official <strong>company letterhead</strong> available (required for bank details)</li>
+            <li><strong>Justification</strong> for using this specific supplier (business case)</li>
+            <li><strong>Usage frequency</strong> (one-off, occasional, regular, ongoing contract)</li>
+            <li><strong>Service category</strong> (clinical, non-clinical, IT, estates, HR, etc.)</li>
+            <li>Whether <strong>Procurement team has been engaged</strong> (yes/no)</li>
+          </ul>
+
           <h4 style={{ marginTop: '15px', color: '#005EB8' }}>Section 3: Supplier Classification</h4>
           <ul style={{ marginLeft: '20px' }}>
             <li>Supplier type (Limited Company, Sole Trader, Charity, or Public Sector)</li>
             <li>Company Registration Number (CRN) if registered with Companies House</li>
             <li>Charity number (if applicable)</li>
             <li>For sole traders: Photo ID (passport or driving licence)</li>
+            <li><strong>Annual contract value</strong> (estimated total spend per year)</li>
+            <li><strong>Employee count</strong> (company size)</li>
+            <li>Declaration if supplier has <strong>more than 5% interest in a Limited Company</strong></li>
+            <li>Declaration if supplier has <strong>more than 60% interest in a Partnership</strong></li>
           </ul>
 
           <h4 style={{ marginTop: '15px', color: '#005EB8' }}>Section 4: Company Details</h4>
@@ -84,16 +98,20 @@ const HelpPage = () => {
             <ul style={{ margin: '5px 0 10px 20px', paddingLeft: '0' }}>
               <li style={{ marginBottom: '3px' }}>Full legal company name</li>
               <li style={{ marginBottom: '3px' }}>Trading name (if different)</li>
+              <li style={{ marginBottom: '3px' }}>Supplier type (Limited Company, Sole Trader, Charity, or Public Sector)</li>
               <li style={{ marginBottom: '3px' }}>Company Registration Number (if registered with Companies House)</li>
               <li style={{ marginBottom: '3px' }}>Registered company address (including postcode)</li>
               <li style={{ marginBottom: '3px' }}>Main contact person (name, email, phone number)</li>
               <li style={{ marginBottom: '3px' }}>Company website</li>
+              <li style={{ marginBottom: '3px' }}>Estimated annual contract value with Barts Health</li>
+              <li style={{ marginBottom: '3px' }}>Number of employees (company size)</li>
             </ul>
 
             <p style={{ margin: '15px 0 5px 0' }}><strong>SERVICE INFORMATION:</strong></p>
             <ul style={{ margin: '5px 0 10px 20px', paddingLeft: '0' }}>
               <li style={{ marginBottom: '3px' }}>Detailed description of the goods/services you will provide to us</li>
               <li style={{ marginBottom: '3px' }}>Type of service (Goods, Services, Construction, Consultancy, Temporary Staff)</li>
+              <li style={{ marginBottom: '3px' }}>Confirmation whether you are providing a <strong>personal service</strong> (i.e., an individual providing your own skills and expertise directly, such as freelancer, contractor, or sole trader, rather than a company providing a service)</li>
             </ul>
 
             <p style={{ margin: '15px 0 5px 0' }}><strong>FINANCIAL INFORMATION (CRITICAL):</strong></p>
@@ -117,13 +135,17 @@ const HelpPage = () => {
               <li style={{ marginBottom: '3px' }}>For Sole Traders: Copy of passport or driving licence (for ID verification)</li>
               <li style={{ marginBottom: '3px' }}>For Construction suppliers: CIS registration details and UTR number</li>
               <li style={{ marginBottom: '3px' }}>GHX or DUNS number (if you have one)</li>
+              <li style={{ marginBottom: '3px' }}>Declaration if you have <strong>more than 5% interest in a Limited Company</strong></li>
+              <li style={{ marginBottom: '3px' }}>Declaration if you have <strong>more than 60% interest in a Partnership</strong></li>
             </ul>
 
             <p style={{ margin: '15px 0 5px 0' }}><strong>IMPORTANT:</strong></p>
             <ul style={{ margin: '5px 0 10px 20px', paddingLeft: '0' }}>
-              <li style={{ marginBottom: '3px' }}>All documents must be in PDF format</li>
-              <li style={{ marginBottom: '3px' }}>Bank details MUST be provided on official company letterhead</li>
+              <li style={{ marginBottom: '3px' }}>All documents must be in <strong>PDF format</strong></li>
+              <li style={{ marginBottom: '3px' }}>Bank details <strong>MUST</strong> be provided on <strong>official company letterhead</strong> with company stamp/signature</li>
+              <li style={{ marginBottom: '3px' }}>The letterhead must clearly show your company name, logo, and contact details at the top</li>
               <li style={{ marginBottom: '3px' }}>Maximum file size: 3MB per document</li>
+              <li style={{ marginBottom: '3px' }}>For sole traders without letterhead, a signed letter with your full details and photo ID is required</li>
             </ul>
 
             <p style={{ margin: '15px 0 10px 0' }}>Please send the above information to me at your earliest convenience so I can complete the supplier setup process.</p>
