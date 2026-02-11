@@ -618,7 +618,23 @@ const Section7ReviewSubmit = () => {
           </div>
         )}
         {/* Q2.2 Personal Service Status (moved from Q2.5) */}
-        <ReviewItem label="2.2 Is the supplier providing a personal service?" value={formData.soleTraderStatus} />
+        <ReviewItem
+          label="2.2 Is the supplier providing a personal service?"
+          value={formData.soleTraderStatus}
+          badge={formData.soleTraderStatus === 'yes' && (
+            <span style={{
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '0.85em',
+              fontWeight: 'bold',
+              backgroundColor: '#dbeafe',
+              color: '#1e40af',
+              border: '1px solid #93c5fd'
+            }}>
+              OPW RELEVANT
+            </span>
+          )}
+        />
         {/* Q2.3 Letterhead (was Q2.2) */}
         <ReviewItem label="2.3 Letterhead Available" value={formData.letterheadAvailable} />
         {/* Q2.4 Justification (was Q2.3) */}

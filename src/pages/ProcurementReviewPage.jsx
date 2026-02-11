@@ -524,7 +524,23 @@ const ProcurementReviewPage = ({
         <ReviewItem label="Service Category" value={formatServiceCategory(formData.serviceCategory)} raw />
         <ReviewItem label="Procurement Engaged" value={formData.procurementEngaged} />
         <ReviewItem label="Letterhead Available" value={formData.letterheadAvailable} />
-        <ReviewItem label="Is the supplier providing a personal service?" value={formData.soleTraderStatus} />
+        <ReviewItem
+          label="Is the supplier providing a personal service?"
+          value={formData.soleTraderStatus}
+          badge={formData.soleTraderStatus === 'yes' && (
+            <span style={{
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '0.85em',
+              fontWeight: 'bold',
+              backgroundColor: '#dbeafe',
+              color: '#1e40af',
+              border: '1px solid #93c5fd'
+            }}>
+              OPW RELEVANT
+            </span>
+          )}
+        />
         <ReviewItem label="Usage Frequency" value={formatUsageFrequency(formData.usageFrequency)} raw />
         <ReviewItem label="Supplier Connection" value={formData.supplierConnection} />
         {/* Conflict of Interest Warning */}
@@ -590,7 +606,7 @@ const ProcurementReviewPage = ({
         {/* Phase 4: Show intermediary classification fields */}
         {formData.supplierType === 'limited_company' && formData.limitedCompanyInterest && (
           <ReviewItem
-            label="Does the worker have more than 5% interest in this Limited Company?"
+            label="Does the supplier have more than 5% interest in this Limited Company?"
             value={formData.limitedCompanyInterest}
             badge={formData.limitedCompanyInterest === 'yes' && (
               <span style={{
@@ -610,7 +626,7 @@ const ProcurementReviewPage = ({
 
         {formData.supplierType === 'partnership' && formData.partnershipInterest && (
           <ReviewItem
-            label="Does the worker have more than 60% interest in this Partnership?"
+            label="Does the supplier have more than 60% interest in this Partnership?"
             value={formData.partnershipInterest}
             badge={formData.partnershipInterest === 'yes' && (
               <span style={{
