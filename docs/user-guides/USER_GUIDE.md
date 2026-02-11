@@ -301,20 +301,44 @@ Enter complete supplier information:
 ### Workflow Overview
 
 ```
-Your Submission → Procurement Review → Classification → AP Control → Complete
+Your Submission → PBP Review → Procurement Review → OPW Panel (if required) → Contract Review (if required) → AP Control → Complete
 ```
 
-**Timeline:** 3-5 working days (typical)
+**Timeline:**
+- **Standard suppliers:** 5-10 working days
+- **Suppliers requiring IR35 assessment + contract:** 10-15 working days
 
 ### Email Notifications
 
 You'll receive emails at each stage:
 
 1. **Submission Confirmed** - Immediate
-2. **Procurement Review Complete** - 1-2 days
-3. **Classification Determined** - If sole trader, goes to OPW panel
-4. **Final Approval** - AP Control completes setup
-5. **Supplier Number Issued** - Vendor number assigned
+2. **PBP Review Complete** (if required) - 3-5 days
+3. **Procurement Review Complete** - 1-2 days
+4. **OPW/IR35 Assessment** (if sole trader/contractor) - 3-5 days
+5. **Contract Agreement** (if required) - Negotiated offline via email
+6. **Final Approval** - AP Control completes setup
+7. **Supplier Number Issued** - Vendor number assigned
+
+### Contract Review Stage (If Required)
+
+For certain suppliers (particularly those requiring IR35 assessment), a contract agreement stage may be required:
+
+**When Contract Review is Required:**
+- Suppliers assessed as "Outside IR35" by the OPW Panel
+- Suppliers assessed as "Inside IR35" requiring a sole trader agreement
+- Other suppliers flagged by Procurement as requiring contract review
+
+**How It Works:**
+1. **Email Notification:** You and the supplier will receive an email from the Contract Drafter with the appropriate agreement template
+2. **Offline Negotiation:** Any contract terms are discussed via email correspondence (not through the form)
+3. **Final Signature:** Once agreed, the supplier signs the contract
+4. **Upload:** The signed agreement is uploaded to the system
+5. **Approval:** Contract Drafter approves and forwards to AP Control for final processing
+
+**Timeline:** Varies depending on negotiation complexity (typically 3-7 days)
+
+**Your Role:** Respond to Contract Drafter emails promptly and coordinate with the supplier to ensure the agreement is signed and returned
 ---
 
 ## Required Documents
@@ -466,10 +490,12 @@ A: Clear browser cache, try incognito mode, or use a different browser. Contact 
 A: For sole traders and contractors, the Off-Payroll Working panel assesses whether they should be treated as employees for tax purposes.
 
 **Q: Who reviews my submission?**
-A: Depends on supplier type:
-- All submissions: Procurement Team
-- Sole traders: OPW/IR35 Panel
-- All suppliers: AP Control (final setup)
+A: Depends on supplier type and value:
+- **All submissions:** Procurement Business Partner (PBP) if value >£5,000 and not pre-approved
+- **All submissions:** Procurement Team for classification
+- **Sole traders/contractors:** OPW/IR35 Panel for tax assessment
+- **Suppliers requiring agreements:** Contract Drafter (via offline email negotiation)
+- **All suppliers:** AP Control for final setup and bank verification
 
 **Q: What happens if my request is rejected?**
 A: When your submission is rejected by any reviewer (PBP, Procurement, OPW Panel, or AP Control):

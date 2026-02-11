@@ -68,7 +68,7 @@ This document tracks the project phases, current status, deployment timeline, an
 | Task | Status | Notes |
 |------|--------|-------|
 | React frontend (7 form sections) | ✅ Complete | All validation working |
-| Review pages (PBP, Procurement, OPW, Contract, AP) | ✅ Complete | Role-based access |
+| Review pages (PBP, Procurement, OPW, Contract, AP) | ✅ Complete | Contract stage uses email-based workflow (Feb 2026) |
 | Backend API structure | ✅ Complete | Express.js with RBAC |
 | StorageProvider pattern | ✅ Complete | Dev/Prod toggle works |
 | Document governance (Alemba rules) | ✅ Complete | Sensitive docs protected |
@@ -194,7 +194,7 @@ This document tracks the project phases, current status, deployment timeline, an
 - [x] PBP Review page with approval/rejection/info request
 - [x] Procurement Review page with classification
 - [x] OPW Review page with IR35 determination
-- [x] Contract Drafter page with upload
+- [x] Contract Drafter Review page - Email-based workflow (Feb 2026: Changed from in-app messaging to offline email negotiation for better alignment with NHS procurement processes)
 - [x] AP Control Review page with verification checks
 - [x] Requester Response page for PBP questions
 - [x] Role-based access control (frontend)
