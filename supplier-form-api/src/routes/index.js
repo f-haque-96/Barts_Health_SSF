@@ -518,7 +518,7 @@ router.post('/contracts/:submissionId/send-to-supplier', requireAuth, requireRol
     }
 
     // Check if already sent
-    if (submission.ContractDrafterData && JSON.parse(submission.ContractDrafterData).sentAt) {
+    if (submission.ContractReviewData && JSON.parse(submission.ContractReviewData).sentAt) {
       return res.status(400).json({
         error: 'INVALID_STATE',
         message: 'Agreement already sent to supplier'
@@ -534,7 +534,7 @@ router.post('/contracts/:submissionId/send-to-supplier', requireAuth, requireRol
     };
 
     await submissionService.update(submissionId, {
-      ContractDrafterData: JSON.stringify(contractData),
+      ContractReviewData: JSON.stringify(contractData),
       CurrentStage: 'contract'
     }, req.user);
 
@@ -547,7 +547,7 @@ router.post('/contracts/:submissionId/send-to-supplier', requireAuth, requireRol
     });
 
     // In production, trigger notification email via Power Automate
-    // Power Automate monitors ContractDrafterData changes
+    // Power Automate monitors ContractReviewData changes
 
     res.json({
       success: true,
@@ -582,7 +582,7 @@ router.post('/contracts/:submissionId/approve', requireAuth, requireRole('contra
     }
 
     // Check if agreement was sent
-    const existingData = submission.ContractDrafterData ? JSON.parse(submission.ContractDrafterData) : {};
+    const existingData = submission.ContractReviewData ? JSON.parse(submission.ContractReviewData) : {};
     if (!existingData.sentAt) {
       return res.status(400).json({
         error: 'INVALID_STATE',
@@ -611,7 +611,7 @@ router.post('/contracts/:submissionId/approve', requireAuth, requireRole('contra
     };
 
     await submissionService.update(submissionId, {
-      ContractDrafterData: JSON.stringify(updatedContractData),
+      ContractReviewData: JSON.stringify(updatedContractData),
       CurrentStage: 'ap',
       Status: 'contract_approved'
     }, req.user);
@@ -625,7 +625,7 @@ router.post('/contracts/:submissionId/approve', requireAuth, requireRole('contra
     });
 
     // In production, trigger notification emails via Power Automate
-    // Power Automate monitors ContractDrafterData changes
+    // Power Automate monitors ContractReviewData changes
 
     res.json({
       success: true,
