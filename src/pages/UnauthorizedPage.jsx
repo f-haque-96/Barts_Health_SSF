@@ -1,5 +1,5 @@
 /**
- * Unauthorized Page
+ * Unauthorised Page
  * Shown when user is not authenticated
  */
 

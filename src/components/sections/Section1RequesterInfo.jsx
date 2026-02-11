@@ -136,7 +136,7 @@ const Section1RequesterInfo = () => {
                 <QuestionLabel section="1" question="5">
                   NHS Email Address
                   <Tooltip content="This must be your official NHS email address (e.g., @nhs.net, @nhs.uk, @bartshealth.nhs.uk). All form notifications and updates will be sent to this address.">
-                    <span style={{ marginLeft: '8px', display: 'inline-flex', alignItems: 'center' }}>
+                    <span style={{ marginLeft: '4px', display: 'inline-flex', alignItems: 'center' }}>
                       <InfoIcon size={16} color="var(--nhs-blue)" />
                     </span>
                   </Tooltip>

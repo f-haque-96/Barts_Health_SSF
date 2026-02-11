@@ -513,7 +513,7 @@ const Section2PreScreening = () => {
                   <QuestionLabel section="2" question="2">
                     Is the supplier providing a personal service?
                     <Tooltip content="A personal service is when an individual provides their own skills and expertise directly (e.g., sole traders, freelancers, contractors), rather than a company providing a service. This determination affects IR35/OPW assessment.">
-                      <span style={{ marginLeft: '8px', display: 'inline-flex', alignItems: 'center' }}>
+                      <span style={{ marginLeft: '4px', display: 'inline-flex', alignItems: 'center' }}>
                         <InfoIcon size={16} color="var(--nhs-blue)" />
                       </span>
                     </Tooltip>

@@ -653,7 +653,7 @@ const ContractDrafterReviewPage = ({ user, readOnly = false }) => {
 
             {submission.contractDrafter?.finalizedAgreement && (
               <div>
-                <strong>Finalized Agreement:</strong>
+                <strong>Finalised Agreement:</strong>
                 <div style={{
                   marginTop: '8px',
                   padding: 'var(--space-12)',
