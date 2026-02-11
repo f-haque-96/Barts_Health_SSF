@@ -27,6 +27,27 @@ export const LimitedCompanyIcon = ({ size = 48, color = 'currentColor' }) => (
   </svg>
 );
 
+// Partnership - Handshake Icon
+export const PartnershipIcon = ({ size = 48, color = 'currentColor' }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M11 12h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 14" />
+    <path d="m7 18 1.6-1.4c.3-.4.8-.6 1.4-.6h2" />
+    <path d="m16 8 3-3 3 3" />
+    <path d="m21 5v5c0 .6-.4 1-1 1h-5" />
+    <path d="m7 8-3-3-3 3" />
+    <path d="m3 5v5c0 .6.4 1 1 1h5" />
+  </svg>
+);
+
 // Charity/Non-Profit - Heart Icon
 export const CharityIcon = ({ size = 48, color = 'currentColor' }) => (
   <svg
@@ -90,6 +111,7 @@ export const PublicSectorIcon = ({ size = 48, color = 'currentColor' }) => (
 // Icon map for internal use (not exported to avoid Fast Refresh issues)
 const SupplierIcons = {
   limited_company: LimitedCompanyIcon,
+  partnership: PartnershipIcon,
   charity: CharityIcon,
   sole_trader: SoleTraderIcon,
   public_sector: PublicSectorIcon,

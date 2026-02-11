@@ -42,6 +42,13 @@ export const SUPPLIER_TYPES = {
     description: 'Registered with Companies House',
     tooltip: 'A company registered with Companies House with limited liability protection',
   },
+  PARTNERSHIP: {
+    value: 'partnership',
+    label: 'Partnership',
+    icon: '🤝',
+    description: 'Business partnership arrangement',
+    tooltip: 'A business partnership where the worker may have a profit share arrangement',
+  },
   CHARITY: {
     value: 'charity',
     label: 'Charity/Non-Profit',

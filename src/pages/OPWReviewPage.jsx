@@ -327,7 +327,6 @@ const OPWReviewPage = ({
             ? 'BartsConsultancyAgreement.1.2.docx'
             : 'Sole Trader Agreement latest version 22.docx',
           assignedTo: 'peter.persaud@nhs.net',
-          exchanges: [],
         },
       };
 

@@ -71,6 +71,9 @@ export const section1Schema = z.object({
 // ===== Section 2: Pre-screening =====
 
 export const section2Schema = z.object({
+  substantivePosition: z.enum(['yes', 'no'], {
+    required_error: 'Please select an option',
+  }),
   supplierConnection: z.enum(['yes', 'no'], {
     required_error: 'Please select an option',
   }),
