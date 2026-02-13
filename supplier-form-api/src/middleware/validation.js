@@ -85,12 +85,12 @@ const validateSubmissionUpdate = [
 
   body('status')
     .optional()
-    .isIn(['pending_review', 'approved', 'rejected', 'pending_procurement_review', 'pending_opw_review', 'pending_contract', 'pending_ap_control', 'completed'])
+    .isIn(['pending_review', 'approved', 'rejected', 'pending_procurement_review', 'pending_opw_review', 'pending_contract', 'pending_ap_control', 'completed', 'Completed_Payroll', 'inside_ir35_sds_issued', 'sds_appeal', 'info_required', 'pbp_approved', 'procurement_approved_opw', 'opw_complete', 'contract_uploaded'])
     .withMessage('Invalid status value'),
 
   body('currentStage')
     .optional()
-    .isIn(['pbp', 'procurement', 'opw', 'contract', 'ap'])
+    .isIn(['pbp', 'procurement', 'opw', 'contract', 'ap', 'completed', 'completed_payroll', 'sds_issued'])
     .withMessage('Invalid current stage value'),
 
   body('companyName')

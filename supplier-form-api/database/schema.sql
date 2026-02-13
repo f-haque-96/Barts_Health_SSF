@@ -22,7 +22,14 @@ CREATE TABLE Submissions (
     DisplayReference NVARCHAR(100) NULL,
 
     -- Status tracking
+    -- Valid statuses: pending_review, pending_pbp_review, info_required, pbp_approved,
+    --   pending_procurement_review, procurement_approved, procurement_approved_opw,
+    --   pending_opw_review, opw_approved, Completed_Payroll, inside_ir35_sds_issued,
+    --   pending_contract, contract_uploaded, pending_ap_control, completed, rejected
+    -- Terminal states: 'completed' (Oracle/AP), 'Completed_Payroll' (ESR), 'inside_ir35_sds_issued', 'rejected'
+    -- SDS states: 'inside_ir35_sds_issued', 'sds_appeal' (for Inside IR35 intermediary tracking)
     Status NVARCHAR(50) NOT NULL DEFAULT 'pending_review',
+    -- Valid stages: pbp, procurement, opw, contract, ap, completed, completed_payroll, sds_issued
     CurrentStage NVARCHAR(50) NOT NULL DEFAULT 'pbp',
 
     -- Requester Information
@@ -87,6 +94,7 @@ CREATE TABLE Submissions (
     OPWApprovedBy NVARCHAR(255) NULL,
     OPWDate DATETIME NULL,
     IR35Determination NVARCHAR(50) NULL,
+    OutcomeRoute NVARCHAR(50) NULL, -- 'oracle_ap', 'payroll_esr', 'cannot_engage', NULL (still in progress)
 
     -- Contract Review
     ContractReviewData NVARCHAR(MAX) NULL,

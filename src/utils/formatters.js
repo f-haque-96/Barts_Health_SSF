@@ -154,3 +154,73 @@ export const formatEmployeeCount = (value) => {
   const lower = value.toLowerCase();
   return mappings[lower] || value;
 };
+
+/**
+ * Format submission status for display with human-readable labels
+ * Handles all pipeline states including terminal states
+ */
+export const formatSubmissionStatus = (status) => {
+  if (!status) return 'Unknown';
+  const mappings = {
+    'pending_review': 'Pending Review',
+    'pending_pbp_review': 'Pending PBP Review',
+    'info_required': 'Information Required',
+    'pbp_approved': 'PBP Approved',
+    'pending_procurement_review': 'Pending Procurement Review',
+    'procurement_approved': 'Procurement Approved',
+    'procurement_approved_opw': 'Routed to OPW Panel',
+    'pending_opw_review': 'Pending OPW Review',
+    'opw_approved': 'OPW Approved',
+    'Pending_Contract': 'Pending Contract',
+    'pending_contract': 'Pending Contract',
+    'opw_complete': 'OPW Complete',
+    'contract_uploaded': 'Contract Uploaded',
+    'Pending_AP': 'Pending AP Control',
+    'pending_ap_control': 'Pending AP Control',
+    // Terminal states
+    'completed': 'Completed \u2014 Oracle/AP',
+    'Completed_Payroll': 'Completed \u2014 Payroll/ESR Route',
+    'completed_payroll': 'Completed \u2014 Payroll/ESR Route',
+    'inside_ir35_sds_issued': 'SDS Issued \u2014 Awaiting Response',
+    'sds_issued': 'SDS Issued \u2014 Awaiting Response',
+    'sds_appeal': 'SDS Appeal \u2014 Under Reconsideration',
+    'rejected': 'Rejected',
+  };
+  return mappings[status] || status;
+};
+
+/**
+ * Format current stage for display
+ */
+export const formatCurrentStage = (stage) => {
+  if (!stage) return 'Unknown';
+  const mappings = {
+    'pbp': 'PBP Review',
+    'procurement': 'Procurement Review',
+    'opw': 'OPW Panel Review',
+    'contract': 'Contract Drafter',
+    'ap': 'AP Control',
+    'completed': 'Completed \u2014 Oracle/AP',
+    'completed_payroll': 'Completed \u2014 Payroll/ESR',
+    'sds_issued': 'SDS Issued \u2014 Awaiting Response',
+    'Completed': 'Completed',
+  };
+  return mappings[stage] || stage;
+};
+
+/**
+ * Format OPW determination labels for display
+ */
+export const formatDetermination = (determination) => {
+  if (!determination) return 'Not determined';
+  const mappings = {
+    'outside_ir35': 'Outside IR35 (Consultancy Agreement)',
+    'outside': 'Outside IR35 (Consultancy Agreement)',
+    'inside_ir35': 'Inside IR35 (Payroll/ESR Route)',
+    'inside': 'Inside IR35 (Payroll/ESR Route)',
+    'self_employed': 'Self-Employed (Sole Trader Agreement)',
+    'employed': 'Employed (Payroll/ESR Route)',
+    'rejected': 'Rejected',
+  };
+  return mappings[determination] || determination;
+};

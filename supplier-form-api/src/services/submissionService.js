@@ -170,6 +170,7 @@ async function update(id, data, user) {
       opwDecision: { column: 'OPWDecision', type: sql.NVarChar(50) },
       opwApprovedBy: { column: 'OPWApprovedBy', type: sql.NVarChar(255) },
       ir35Determination: { column: 'IR35Determination', type: sql.NVarChar(50) },
+      outcomeRoute: { column: 'OutcomeRoute', type: sql.NVarChar(50) },
 
       contractReviewData: { column: 'ContractReviewData', type: sql.NVarChar(sql.MAX) },
       contractUploadedBy: { column: 'ContractUploadedBy', type: sql.NVarChar(255) },
@@ -240,7 +241,8 @@ async function getWorkQueue(stage, user) {
       'procurement': ['approved', 'pending_procurement_review', 'pbp_approved'],
       'opw': ['pending_opw_review', 'procurement_approved_opw'],
       'contract': ['pending_contract', 'opw_complete'],
-      'ap': ['pending_ap_control', 'contract_uploaded']
+      'ap': ['pending_ap_control', 'contract_uploaded'],
+      'sds_issued': ['inside_ir35_sds_issued'],
     };
 
     const statuses = stageStatusMap[stage] || [];

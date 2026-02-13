@@ -372,7 +372,8 @@ const OPWReviewPage = ({
             ...currentSubmission,
             opwReview: opwReviewData,
             status: 'Completed_Payroll',
-            currentStage: 'Completed',
+            currentStage: 'completed_payroll',
+            outcomeRoute: 'payroll_esr',
             completedAt: new Date().toISOString(),
           };
 
@@ -382,19 +383,45 @@ const OPWReviewPage = ({
             'The worker should be set up on ESR by HR/Payroll.\n\n' +
             'This supplier request is now complete.';
 
-        } else {
-          // SELF-EMPLOYED SOLE TRADER → AP CONTROL (CREATE ORACLE SUPPLIER)
-          updatedSubmission = {
-            ...currentSubmission,
-            opwReview: opwReviewData,
-            status: 'Pending_AP',
-            currentStage: 'ap',
-          };
+        } else if (employmentStatus === 'self_employed') {
+          // SELF-EMPLOYED SOLE TRADER → CONTRACT (IF REQUIRED) OR AP CONTROL
+          if (contractRequired === 'yes') {
+            // Route to Contract Drafter
+            updatedSubmission = {
+              ...currentSubmission,
+              opwReview: opwReviewData,
+              status: 'Pending_Contract',
+              currentStage: 'contract',
+              outcomeRoute: 'oracle_ap',
+              contractDrafter: {
+                status: 'pending_review',
+                ir35Status: 'self_employed',
+                requiredTemplate: 'Sole Trader Agreement latest version 22.docx',
+                assignedTo: 'peter.persaud@nhs.net',
+              },
+            };
 
-          successMessage = 'OPW Determination Complete: SELF-EMPLOYED\n\n' +
-            'This worker is self-employed and can be paid as a supplier.\n\n' +
-            'The request has been forwarded to AP Control for bank details verification.\n' +
-            'An Oracle supplier record will be created upon AP approval.';
+            successMessage = 'OPW Determination Complete: SELF-EMPLOYED\n\n' +
+              'This worker is self-employed and can be paid as a supplier.\n\n' +
+              'Contract Required: YES\n' +
+              'The request has been forwarded to the Contract Drafter for agreement negotiation.\n' +
+              'After contract approval, an Oracle supplier record will be created.';
+          } else {
+            // Skip contract, route directly to AP Control
+            updatedSubmission = {
+              ...currentSubmission,
+              opwReview: opwReviewData,
+              status: 'Pending_AP',
+              currentStage: 'ap',
+              outcomeRoute: 'oracle_ap',
+            };
+
+            successMessage = 'OPW Determination Complete: SELF-EMPLOYED\n\n' +
+              'This worker is self-employed and can be paid as a supplier.\n\n' +
+              'Contract Required: NO\n' +
+              'The request has been forwarded to AP Control for bank details verification.\n' +
+              'An Oracle supplier record will be created upon AP approval.';
+          }
         }
       }
       // ===== PATH 2: INTERMEDIARY (LIMITED COMPANY, PARTNERSHIP) =====
@@ -427,8 +454,9 @@ const OPWReviewPage = ({
           updatedSubmission = {
             ...currentSubmission,
             opwReview: opwReviewData,
-            status: 'Completed_Payroll',
-            currentStage: 'Completed',
+            status: 'inside_ir35_sds_issued',
+            currentStage: 'sds_issued',
+            outcomeRoute: 'payroll_esr',
             completedAt: new Date().toISOString(),
           };
 
@@ -448,6 +476,7 @@ const OPWReviewPage = ({
               opwReview: opwReviewData,
               status: 'Pending_Contract',
               currentStage: 'contract',
+              outcomeRoute: 'oracle_ap',
               contractDrafter: {
                 status: 'pending_review',
                 ir35Status: 'outside',
@@ -468,6 +497,7 @@ const OPWReviewPage = ({
               opwReview: opwReviewData,
               status: 'Pending_AP',
               currentStage: 'ap',
+              outcomeRoute: 'oracle_ap',
             };
 
             successMessage = 'IR35 Determination: OUTSIDE IR35\n\n' +
@@ -662,7 +692,7 @@ const OPWReviewPage = ({
         <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-12)', alignItems: 'flex-end' }}>
           {opwReview && (
             <ApprovalStamp
-              status={opwReview.decision === 'rejected' ? 'rejected' : opwReview.ir35Status === 'outside' || opwReview.ir35Status === 'inside' ? 'approved' : 'pending'}
+              status={opwReview.decision === 'rejected' ? 'rejected' : (opwReview.ir35Status === 'outside' || opwReview.ir35Status === 'inside' || opwReview.employmentStatus === 'self_employed' || opwReview.employmentStatus === 'employed') ? 'approved' : 'pending'}
               date={opwReview.date || opwReview.reviewedAt}
               approver={opwReview.signature || opwReview.reviewedBy}
               size="large"
@@ -693,7 +723,9 @@ const OPWReviewPage = ({
       {/* OPW Review Status */}
       {opwReview && (
         <NoticeBox
-          type={opwReview.decision === 'rejected' ? 'error' : opwReview.ir35Status === 'outside' ? 'success' : 'error'}
+          type={opwReview.decision === 'rejected' ? 'error'
+            : (opwReview.employmentStatus === 'self_employed' || opwReview.ir35Status === 'outside') ? 'success'
+            : 'error'}
           style={{ marginBottom: 'var(--space-24)' }}
         >
           {opwReview.decision === 'rejected' ? (
@@ -709,18 +741,47 @@ const OPWReviewPage = ({
                 <strong>Rejection Reason:</strong> {opwReview.rejectionReason}
               </p>
             </>
+          ) : opwReview.workerClassification === 'sole_trader' ? (
+            <>
+              <strong>Employment Status: {opwReview.employmentStatus === 'self_employed' ? 'Self-Employed (Supplier Route)' : 'Employed (Payroll/ESR Route)'}</strong>
+              <p style={{ marginTop: 'var(--space-8)', marginBottom: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+                Reviewed by {opwReview.signature || opwReview.reviewedBy} on {formatDate(opwReview.date || opwReview.reviewedAt)}
+              </p>
+            </>
           ) : (
             <>
-              <strong>IR35 Determination: {opwReview.ir35Status === 'outside' ? 'Outside IR35' : 'Inside IR35'}</strong>
-              <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-                <strong>Rationale:</strong> {opwReview.rationale}
-              </p>
+              <strong>IR35 Determination: {opwReview.ir35Status === 'outside' ? 'Outside IR35 (Supplier Route)' : 'Inside IR35 (Payroll/ESR Route)'}</strong>
+              {opwReview.rationale && (
+                <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+                  <strong>Rationale:</strong> {opwReview.rationale}
+                </p>
+              )}
               <p style={{ marginTop: 'var(--space-8)', marginBottom: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
                 Reviewed by {opwReview.signature || opwReview.reviewedBy} on {formatDate(opwReview.date || opwReview.reviewedAt)}
               </p>
             </>
           )}
         </NoticeBox>
+      )}
+
+      {/* SDS Status Tracking Panel (Read-Only) - Shows when Inside IR35 has been determined */}
+      {opwReview && opwReview.ir35Status === 'inside' && opwReview.sdsTracking && (
+        <ReviewCard title="SDS Status Tracking" highlight>
+          <p style={{ margin: '0 0 var(--space-8) 0' }}><strong>Status:</strong> SDS Issued &mdash; Awaiting Intermediary Response</p>
+          <p style={{ margin: '0 0 var(--space-8) 0' }}><strong>SDS Issued:</strong> {formatDate(opwReview.sdsTracking.sdsIssuedDate)}</p>
+          {opwReview.sdsTracking.sdsResponseReceived ? (
+            <p style={{ margin: '0 0 var(--space-8) 0' }}><strong>Response Received:</strong> {formatDate(opwReview.sdsTracking.sdsResponseDate)}</p>
+          ) : (
+            <p style={{ margin: '0 0 var(--space-8) 0' }}><strong>Response Deadline:</strong> {opwReview.sdsTracking.sdsIssuedDate ? formatDate(new Date(new Date(opwReview.sdsTracking.sdsIssuedDate).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString()) : 'N/A'}</p>
+          )}
+          <p style={{ margin: '0 0 var(--space-16) 0' }}><strong>Sent To:</strong> {formData.contactEmail || formData.email || 'Supplier contact email'}</p>
+
+          <NoticeBox type="info">
+            The intermediary has 14 days from the SDS issue date to agree or disagree.
+            If they disagree, the OPW Panel has 45 days to reconsider.
+            Correspondence should happen via email to <strong>bartshealth.opwpanelbarts@nhs.net</strong>
+          </NoticeBox>
+        </ReviewCard>
       )}
 
       {/* Requester Information */}
@@ -1151,12 +1212,32 @@ const OPWReviewPage = ({
 
               {/* Info for Self-Employed */}
               {employmentStatus === 'self_employed' && (
-                <NoticeBox type="success" style={{ marginBottom: 'var(--space-16)' }}>
-                  <strong>✓ Self-Employed - Supplier Route</strong>
-                  <p style={{ marginTop: '8px', marginBottom: 0 }}>
-                    This worker will proceed to AP Control for bank details verification. An Oracle supplier record will be created upon AP approval.
-                  </p>
-                </NoticeBox>
+                <>
+                  <NoticeBox type="success" style={{ marginBottom: 'var(--space-16)' }}>
+                    <strong>&#10003; Self-Employed - Supplier Route</strong>
+                    <p style={{ marginTop: '8px', marginBottom: 0 }}>
+                      This worker is self-employed and can be paid as a supplier.
+                      {contractRequired === 'yes' && ' Will proceed to Contract Drafter for agreement negotiation.'}
+                      {contractRequired === 'no' && ' Will proceed directly to AP Control for bank details verification.'}
+                      {!contractRequired && ' Please indicate if a contract is required.'}
+                    </p>
+                  </NoticeBox>
+
+                  {/* Contract Required Question for Self-Employed Sole Traders */}
+                  <div style={{ marginBottom: 'var(--space-16)' }}>
+                    <RadioGroup
+                      label="Is a Contract Required?"
+                      name="contractRequiredSoleTrader"
+                      options={[
+                        { value: 'yes', label: 'Yes - Contract negotiation needed' },
+                        { value: 'no', label: 'No - Proceed without contract' },
+                      ]}
+                      value={contractRequired}
+                      onChange={setContractRequired}
+                      required
+                    />
+                  </div>
+                </>
               )}
             </>
           )}
@@ -1200,8 +1281,8 @@ const OPWReviewPage = ({
                 />
               </div>
 
-              {/* Contract Required Question (for Inside and Outside) */}
-              {(ir35Determination === 'inside' || ir35Determination === 'outside') && (
+              {/* Contract Required Question (for Outside IR35 only - Inside IR35 goes to payroll) */}
+              {ir35Determination === 'outside' && (
                 <div style={{ marginBottom: 'var(--space-16)' }}>
                   <RadioGroup
                     label="Is a Contract Required?"
@@ -1367,7 +1448,8 @@ const OPWReviewPage = ({
                   (workerClassification === 'intermediary' && !ir35Determination) ||
                   ((employmentStatus === 'rejected' || ir35Determination === 'rejected') && !rejectionReason.trim()) ||
                   (workerClassification === 'intermediary' && (ir35Determination === 'inside' || ir35Determination === 'outside') && !rationale.trim()) ||
-                  (workerClassification === 'intermediary' && (ir35Determination === 'inside' || ir35Determination === 'outside') && !contractRequired)
+                  (workerClassification === 'intermediary' && ir35Determination === 'outside' && !contractRequired) ||
+                  (workerClassification === 'sole_trader' && employmentStatus === 'self_employed' && !contractRequired)
                 }
               >
                 {(employmentStatus === 'rejected' || ir35Determination === 'rejected') ? 'Proceed to Sign Rejection' : 'Proceed to Sign Determination'}

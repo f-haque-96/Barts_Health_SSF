@@ -6,28 +6,43 @@
 
 export const contractNegotiationService = {
   /**
-   * Get appropriate agreement template based on IR35 status
-   * @param {string} ir35Status - 'outside_ir35' or 'inside_ir35'
+   * Get appropriate agreement template based on OPW determination
+   * @param {string} determination - 'outside_ir35', 'self_employed', 'outside', or legacy 'inside_ir35'
    * @returns {object} Template information
    */
-  getAgreementTemplate(ir35Status) {
+  getAgreementTemplate(determination) {
     const templates = {
       outside_ir35: {
         name: 'Barts Consultancy Agreement',
         filename: 'BartsConsultancyAgreement.1.2.docx',
         version: '1.2',
-        description: 'For suppliers outside IR35',
+        description: 'For intermediaries outside IR35 (Consultancy Agreement)',
         path: '/templates/BartsConsultancyAgreement.1.2.docx',
       },
+      outside: {
+        name: 'Barts Consultancy Agreement',
+        filename: 'BartsConsultancyAgreement.1.2.docx',
+        version: '1.2',
+        description: 'For intermediaries outside IR35 (Consultancy Agreement)',
+        path: '/templates/BartsConsultancyAgreement.1.2.docx',
+      },
+      self_employed: {
+        name: 'Sole Trader Agreement',
+        filename: 'Sole Trader Agreement latest version 22.docx',
+        version: '22',
+        description: 'For self-employed sole traders (Sole Trader Agreement)',
+        path: '/templates/Sole Trader Agreement latest version 22.docx',
+      },
+      // Legacy key - kept for backwards compatibility
       inside_ir35: {
         name: 'Sole Trader Agreement',
         filename: 'Sole Trader Agreement latest version 22.docx',
         version: '22',
-        description: 'For suppliers inside IR35',
+        description: 'For self-employed sole traders (Sole Trader Agreement)',
         path: '/templates/Sole Trader Agreement latest version 22.docx',
       },
     };
-    return templates[ir35Status] || null;
+    return templates[determination] || null;
   },
 
   /**

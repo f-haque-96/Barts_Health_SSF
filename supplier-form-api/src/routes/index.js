@@ -45,6 +45,54 @@ const upload = multer({
 });
 
 // ===========================================
+// ROUTING LOGIC
+// ===========================================
+
+/**
+ * Determines the next stage in the approval pipeline based on current stage,
+ * review data, and submission context. Handles conditional routing for OPW
+ * determination outcomes (employed/self-employed, inside/outside IR35).
+ *
+ * Terminal states: completed_payroll (ESR route), sds_issued (Inside IR35)
+ * Supplier route: contract → ap → completed (Oracle/AP route)
+ */
+function getNextStage(currentStage, reviewData, submission) {
+  switch (currentStage) {
+    case 'pbp':
+      return 'procurement';
+
+    case 'procurement': {
+      // Procurement classifies: standard goes straight to AP, OPW/IR35 goes to OPW panel
+      const classification = reviewData.classification || reviewData.supplierClassification;
+      return classification === 'opw_ir35' ? 'opw' : 'ap';
+    }
+
+    case 'opw': {
+      const determination = reviewData.determination;
+      // Payroll route outcomes — end the supplier setup process
+      if (determination === 'employed') {
+        return 'completed_payroll';
+      }
+      if (determination === 'inside' || determination === 'inside_ir35') {
+        return 'sds_issued';
+      }
+      // Supplier route outcomes — check if contract is needed
+      const contractNeeded = reviewData.contractRequired !== 'no';
+      return contractNeeded ? 'contract' : 'ap';
+    }
+
+    case 'contract':
+      return 'ap';
+
+    case 'ap':
+      return 'completed';
+
+    default:
+      return currentStage; // Safety fallback
+  }
+}
+
+// ===========================================
 // SESSION ROUTES
 // ===========================================
 
@@ -154,7 +202,7 @@ router.get('/reviews/:stage/queue', requireAuth, (req, res, next) => {
 router.post('/reviews/:stage/:id', requireAuth, async (req, res, next) => {
   try {
     const { stage, id } = req.params;
-    const { decision, comments, signature } = req.body;
+    const { decision, comments, signature, classification, determination, contractRequired, outcomeRoute } = req.body;
 
     // --- Validate stage param ---
     const validStages = ['pbp', 'procurement', 'opw', 'contract', 'ap'];
@@ -216,15 +264,20 @@ router.post('/reviews/:stage/:id', requireAuth, async (req, res, next) => {
 
     // Update status based on decision
     if (decision === 'approved') {
-      const nextStages = {
-        'pbp': 'procurement',
-        'procurement': 'opw',
-        'opw': 'contract',
-        'contract': 'ap',
-        'ap': 'completed'
-      };
-      updateData.currentStage = nextStages[stage] || stage;
-      updateData.status = `${stage}_approved`;
+      const reviewData = { classification, determination, contractRequired };
+      updateData.currentStage = getNextStage(stage, reviewData, submission);
+
+      // Set appropriate status based on routing outcome
+      if (updateData.currentStage === 'completed_payroll') {
+        updateData.status = 'Completed_Payroll';
+        if (outcomeRoute) updateData.outcomeRoute = outcomeRoute;
+      } else if (updateData.currentStage === 'sds_issued') {
+        updateData.status = 'inside_ir35_sds_issued';
+        if (outcomeRoute) updateData.outcomeRoute = outcomeRoute;
+      } else {
+        updateData.status = `${stage}_approved`;
+        if (outcomeRoute) updateData.outcomeRoute = outcomeRoute;
+      }
     } else if (decision === 'rejected') {
       updateData.status = 'rejected';
     } else if (decision === 'info_required') {

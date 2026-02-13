@@ -519,8 +519,18 @@ const ProcurementReviewPage = ({
         <ReviewItem label="Phone" value={formData.phoneNumber} />
       </ReviewCard>
 
+      {/* Substantive Position Warning */}
+      {formData.substantivePosition === 'yes' && (
+        <NoticeBox type="danger" style={{ marginBottom: 'var(--space-16)' }}>
+          <strong>Warning:</strong> The requester indicated this engagement covers a substantive/vacant position.
+          This should normally go through standard recruitment (fixed-term/bank/agency), not supplier setup.
+          Please verify before proceeding.
+        </NoticeBox>
+      )}
+
       {/* Section 2: Pre-screening */}
       <ReviewCard title="Section 2: Pre-screening & Authorisation">
+        <ReviewItem label="Substantive Position" value={formData.substantivePosition} />
         <ReviewItem label="Service Category" value={formatServiceCategory(formData.serviceCategory)} raw />
         <ReviewItem label="Procurement Engaged" value={formData.procurementEngaged} />
         <ReviewItem label="Letterhead Available" value={formData.letterheadAvailable} />

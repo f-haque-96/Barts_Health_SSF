@@ -529,7 +529,14 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
 
         {/* SECTION 2: Pre-screening */}
         <Text style={styles.sectionHeader}>Section 2: Pre-screening & Authorisation</Text>
-        {/* Q2.1 Supplier Connection */}
+        {/* Q2.1 Substantive Position */}
+        <Field label="Covers Substantive Position" value={normalizedData.section2?.substantivePosition || normalizedData.substantivePosition} />
+        {(normalizedData.section2?.substantivePosition === 'yes' || normalizedData.substantivePosition === 'yes') && (
+          <View style={{ backgroundColor: '#fef2f2', padding: 10, borderRadius: 4, marginBottom: 10, borderWidth: 1, borderColor: '#dc2626' }}>
+            <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#dc2626' }}>WARNING: Requester indicated this covers a substantive/vacant position. Standard recruitment should be used.</Text>
+          </View>
+        )}
+        {/* Q2.2 Supplier Connection */}
         <Field label="Supplier Connection" value={normalizedData.section2?.supplierConnection || normalizedData.supplierConnection} />
         {/* Connection Details - Show if supplier has a connection */}
         {(normalizedData.section2?.supplierConnection === 'yes' || normalizedData.supplierConnection === 'yes') &&
