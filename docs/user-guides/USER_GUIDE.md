@@ -81,7 +81,7 @@ This guide explains how to submit a new supplier setup request through the NHS S
 ### Required Documents
 
 **Mandatory for ALL suppliers:**
-- Official supplier Letterhead with bank details (PDF, max 3MB)
+- Official supplier Letterhead with bank details (PDF, max 10MB)
 
 **Required if applicable:**
 - Procurement approval certificate (You can obtain this by completing the clinical/ non clinical questionnaire on the form Q2.7)
@@ -89,7 +89,7 @@ This guide explains how to submit a new supplier setup request through the NHS S
 - Photo ID (passport or driving licence for sole traders)
 
 **Format:** PDF only
-**Max File Size:** 3MB per file
+**Max File Size:** 10MB per file
 
 **🔒 Security Note (Feb 2026):** All uploaded files are now:
 - Scanned for viruses
@@ -301,7 +301,10 @@ Enter complete supplier information:
 ### Workflow Overview
 
 ```
-Your Submission → PBP Review → Procurement Review → OPW Panel (if required) → Contract Review (if required) → AP Control → Complete
+Your Submission → PBP Review → Procurement Review → OPW Panel (if personal service)
+                                                       ↓
+                                                    Self-Employed/Outside IR35 → Contract Review (if required) → AP Control → Complete (Oracle/AP)
+                                                    Employed/Inside IR35 → Complete (Payroll/ESR) — No Oracle supplier record created
 ```
 
 **Timeline:**
@@ -316,7 +319,7 @@ You'll receive emails at each stage:
 2. **PBP Review Complete** (if required) - 3-5 days
 3. **Procurement Review Complete** - 1-2 days
 4. **OPW/IR35 Assessment** (if sole trader/contractor) - 3-5 days
-5. **Contract Agreement** (if required) - Negotiated offline via email
+5. **Contract Agreement** (if required) - Negotiated via the Contract Drafter stage
 6. **Final Approval** - AP Control completes setup
 7. **Supplier Number Issued** - Vendor number assigned
 
@@ -325,20 +328,22 @@ You'll receive emails at each stage:
 For certain suppliers (particularly those requiring IR35 assessment), a contract agreement stage may be required:
 
 **When Contract Review is Required:**
-- Suppliers assessed as "Outside IR35" by the OPW Panel
-- Suppliers assessed as "Inside IR35" requiring a sole trader agreement
+- Intermediaries assessed as "Outside IR35" by the OPW Panel (Barts Consultancy Agreement)
+- Sole traders assessed as "Self-Employed" by the OPW Panel (Sole Trader Agreement)
 - Other suppliers flagged by Procurement as requiring contract review
 
+**Note:** Suppliers determined as "Employed" (sole traders) or "Inside IR35" (intermediaries) are routed to NHS Payroll (ESR) and do **not** go through the Contract Review stage.
+
 **How It Works:**
-1. **Email Notification:** You and the supplier will receive an email from the Contract Drafter with the appropriate agreement template
-2. **Offline Negotiation:** Any contract terms are discussed via email correspondence (not through the form)
-3. **Final Signature:** Once agreed, the supplier signs the contract
-4. **Upload:** The signed agreement is uploaded to the system
-5. **Approval:** Contract Drafter approves and forwards to AP Control for final processing
+1. **Notification:** You and the supplier will receive a notification from the Contract Drafter with the appropriate agreement template
+2. **Contract Negotiation:** Agreement terms are reviewed and negotiated through the system with a full audit trail
+3. **Document Exchange:** The Contract Drafter and supplier can exchange messages and documents through the form
+4. **Final Signature:** Once agreed, the supplier signs the contract and uploads the signed version
+5. **Approval:** Contract Drafter reviews the signed agreement and forwards to AP Control for final processing
 
 **Timeline:** Varies depending on negotiation complexity (typically 3-7 days)
 
-**Your Role:** Respond to Contract Drafter emails promptly and coordinate with the supplier to ensure the agreement is signed and returned
+**Your Role:** Respond to Contract Drafter communications promptly and coordinate with the supplier to ensure the agreement is signed and returned
 ---
 
 ## Required Documents
@@ -347,12 +352,12 @@ For certain suppliers (particularly those requiring IR35 assessment), a contract
 
 | Document | Required For | Format | Max Size |
 |----------|-------------|--------|----------|
-| Letterhead with Bank Details | ALL suppliers | PDF | 3MB |
-| Procurement Approval | If already engaged with procurement | PDF | 3MB |
-| CEST Form | Sole traders/contractors only | PDF | 3MB |
-| Passport Photo | Sole traders (if passport ID chosen) | PDF/JPG | 3MB |
-| Driving Licence (Front) | Sole traders (if licence chosen) | PDF/JPG | 3MB |
-| Driving Licence (Back) | Sole traders (if licence chosen) | PDF/JPG | 3MB |
+| Letterhead with Bank Details | ALL suppliers | PDF | 10MB |
+| Procurement Approval | If already engaged with procurement | PDF | 10MB |
+| CEST Form | Sole traders/contractors only | PDF | 10MB |
+| Passport Photo | Sole traders (if passport ID chosen) | PDF/JPG | 10MB |
+| Driving Licence (Front) | Sole traders (if licence chosen) | PDF/JPG | 10MB |
+| Driving Licence (Back) | Sole traders (if licence chosen) | PDF/JPG | 10MB |
 
 ### Document Requirements
 
@@ -394,7 +399,7 @@ For certain suppliers (particularly those requiring IR35 assessment), a contract
 **Cause:** File too large or wrong format
 **Solution:**
 1. Check file is PDF format
-2. Ensure file size is under 3MB
+2. Ensure file size is under 10MB
 3. Compress PDF if needed (use Adobe Acrobat or online tool)
 4. Rename file (remove special characters)
 
@@ -487,15 +492,23 @@ A: Clear browser cache, try incognito mode, or use a different browser. Contact 
 ### Process Questions
 
 **Q: What is OPW/IR35 assessment?**
-A: For sole traders and contractors, the Off-Payroll Working panel assesses whether they should be treated as employees for tax purposes.
+A: The Off-Payroll Working (OPW) panel assesses suppliers who provide personal services. There are two determination paths:
+
+**For Sole Traders / Individuals:**
+- **Self-Employed** - Worker operates their own business. Proceeds to supplier setup (Oracle/AP). A contract may be required.
+- **Employed** - Worker is effectively an employee for tax purposes. Must be engaged via NHS Payroll (ESR). No Oracle supplier record is created. *This is a terminal state.*
+
+**For Intermediaries (Limited Companies with >5% interest, Partnerships with >60% interest):**
+- **Outside IR35** - Worker is genuinely self-employed via their intermediary. Proceeds to supplier setup (Oracle/AP). A contract may be required.
+- **Inside IR35** - Worker operates like an employee via intermediary. A Status Determination Statement (SDS) is issued to the intermediary, who has 14 days to respond. If they disagree, the OPW Panel has 45 days to reconsider. The worker must be engaged via NHS Payroll (ESR). *This is a terminal state.*
 
 **Q: Who reviews my submission?**
 A: Depends on supplier type and value:
 - **All submissions:** Procurement Business Partner (PBP) if value >£5,000 and not pre-approved
-- **All submissions:** Procurement Team for classification
-- **Sole traders/contractors:** OPW/IR35 Panel for tax assessment
-- **Suppliers requiring agreements:** Contract Drafter (via offline email negotiation)
-- **All suppliers:** AP Control for final setup and bank verification
+- **All submissions:** Procurement Team for classification (Standard or OPW/IR35)
+- **Personal service providers:** OPW/IR35 Panel for employment/IR35 determination
+- **Suppliers requiring agreements:** Contract Drafter (via in-app contract negotiation with audit trail)
+- **All suppliers routed to Oracle:** AP Control for final setup and bank verification
 
 **Q: What happens if my request is rejected?**
 A: When your submission is rejected by any reviewer (PBP, Procurement, OPW Panel, or AP Control):

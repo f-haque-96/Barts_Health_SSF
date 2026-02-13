@@ -44,7 +44,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 **Companies House API:**
 - [ ] `CH_API_KEY` - Companies House API key (register at https://developer.companieshouse.gov.uk)
-- [ ] `CH_API_URL=https://api.companieshouse.gov.uk` - Leave as default
+- [ ] `CH_API_URL=https://api.company-information.service.gov.uk` - Leave as default
 
 #### Frontend (.env.production)
 
@@ -70,7 +70,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 - [ ] Redirect URIs configured for frontend URL
 - [ ] API permissions granted:
   - [ ] Microsoft Graph - User.Read
-  - [ ] Microsoft Graph - Group.Read.All (for RBAC)
+  - [ ] Microsoft Graph - GroupMember.Read.All (for RBAC)
 - [ ] Client secret generated and stored securely
 
 ### 3. Azure AD Security Groups
@@ -113,15 +113,16 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 - [ ] Folder structure created in each library:
   ```
   SupplierDocuments/
-  ├── VAT_Certificates/
-  ├── Contracts/
   ├── Letterheads/
-  └── PBP_Certificates/
+  ├── Contracts/
+  ├── PBP_Certificates/
+  └── Other/
 
   SensitiveDocuments/
   ├── Passports/
   ├── DrivingLicences/
-  └── IDDocuments/
+  ├── IDDocuments/
+  └── ProofOfAddress/
   ```
 - [ ] Permissions configured:
   - [ ] `SensitiveDocuments` - AP Control and Admin only

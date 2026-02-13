@@ -895,17 +895,17 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
                 )}
 
                 {/* Intermediary Path - IR35 Status */}
-                {submission.opwReview.workerClassification === 'intermediary' && submission.opwReview.ir35Determination && (
+                {submission.opwReview.workerClassification === 'intermediary' && submission.opwReview.ir35Status && (
                   <View style={{ marginTop: 6 }}>
                     <Text style={styles.authField}>
                       IR35 Status:{' '}
-                      <Text style={{ fontWeight: 'bold', color: submission.opwReview.ir35Determination === 'outside' ? '#22c55e' : '#dc2626' }}>
-                        {submission.opwReview.ir35Determination === 'inside' ? 'INSIDE IR35 (Payroll)' : 'OUTSIDE IR35'}
+                      <Text style={{ fontWeight: 'bold', color: submission.opwReview.ir35Status === 'outside' ? '#22c55e' : '#dc2626' }}>
+                        {submission.opwReview.ir35Status === 'inside' ? 'INSIDE IR35 (Payroll)' : 'OUTSIDE IR35'}
                       </Text>
                     </Text>
 
                     {/* SDS Tracking - Only for Inside IR35 */}
-                    {submission.opwReview.ir35Determination === 'inside' && submission.opwReview.sdsTracking && (
+                    {submission.opwReview.ir35Status === 'inside' && submission.opwReview.sdsTracking && (
                       <View style={{ marginTop: 4, padding: 6, backgroundColor: '#fef2f2', borderRadius: 4 }}>
                         <Text style={{ fontSize: 8, fontWeight: 'bold', color: '#991b1b', marginBottom: 3 }}>
                           Status Determination Statement (SDS) Tracking:
@@ -936,7 +936,7 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
                     )}
 
                     {/* Outside IR35 - Contract Required */}
-                    {submission.opwReview.ir35Determination === 'outside' && submission.opwReview.contractRequired && (
+                    {submission.opwReview.ir35Status === 'outside' && submission.opwReview.contractRequired && (
                       <Text style={[styles.authField, { marginTop: 4 }]}>
                         Contract Required: {submission.opwReview.contractRequired === 'yes' ? 'Yes' : 'No'}
                       </Text>
@@ -977,9 +977,10 @@ const SupplierFormPDF = ({ formData, uploadedFiles, submissionId, submission }) 
                 {submission.contractDrafter.finalizedAgreement && (
                   <Text style={styles.authField}>Final Document: {submission.contractDrafter.finalizedAgreement.name}</Text>
                 )}
-                {submission.contractDrafter.ir35Status && (
+                {/* Show worker classification and relevant status from OPW review */}
+                {submission.opwReview?.workerClassification && (
                   <Text style={styles.authField}>
-                    IR35 Status: {submission.contractDrafter.ir35Status === 'outside_ir35' ? 'Outside IR35' : 'Inside IR35'}
+                    Worker Classification: {submission.opwReview.workerClassification === 'sole_trader' ? 'Sole Trader (Self-Employed)' : 'Intermediary (Outside IR35)'}
                   </Text>
                 )}
                 <View style={styles.signatureRow}>

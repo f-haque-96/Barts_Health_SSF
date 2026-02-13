@@ -27,7 +27,9 @@ import {
   PoundIcon,
   CheckIcon,
   ClockIcon,
-  XIcon
+  XIcon,
+  InfoIcon,
+  UserIcon
 } from '../components/common';
 import { formatDate } from '../utils/helpers';
 import PBPApprovalPDF from '../components/pdf/PBPApprovalPDF';
@@ -618,7 +620,7 @@ const WorkflowStatus = ({ submission }) => {
             fontSize: '0.875rem',
             color: '#1e40af',
           }}>
-            <strong>ℹ️ Estimated Completion:</strong> 2-3 working days
+            <strong><InfoIcon size={14} style={{ verticalAlign: 'middle' }} /> Estimated Completion:</strong> 2-3 working days
           </div>
         )}
       </div>
@@ -963,17 +965,17 @@ const RequesterResponsePage = ({
           <div>Originally Submitted: {formatDate(submission.submissionDate)}</div>
           {isBothRoles && (
             <div style={{ marginTop: 'var(--space-8)', color: '#059669', fontWeight: '500' }}>
-              ℹ️ You are both the requester and supplier for this submission
+              <InfoIcon size={14} style={{ verticalAlign: 'middle' }} /> You are both the requester and supplier for this submission
             </div>
           )}
           {userRole === 'supplier' && !isBothRoles && (
             <div style={{ marginTop: 'var(--space-8)', color: '#3b82f6', fontWeight: '500' }}>
-              👤 Viewing as: <strong>Supplier</strong> (Contract stage access)
+              <UserIcon size={14} style={{ verticalAlign: 'middle' }} /> Viewing as: <strong>Supplier</strong> (Contract stage access)
             </div>
           )}
           {userRole === 'requester' && !isBothRoles && (
             <div style={{ marginTop: 'var(--space-8)', color: '#ca8a04', fontWeight: '500' }}>
-              👤 Viewing as: <strong>Requester</strong> (Full access)
+              <UserIcon size={14} style={{ verticalAlign: 'middle' }} /> Viewing as: <strong>Requester</strong> (Full access)
             </div>
           )}
         </div>

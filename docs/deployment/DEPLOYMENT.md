@@ -302,7 +302,7 @@ AZURE_AD_CLIENT_SECRET=<YOUR_APP_REGISTRATION_SECRET>      # ⚠️ REPLACE THIS
 # ⚠️ Replace with your SQL Server connection details
 DB_HOST=<YOUR_SQL_SERVER_HOSTNAME>                         # ⚠️ REPLACE THIS (e.g., sqlserver.bartshealth.nhs.uk)
 DB_PORT=1433                                               # ✅ Keep as-is
-DB_NAME=SupplierSetupDB                                    # ✅ Keep as-is (matches database name)
+DB_NAME=NHSSupplierForms                                    # ✅ Keep as-is (matches database name)
 DB_USER=<YOUR_SQL_USERNAME>                                # ⚠️ REPLACE THIS (e.g., SupplierFormAPI)
 DB_PASSWORD=<YOUR_SQL_PASSWORD>                            # ⚠️ REPLACE THIS (use secure password)
 DB_TRUSTED_CONNECTION=false                                # ⚠️ Set to true if using Windows Auth
@@ -606,6 +606,10 @@ For DLP compliance, use **SharePoint list triggers** (not HTTP triggers).
 | Submit full form | Complete all sections, submit in Section 7 | Submission created, PROCUREMENT notified (not PBP) |
 | Procurement Standard | Open Procurement page, classify as Standard | Routed to AP Control |
 | Procurement OPW | Open Procurement page, classify as Potential OPW | Routed to OPW Panel |
+| OPW Sole Trader Self-Employed | Determine as Self-Employed, contract: yes | Routed to Contract Drafter |
+| OPW Sole Trader Employed | Determine as Employed | Terminal: completed_payroll, notification sent |
+| OPW Intermediary Outside IR35 | Determine as Outside IR35, contract: no | Routed directly to AP Control |
+| OPW Intermediary Inside IR35 | Determine as Inside IR35, issue SDS | Terminal: sds_issued, SDS notification sent |
 | Unauthorized access | Open procurement page without role | Access denied page shown |
 | Document upload (passport) | Upload passport in Section 3 | Goes to SensitiveDocuments library |
 | AP Control verification | Verify bank and company details | Supplier created, requester notified with vendor number |

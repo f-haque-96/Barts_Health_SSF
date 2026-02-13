@@ -309,7 +309,7 @@ Date Created: ___________________
 Before moving to the next step, verify:
 
 - [ ] SharePoint site "NHS-Supplier-Forms" exists
-- [ ] SupplierDocuments library exists with 6 folders
+- [ ] SupplierDocuments library exists with 4 folders
 - [ ] SensitiveDocuments library exists with 4 folders
 - [ ] SensitiveDocuments has restricted permissions (only AP Control + Admin)
 - [ ] I wrote down the URLs above
@@ -371,7 +371,7 @@ If stuck, search Google for "SharePoint Online break permission inheritance [you
 ## Next Step
 
 Once this checklist is complete, move on to:
-**→ 03-SUPPLIER-DATA-EXPORT.md**
+**→ [04-power-automate.md](04-power-automate.md)** (Power Automate Notification Flows)
 
 ---
 

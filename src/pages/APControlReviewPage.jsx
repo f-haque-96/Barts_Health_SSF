@@ -635,21 +635,43 @@ const APControlReviewPage = ({
         </div>
       </div>
 
-      {/* Terminal State Notice - Completed_Payroll (No Oracle supplier record needed) */}
+      {/* Terminal State Notice - Employed (No Oracle supplier record needed) */}
       {submission.status === 'Completed_Payroll' && (
         <NoticeBox
-          type="info"
-          style={{ marginBottom: 'var(--space-24)', backgroundColor: '#fffbeb', borderColor: '#f59e0b' }}
+          type="error"
+          style={{ marginBottom: 'var(--space-24)' }}
         >
-          <h4 style={{ margin: '0 0 var(--space-8) 0', display: 'flex', alignItems: 'center', gap: '8px', color: '#92400e' }}>
-            <WarningIcon size={20} color="#f59e0b" />
-            Terminal State: Completed (Payroll)
+          <h4 style={{ margin: '0 0 var(--space-8) 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <WarningIcon size={20} color="#dc2626" />
+            DO NOT SET UP SUPPLIER — Employed (Payroll Route)
           </h4>
-          <p style={{ margin: '0 0 var(--space-8) 0', color: '#78350f' }}>
-            This submission has been completed by the OPW Panel and <strong>does not require AP Control verification</strong>.
+          <p style={{ margin: '0 0 var(--space-8) 0' }}>
+            The OPW Panel has determined this worker is <strong>employed for tax purposes</strong>.
+            This submission is complete and <strong>does not require AP Control verification</strong>.
           </p>
-          <p style={{ margin: 0, color: '#78350f', fontWeight: 'var(--font-weight-semibold)' }}>
-            ⚠️ <strong>DO NOT create an Oracle supplier record.</strong> This worker should be processed via NHS payroll (ESR) by HR/Payroll.
+          <p style={{ margin: 0, fontWeight: 'var(--font-weight-semibold)' }}>
+            No Oracle supplier record should be created. This worker must be engaged via NHS Payroll (ESR).
+          </p>
+        </NoticeBox>
+      )}
+
+      {/* Terminal State Notice - Inside IR35 (No Oracle supplier record needed) */}
+      {(submission.status === 'inside_ir35_sds_issued' || submission.currentStage === 'sds_issued') && (
+        <NoticeBox
+          type="error"
+          style={{ marginBottom: 'var(--space-24)' }}
+        >
+          <h4 style={{ margin: '0 0 var(--space-8) 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <WarningIcon size={20} color="#dc2626" />
+            DO NOT SET UP SUPPLIER — Inside IR35 (Payroll Route)
+          </h4>
+          <p style={{ margin: '0 0 var(--space-8) 0' }}>
+            The OPW Panel has determined this engagement falls <strong>inside IR35</strong>.
+            A Status Determination Statement (SDS) has been issued to the intermediary.
+            This submission is complete and <strong>does not require AP Control verification</strong>.
+          </p>
+          <p style={{ margin: 0, fontWeight: 'var(--font-weight-semibold)' }}>
+            No Oracle supplier record should be created. This worker must be paid via NHS Payroll (ESR) with PAYE deductions.
           </p>
         </NoticeBox>
       )}
@@ -1076,7 +1098,7 @@ const APControlReviewPage = ({
                         border: '1px solid #fecaca'
                       }}>
                         <p style={{ margin: 0, fontSize: 'var(--font-size-xs)', color: '#991b1b' }}>
-                          ⚠️ <strong>Payroll Route:</strong> Worker classified as employed. Must be paid via NHS payroll (ESR).
+                          <WarningIcon size={14} style={{ verticalAlign: 'middle' }} /> <strong>Payroll Route:</strong> Worker classified as employed. Must be paid via NHS payroll (ESR).
                           No Oracle supplier record required.
                         </p>
                       </div>
@@ -1085,7 +1107,7 @@ const APControlReviewPage = ({
                 )}
 
                 {/* Intermediary Path - IR35 Status */}
-                {submission.opwReview.workerClassification === 'intermediary' && submission.opwReview.ir35Determination && (
+                {submission.opwReview.workerClassification === 'intermediary' && submission.opwReview.ir35Status && (
                   <>
                     <p style={{ marginBottom: 'var(--space-8)' }}>
                       <strong>IR35 Status:</strong>{' '}
@@ -1093,17 +1115,17 @@ const APControlReviewPage = ({
                         display: 'inline-block',
                         padding: '4px 12px',
                         borderRadius: 'var(--radius-sm)',
-                        backgroundColor: submission.opwReview.ir35Determination === 'outside' ? '#22c55e' : '#dc2626',
+                        backgroundColor: submission.opwReview.ir35Status === 'outside' ? '#22c55e' : '#dc2626',
                         color: 'white',
                         fontWeight: 'var(--font-weight-semibold)',
                         fontSize: 'var(--font-size-xs)',
                       }}>
-                        {submission.opwReview.ir35Determination === 'inside' ? 'INSIDE IR35 (Payroll)' : 'OUTSIDE IR35'}
+                        {submission.opwReview.ir35Status === 'inside' ? 'INSIDE IR35 (Payroll)' : 'OUTSIDE IR35'}
                       </span>
                     </p>
 
                     {/* SDS Tracking - Only for Inside IR35 */}
-                    {submission.opwReview.ir35Determination === 'inside' && submission.opwReview.sdsTracking && (
+                    {submission.opwReview.ir35Status === 'inside' && submission.opwReview.sdsTracking && (
                       <div style={{
                         marginTop: 'var(--space-12)',
                         padding: 'var(--space-12)',
@@ -1121,7 +1143,7 @@ const APControlReviewPage = ({
                             </p>
                             {submission.opwReview.sdsTracking.sdsResponseReceived ? (
                               <p style={{ margin: '0 0 var(--space-4) 0', fontSize: 'var(--font-size-xs)', color: '#7f1d1d' }}>
-                                • <strong>Response Received:</strong> {formatDate(submission.opwReview.sdsTracking.sdsResponseDate)} ✓
+                                • <strong>Response Received:</strong> {formatDate(submission.opwReview.sdsTracking.sdsResponseDate)} <CheckIcon size={12} style={{ verticalAlign: 'middle' }} />
                               </p>
                             ) : (
                               <p style={{ margin: '0 0 var(--space-4) 0', fontSize: 'var(--font-size-xs)', color: '#7f1d1d' }}>
@@ -1134,14 +1156,14 @@ const APControlReviewPage = ({
                           </>
                         )}
                         <p style={{ margin: 'var(--space-8) 0 0 0', fontSize: 'var(--font-size-xs)', color: '#991b1b' }}>
-                          ⚠️ <strong>Payroll Route:</strong> Inside IR35 determination. Must be paid via NHS payroll (ESR).
+                          <WarningIcon size={14} style={{ verticalAlign: 'middle' }} /> <strong>Payroll Route:</strong> Inside IR35 determination. Must be paid via NHS payroll (ESR).
                           No Oracle supplier record required.
                         </p>
                       </div>
                     )}
 
                     {/* Outside IR35 - Contract Required */}
-                    {submission.opwReview.ir35Determination === 'outside' && submission.opwReview.contractRequired === 'yes' && (
+                    {submission.opwReview.ir35Status === 'outside' && submission.opwReview.contractRequired === 'yes' && (
                       <div style={{
                         marginTop: 'var(--space-12)',
                         padding: 'var(--space-12)',
@@ -1150,7 +1172,7 @@ const APControlReviewPage = ({
                         border: '1px solid #86efac'
                       }}>
                         <p style={{ margin: 0, fontSize: 'var(--font-size-xs)', color: '#166534' }}>
-                          ✓ <strong>Contract Required:</strong> Agreement must be approved by Contract Drafter before AP verification.
+                          <CheckIcon size={14} style={{ verticalAlign: 'middle' }} /> <strong>Contract Required:</strong> Agreement must be approved by Contract Drafter before AP verification.
                         </p>
                       </div>
                     )}
@@ -1554,8 +1576,8 @@ const APControlReviewPage = ({
         </div>
       </div>
 
-      {/* AP Verification Checklist */}
-      {!apControlReview && (
+      {/* AP Verification Checklist - Hide for terminal states (Employed/Inside IR35 go to payroll, not AP) */}
+      {!apControlReview && submission.status !== 'Completed_Payroll' && submission.status !== 'inside_ir35_sds_issued' && submission.currentStage !== 'sds_issued' && submission.currentStage !== 'completed_payroll' && (
         <div style={{
           marginTop: 'var(--space-32)',
           padding: 'var(--space-24)',

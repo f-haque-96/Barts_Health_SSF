@@ -185,7 +185,7 @@ VITE_ENABLE_MOCK_AUTH=false
 
 - [ ] **NEW:** Add CSRF token integration to frontend:
   - [ ] Fetch CSRF token on app load from `/api/csrf-token`
-  - [ ] Include `CSRF-Token` header in all POST/PUT/DELETE requests
+  - [ ] Include `X-CSRF-Token` header in all POST/PUT/DELETE requests
   - [ ] Refresh token if 403 Forbidden received
 
 Example frontend code:
@@ -196,7 +196,7 @@ const { csrfToken } = await fetch('/api/csrf-token').then(r => r.json());
 // Include in requests
 headers: {
   'Content-Type': 'application/json',
-  'CSRF-Token': csrfToken
+  'X-CSRF-Token': csrfToken
 }
 ```
 

@@ -35,7 +35,7 @@ const ContractDrafterReviewPage = ({ user, readOnly = false }) => {
   const [instructions, setInstructions] = useState('');
   const [actionInProgress, setActionInProgress] = useState(false);
   const [approvalComments, setApprovalComments] = useState('');
-  const [finalizedAgreement, setFinalizedAgreement] = useState(null);
+  const [finalizedAgreement, setFinalisedAgreement] = useState(null);
   const [digitalSignature, setDigitalSignature] = useState('');
 
   // Load submission data
@@ -125,7 +125,7 @@ const ContractDrafterReviewPage = ({ user, readOnly = false }) => {
   };
 
   // Handle finalized agreement upload
-  const handleFinalizedAgreementUpload = (fileData) => {
+  const handleFinalisedAgreementUpload = (fileData) => {
     if (!fileData) return;
 
     // FileUpload component already provides: {name, size, type, file, base64}
@@ -144,7 +144,7 @@ const ContractDrafterReviewPage = ({ user, readOnly = false }) => {
     }
 
     // FileUpload component already converted to base64, just use it
-    setFinalizedAgreement({
+    setFinalisedAgreement({
       name: fileData.name,
       type: fileData.type,
       size: fileData.size,
@@ -294,21 +294,21 @@ const ContractDrafterReviewPage = ({ user, readOnly = false }) => {
           </div>
 
           {/* Intermediary Path - IR35 Status */}
-          {opwReview.workerClassification === 'intermediary' && opwReview.ir35Determination && (
+          {opwReview.workerClassification === 'intermediary' && opwReview.ir35Status && (
             <div style={{ marginBottom: 'var(--space-8)' }}>
               <strong>IR35 Status:</strong>{' '}
               <span style={{
                 display: 'inline-block',
                 padding: '4px 12px',
                 borderRadius: 'var(--radius-sm)',
-                backgroundColor: opwReview.ir35Determination === 'outside' ? '#22c55e' : '#dc2626',
+                backgroundColor: opwReview.ir35Status === 'outside' ? '#22c55e' : '#dc2626',
                 color: 'white',
                 fontWeight: 'var(--font-weight-semibold)',
                 fontSize: 'var(--font-size-xs)',
               }}>
-                {opwReview.ir35Determination === 'outside' ? 'OUTSIDE IR35' : 'INSIDE IR35'}
+                {opwReview.ir35Status === 'outside' ? 'OUTSIDE IR35' : 'INSIDE IR35'}
               </span>
-              {opwReview.ir35Determination === 'outside' && (
+              {opwReview.ir35Status === 'outside' && (
                 <span style={{ marginLeft: 'var(--space-8)', color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
                   (Requires Consultancy Agreement)
                 </span>
@@ -348,7 +348,7 @@ const ContractDrafterReviewPage = ({ user, readOnly = false }) => {
               borderRadius: 'var(--radius-sm)',
               fontSize: 'var(--font-size-sm)',
             }}>
-              📄 <strong>Contract Required:</strong> {opwReview.contractRequired === 'yes' ? 'Yes' : 'No'}
+              <DocumentIcon size={14} style={{ verticalAlign: 'middle' }} /> <strong>Contract Required:</strong> {opwReview.contractRequired === 'yes' ? 'Yes' : 'No'}
             </div>
           )}
         </div>
@@ -448,10 +448,10 @@ const ContractDrafterReviewPage = ({ user, readOnly = false }) => {
                 </div>
               </div>
 
-              {/* Card 2: Inside IR35 Agreement */}
+              {/* Card 2: Sole Trader Agreement (Self-Employed) */}
               <div
                 onClick={() => {
-                  const template = contractNegotiationService.getAgreementTemplate('inside_ir35');
+                  const template = contractNegotiationService.getAgreementTemplate('self_employed');
                   setSelectedTemplate(template);
                   setCustomFile(null);
                 }}
@@ -500,13 +500,13 @@ const ContractDrafterReviewPage = ({ user, readOnly = false }) => {
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: '600', marginBottom: 'var(--space-4)' }}>
-                      Inside IR35 Agreement
+                      Sole Trader Agreement
                     </div>
                     <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)' }}>
                       Sole Trader Agreement v22
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
-                      For suppliers determined to be inside IR35
+                      For self-employed sole traders
                     </div>
                   </div>
                 </div>
@@ -570,20 +570,20 @@ const ContractDrafterReviewPage = ({ user, readOnly = false }) => {
             <strong>Template Used:</strong> {templateUsed || 'N/A'}
           </div>
 
-          {/* Upload Finalized Agreement */}
+          {/* Upload Finalised Agreement */}
           <div style={{ marginBottom: 'var(--space-16)' }}>
             <NoticeBox type="info" style={{ marginBottom: 'var(--space-12)', fontSize: '0.875rem' }}>
-              <strong>Step 1: Upload Finalized Agreement</strong>
+              <strong>Step 1: Upload Finalised Agreement</strong>
               <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
                 Upload the final signed agreement that has been reviewed and approved by all parties. This will be forwarded to AP Control for final processing.
               </p>
             </NoticeBox>
 
             <FileUpload
-              label="Finalized Signed Agreement"
+              label="Finalised Signed Agreement"
               name="finalizedAgreement"
               acceptedTypes={['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']}
-              onUpload={handleFinalizedAgreementUpload}
+              onUpload={handleFinalisedAgreementUpload}
               required
               helperText="Accepted formats: PDF, DOCX (Max 3MB)"
             />

@@ -32,6 +32,10 @@ export const NOTIFICATION_TYPES = {
 
   OPW_INSIDE_IR35: 'OPW_INSIDE_IR35',
   OPW_OUTSIDE_IR35: 'OPW_OUTSIDE_IR35',
+  OPW_EMPLOYED: 'OPW_EMPLOYED',
+  OPW_SELF_EMPLOYED: 'OPW_SELF_EMPLOYED',
+  OPW_SDS_ISSUED: 'OPW_SDS_ISSUED',
+  AP_DIRECT_ROUTE: 'AP_DIRECT_ROUTE',
 
   AP_VERIFIED: 'AP_VERIFIED',
 
@@ -104,10 +108,16 @@ export const generateAlembaResolutionSummary = ({
       return `Rejected request - ${rejectionReason || 'See comments'}. Rejected by ${rejectedBy} at ${rejectedAtStage} stage. Guidance sent to requester.`;
 
     case 'opw_inside':
-      return `OPW/IR35 Determination: Inside IR35. ${supplierName}. Processed via OPW route.`;
+      return `OPW/IR35 Determination: Inside IR35. ${supplierName}. SDS issued. Routed to Payroll/ESR.`;
 
     case 'opw_outside':
-      return `OPW/IR35 Determination: Outside IR35. ${supplierName}. Processed via OPW route.`;
+      return `OPW/IR35 Determination: Outside IR35. ${supplierName}. Routed to supplier setup (Oracle/AP).`;
+
+    case 'opw_employed':
+      return `OPW Employment Status: Employed for tax purposes. ${supplierName}. Routed to Payroll/ESR. No Oracle supplier record created.`;
+
+    case 'opw_self_employed':
+      return `OPW Employment Status: Self-Employed. ${supplierName}. Routed to supplier setup (Oracle/AP).`;
 
     default:
       return `Request processed. ${supplierName || 'See details in system.'}`;
@@ -799,6 +809,306 @@ NHS Supplier Setup System
   return notifications;
 };
 
+/**
+ * Notify hiring manager when OPW determines "Employed" (sole trader payroll route)
+ * Terminal state: Worker must be engaged via Payroll (ESR), not as a supplier
+ * @param {object} submission - Submission data
+ * @param {object} determination - OPW determination details
+ * @returns {Array} - Array of notification records
+ */
+export const notifyEmployedDetermination = (submission, determination) => {
+  const requesterEmail = submission.formData?.nhsEmail;
+  const requesterName = `${submission.formData?.firstName || ''} ${submission.formData?.lastName || ''}`.trim();
+  const supplierName = submission.formData?.companyName || submission.formData?.section4?.companyName || 'Supplier';
+  const reviewedBy = determination?.signature || determination?.reviewedBy || 'OPW Panel';
+  const notifications = [];
+
+  const subject = `OPW Determination \u2014 Employed for Tax Purposes \u2014 ${supplierName} \u2014 ${submission.submissionId}`;
+
+  const body = `
+Dear ${requesterName || 'Hiring Manager'},
+
+The OPW Panel has completed its assessment of your supplier setup request.
+
+DETERMINATION: EMPLOYED FOR TAX PURPOSES
+
+SUBMISSION DETAILS:
+- Submission ID: ${submission.submissionId}
+- Worker/Supplier: ${supplierName}
+- Determined By: ${reviewedBy}
+- Date: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
+
+WHAT THIS MEANS:
+This worker has been determined as employed for tax purposes based on the CEST assessment. Under HMRC rules, they cannot be engaged as a supplier through Oracle.
+
+REQUIRED ACTION:
+The worker must be engaged via NHS Payroll (ESR) using the Trust's standard recruitment processes. Please contact HR to arrange one of the following:
+- Fixed-term contract
+- Bank staff engagement
+- Agency via BankPartners
+
+NO Oracle supplier record will be created for this engagement.
+
+This supplier setup request is now COMPLETE. No further action is required on the supplier form.
+
+If you have questions, please contact the OPW Panel at bartshealth.opwpanelbarts@nhs.net
+
+Regards,
+Barts Health NHS Trust
+OPW Panel
+
+---
+This is an automated notification from the NHS Supplier Setup System.
+  `.trim();
+
+  // Notify hiring manager/requester
+  notifications.push(createNotificationRecord({
+    type: NOTIFICATION_TYPES.OPW_EMPLOYED,
+    submissionId: submission.submissionId,
+    recipientEmail: requesterEmail,
+    recipientName: requesterName,
+    subject,
+    body,
+    metadata: {
+      supplierName,
+      determination: 'employed',
+      workerClassification: 'sole_trader',
+      outcomeRoute: 'payroll_esr',
+      reviewedBy,
+    },
+  }));
+
+  // Notify admin team
+  notifyDepartment('admin', {
+    type: NOTIFICATION_TYPES.OPW_EMPLOYED,
+    submissionId: submission.submissionId,
+    subject: `[OPW TERMINAL] Employed determination: ${supplierName} (${submission.submissionId})`,
+    body: `OPW Panel determined ${supplierName} as EMPLOYED for tax purposes. Worker must use Payroll/ESR. No Oracle supplier record. Reviewed by ${reviewedBy}.`,
+  });
+
+  // Close Alemba ticket if applicable
+  if (submission.alembaReference) {
+    closeAlembaTicket({
+      alembaReference: submission.alembaReference,
+      submissionId: submission.submissionId,
+      outcome: 'opw_employed',
+      supplierName,
+      closedBy: reviewedBy,
+      emailUser: true,
+    });
+  }
+
+  return notifications;
+};
+
+/**
+ * Notify intermediary and hiring manager when OPW determines "Inside IR35"
+ * Issues SDS (Status Determination Statement) with 14-day response window
+ * @param {object} submission - Submission data
+ * @param {object} determination - OPW determination details including SDS tracking
+ * @returns {Array} - Array of notification records
+ */
+export const notifyInsideIR35WithSDS = (submission, determination) => {
+  const requesterEmail = submission.formData?.nhsEmail;
+  const requesterName = `${submission.formData?.firstName || ''} ${submission.formData?.lastName || ''}`.trim();
+  const supplierEmail = submission.formData?.contactEmail || submission.formData?.section4?.supplierEmail;
+  const supplierName = submission.formData?.companyName || submission.formData?.section4?.companyName || 'Supplier';
+  const reviewedBy = determination?.signature || determination?.reviewedBy || 'OPW Panel';
+  const sdsIssuedDate = determination?.sdsTracking?.sdsIssuedDate || new Date().toISOString().split('T')[0];
+  const sdsDeadline = new Date(new Date(sdsIssuedDate).getTime() + 14 * 24 * 60 * 60 * 1000)
+    .toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  const notifications = [];
+
+  // SDS to intermediary (supplier)
+  const sdsSubject = `Status Determination Statement \u2014 Inside IR35 \u2014 ${supplierName} \u2014 ${submission.submissionId}`;
+
+  const sdsBody = `
+Dear ${supplierName},
+
+STATUS DETERMINATION STATEMENT (SDS)
+
+The OPW Panel at Barts Health NHS Trust has made an IR35 determination regarding the engagement described below.
+
+DETERMINATION: INSIDE IR35
+
+ENGAGEMENT DETAILS:
+- Submission ID: ${submission.submissionId}
+- Worker/Intermediary: ${supplierName}
+- Determined By: ${reviewedBy}
+- SDS Issued: ${new Date(sdsIssuedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
+- Response Deadline: ${sdsDeadline}
+
+${determination?.rationale ? `RATIONALE:\n${determination.rationale}\n` : ''}
+WHAT THIS MEANS:
+This engagement has been determined to fall inside IR35. The worker must be treated as an employee for tax purposes and engaged via NHS Payroll (ESR). No Oracle supplier record will be created.
+
+YOUR RIGHT TO RESPOND:
+You have 14 days from the date of this SDS (${sdsDeadline}) to respond.
+- If you AGREE with this determination, no further action is needed.
+- If you DISAGREE, you must provide your reasons in writing within 14 days.
+
+If you disagree, the OPW Panel has 45 days to reconsider the determination.
+
+Please send any correspondence to: bartshealth.opwpanelbarts@nhs.net
+
+Regards,
+Barts Health NHS Trust
+OPW Panel
+
+---
+This is an automated notification from the NHS Supplier Setup System.
+  `.trim();
+
+  // Notify intermediary/supplier
+  if (supplierEmail) {
+    notifications.push(createNotificationRecord({
+      type: NOTIFICATION_TYPES.OPW_SDS_ISSUED,
+      submissionId: submission.submissionId,
+      recipientEmail: supplierEmail,
+      recipientName: supplierName,
+      subject: sdsSubject,
+      body: sdsBody,
+      metadata: {
+        supplierName,
+        determination: 'inside_ir35',
+        workerClassification: 'intermediary',
+        outcomeRoute: 'payroll_esr',
+        sdsIssuedDate,
+        sdsDeadline,
+        reviewedBy,
+      },
+    }));
+  }
+
+  // Notify hiring manager/requester
+  const hiringManagerBody = `
+Dear ${requesterName || 'Hiring Manager'},
+
+The OPW Panel has completed its IR35 assessment.
+
+DETERMINATION: INSIDE IR35
+
+SUBMISSION DETAILS:
+- Submission ID: ${submission.submissionId}
+- Worker/Intermediary: ${supplierName}
+- Determined By: ${reviewedBy}
+- SDS Issued: ${new Date(sdsIssuedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
+
+WHAT THIS MEANS:
+This engagement falls inside IR35. The worker must be engaged via NHS Payroll (ESR).
+A Status Determination Statement (SDS) has been sent to the intermediary.
+They have 14 days to respond (deadline: ${sdsDeadline}).
+
+NO Oracle supplier record will be created. This supplier setup request is now COMPLETE.
+
+Please contact HR to arrange the worker's engagement via Payroll/ESR.
+
+If you have questions, please contact the OPW Panel at bartshealth.opwpanelbarts@nhs.net
+
+Regards,
+Barts Health NHS Trust
+OPW Panel
+
+---
+This is an automated notification from the NHS Supplier Setup System.
+  `.trim();
+
+  notifications.push(createNotificationRecord({
+    type: NOTIFICATION_TYPES.OPW_INSIDE_IR35,
+    submissionId: submission.submissionId,
+    recipientEmail: requesterEmail,
+    recipientName: requesterName,
+    subject: `OPW Determination \u2014 Inside IR35 \u2014 ${supplierName} \u2014 ${submission.submissionId}`,
+    body: hiringManagerBody,
+    metadata: {
+      supplierName,
+      determination: 'inside_ir35',
+      workerClassification: 'intermediary',
+      outcomeRoute: 'payroll_esr',
+      sdsIssuedDate,
+      sdsDeadline,
+      reviewedBy,
+    },
+  }));
+
+  // Notify OPW panel for tracking
+  notifyDepartment('opw', {
+    type: NOTIFICATION_TYPES.OPW_SDS_ISSUED,
+    submissionId: submission.submissionId,
+    subject: `[SDS ISSUED] Inside IR35: ${supplierName} (${submission.submissionId}) \u2014 Response due ${sdsDeadline}`,
+    body: `SDS issued to ${supplierName} (${supplierEmail || 'email not available'}). Response deadline: ${sdsDeadline}. Reviewed by ${reviewedBy}.`,
+    metadata: { sdsIssuedDate, sdsDeadline },
+  });
+
+  // Close Alemba ticket if applicable
+  if (submission.alembaReference) {
+    closeAlembaTicket({
+      alembaReference: submission.alembaReference,
+      submissionId: submission.submissionId,
+      outcome: 'opw_inside',
+      supplierName,
+      closedBy: reviewedBy,
+      emailUser: true,
+    });
+  }
+
+  return notifications;
+};
+
+/**
+ * Notify AP Control when a submission skips the contract stage
+ * and routes directly from OPW to AP Control
+ * @param {object} submission - Submission data
+ * @param {object} determination - OPW determination details
+ * @returns {object} - Notification record
+ */
+export const notifyAPControlDirect = (submission, determination) => {
+  const supplierName = submission.formData?.companyName || submission.formData?.section4?.companyName || 'Supplier';
+  const reviewedBy = determination?.signature || determination?.reviewedBy || 'OPW Panel';
+  const determinationType = determination?.workerClassification === 'sole_trader'
+    ? 'Self-Employed (Sole Trader)'
+    : 'Outside IR35 (Intermediary)';
+
+  const subject = `Supplier Setup Ready for AP Control \u2014 ${supplierName} \u2014 ${submission.submissionId}`;
+
+  const body = `
+A supplier setup request has been approved by the OPW Panel and is ready for AP Control verification.
+
+No contract stage was required for this submission.
+
+SUBMISSION DETAILS:
+- Submission ID: ${submission.submissionId}
+- Supplier: ${supplierName}
+- OPW Determination: ${determinationType}
+- Contract Required: No
+- Reviewed By: ${reviewedBy}
+- Date: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
+
+REQUIRED ACTIONS:
+1. Verify bank details against letterhead
+2. Create Oracle supplier record
+3. Send Oracle confirmation to requester
+
+Review Link: ${typeof window !== 'undefined' ? window.location.origin : ''}/ap-review/${submission.submissionId}
+
+Regards,
+NHS Supplier Setup System
+  `.trim();
+
+  return notifyDepartment('ap', {
+    type: NOTIFICATION_TYPES.AP_DIRECT_ROUTE,
+    submissionId: submission.submissionId,
+    subject,
+    body,
+    metadata: {
+      supplierName,
+      determination: determination?.workerClassification === 'sole_trader' ? 'self_employed' : 'outside_ir35',
+      contractRequired: 'no',
+      reviewedBy,
+    },
+  });
+};
+
 export default {
   NOTIFICATION_TYPES,
   createNotificationRecord,
@@ -811,4 +1121,7 @@ export default {
   markNotificationProcessed,
   sendContractRequestEmail,
   notifyContractApproved,
+  notifyEmployedDetermination,
+  notifyInsideIR35WithSDS,
+  notifyAPControlDirect,
 };

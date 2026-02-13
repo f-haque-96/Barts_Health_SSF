@@ -43,10 +43,21 @@ This application provides:
 
 - **7-section supplier form** - Collects requester info, pre-screening, supplier classification, company details, service description, financial info, and review/submit
 - **Companies House integration** - Verifies Company Registration Numbers (CRN) against the official API
-- **Multiple authorization workflows** - Routes submissions to AP Control, Procurement, OPW Panel, or PBP based on criteria
-- **PDF generation** - Creates downloadable PDF summaries of submissions
-- **File upload support** - Handles document uploads (letterheads, ID verification, etc.)
+- **Conditional approval pipeline** - Routes submissions through PBP, Procurement, OPW Panel, Contract Drafter, and AP Control with intelligent routing based on supplier type and OPW determination
+- **OPW compliance** - Dual-path determination for sole traders (employed/self-employed) and intermediaries (inside/outside IR35), SDS tracking, terminal states for payroll routing
+- **PDF generation** - Creates downloadable PDF summaries of submissions with OPW determination data
+- **File upload support** - Handles document uploads (letterheads, ID verification, CEST forms, etc.)
 - **Rejection handling system** - Automatically flags rejected suppliers, displays rejection notices to requesters, prevents resubmission of rejected suppliers with fuzzy matching (70% similarity threshold)
+
+### Approval Pipeline
+
+```
+Requester → PBP → Procurement ─┬─ Standard ────────────────────→ AP Control → Completed (Oracle)
+                                └─ OPW/IR35 → OPW Panel ─┬─ Self-Employed/Outside IR35 ─┬─ Contract → AP → Completed
+                                                          │                              └─ (no contract) → AP → Completed
+                                                          ├─ Employed → Completed (Payroll/ESR)
+                                                          └─ Inside IR35 → SDS Issued (Payroll/ESR)
+```
 
 ---
 

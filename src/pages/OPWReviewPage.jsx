@@ -1,6 +1,6 @@
 /**
  * OPW (Off-Payroll Working) Panel Review Page
- * Handles IR35 determination for sole trader suppliers
+ * Handles employment status (sole traders) and IR35 determination (intermediaries)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -10,7 +10,8 @@ import { Button, NoticeBox, ApprovalStamp, Textarea, RadioGroup, SignatureSectio
 import { formatDate } from '../utils/helpers';
 import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
-import { sendApprovalNotification, notifyDepartment, sendRejectionNotification } from '../services/notificationService';
+import { sendApprovalNotification, notifyDepartment, sendRejectionNotification, sendContractRequestEmail, notifyEmployedDetermination, notifyInsideIR35WithSDS, notifyAPControlDirect } from '../services/notificationService';
+import { contractNegotiationService } from '../services/contractNegotiationService';
 
 const ReviewItem = ({ label, value, raw = false, badge = null }) => {
   if (!value && value !== 0) return null;
@@ -265,8 +266,8 @@ const OPWReviewPage = ({
         return;
       }
 
-      // Must select contract required for both inside and outside
-      if ((ir35Determination === 'inside' || ir35Determination === 'outside') && !contractRequired) {
+      // Must select contract required for Outside IR35 only (Inside IR35 is terminal - payroll route)
+      if (ir35Determination === 'outside' && !contractRequired) {
         alert('Please indicate whether a contract is required');
         return;
       }
@@ -529,6 +530,32 @@ const OPWReviewPage = ({
 
       setSubmission(updatedSubmission);
 
+      // Send notifications based on determination outcome
+      try {
+        if (workerClassification === 'sole_trader' && employmentStatus === 'employed') {
+          notifyEmployedDetermination(updatedSubmission, opwReviewData);
+        } else if (workerClassification === 'intermediary' && ir35Determination === 'inside') {
+          notifyInsideIR35WithSDS(updatedSubmission, opwReviewData);
+        } else if ((employmentStatus === 'self_employed' || ir35Determination === 'outside') && contractRequired === 'no') {
+          notifyAPControlDirect(updatedSubmission, opwReviewData);
+        } else if ((employmentStatus === 'self_employed' || ir35Determination === 'outside') && contractRequired === 'yes') {
+          // Notify contract drafter and supplier about required agreement
+          const templateKey = employmentStatus === 'self_employed' ? 'self_employed' : 'outside';
+          const templateInfo = contractNegotiationService.getAgreementTemplate(templateKey);
+          if (templateInfo) {
+            sendContractRequestEmail(updatedSubmission, templateInfo);
+          }
+          notifyDepartment('contractDrafter', {
+            type: 'CONTRACT_REVIEW_REQUEST',
+            submissionId: updatedSubmission.submissionId,
+            subject: `Contract Review Required - ${updatedSubmission.formData?.companyName || 'Supplier'}`,
+            body: `OPW Panel determination requires contract negotiation. Please send the appropriate agreement.`,
+          });
+        }
+      } catch (notifError) {
+        console.error('Error sending notifications:', notifError);
+      }
+
       // Show success message
       alert(successMessage);
     } catch (error) {
@@ -712,11 +739,11 @@ const OPWReviewPage = ({
         </div>
       </div>
 
-      {/* Warning if not sole trader */}
-      {!isSoleTrader && (
-        <NoticeBox type="warning" style={{ marginBottom: 'var(--space-24)' }}>
-          <strong>Note:</strong> This supplier is not marked as a sole trader. IR35 determination may not be required.
-          Personal Service Provider Status: <strong>{formData.soleTraderStatus || 'Not specified'}</strong>
+      {/* Substantive Position Warning */}
+      {(formData.substantivePosition === 'yes' || formData.section2?.substantivePosition === 'yes') && (
+        <NoticeBox type="error" style={{ marginBottom: 'var(--space-24)' }}>
+          <strong>Warning:</strong> The requester indicated this covers a substantive/vacant position.
+          Per OPW guidance, this should follow standard Trust recruitment processes (Fixed Term contract, Bank, or Agency).
         </NoticeBox>
       )}
 
@@ -1202,7 +1229,7 @@ const OPWReviewPage = ({
               {/* Warning for Employed */}
               {employmentStatus === 'employed' && (
                 <NoticeBox type="error" style={{ marginBottom: 'var(--space-16)' }}>
-                  <strong>⚠️ EMPLOYED - Payroll Route (Terminal State)</strong>
+                  <strong><WarningIcon size={14} style={{ verticalAlign: 'middle' }} /> EMPLOYED - Payroll Route (Terminal State)</strong>
                   <p style={{ marginTop: '8px', marginBottom: 0 }}>
                     This worker will be routed to HR/Payroll for ESR setup. <strong>NO Oracle supplier record will be created.</strong>
                     This supplier request will be marked as complete after your determination.
@@ -1214,7 +1241,7 @@ const OPWReviewPage = ({
               {employmentStatus === 'self_employed' && (
                 <>
                   <NoticeBox type="success" style={{ marginBottom: 'var(--space-16)' }}>
-                    <strong>&#10003; Self-Employed - Supplier Route</strong>
+                    <strong><CheckIcon size={14} style={{ verticalAlign: 'middle' }} /> Self-Employed - Supplier Route</strong>
                     <p style={{ marginTop: '8px', marginBottom: 0 }}>
                       This worker is self-employed and can be paid as a supplier.
                       {contractRequired === 'yes' && ' Will proceed to Contract Drafter for agreement negotiation.'}
@@ -1301,7 +1328,7 @@ const OPWReviewPage = ({
               {/* Inside IR35 Warning + SDS Tracking */}
               {ir35Determination === 'inside' && (
                 <NoticeBox type="error" style={{ marginBottom: 'var(--space-16)' }}>
-                  <strong>⚠️ INSIDE IR35 - Payroll Route (Terminal State)</strong>
+                  <strong><WarningIcon size={14} style={{ verticalAlign: 'middle' }} /> INSIDE IR35 - Payroll Route (Terminal State)</strong>
                   <p style={{ marginTop: '8px', marginBottom: 0 }}>
                     This worker will be routed to HR/Payroll for ESR setup. <strong>NO Oracle supplier record will be created.</strong>
                     A Status Determination Statement (SDS) must be issued. This supplier request will be marked as complete after your determination.
@@ -1371,7 +1398,7 @@ const OPWReviewPage = ({
                           <p style={{ fontSize: '0.85em', color: '#7f1d1d', margin: '8px 0 0 0' }}>
                             <strong>Days since SDS issued:</strong> {Math.floor((new Date() - new Date(sdsIssuedDate)) / (1000 * 60 * 60 * 24))} days
                             {(Math.floor((new Date() - new Date(sdsIssuedDate)) / (1000 * 60 * 60 * 24)) > 14) && !sdsResponseReceived && (
-                              <span> <strong style={{ color: '#991b1b' }}>⚠️ 14-day response window expired</strong></span>
+                              <span> <strong style={{ color: '#991b1b' }}><WarningIcon size={12} style={{ verticalAlign: 'middle' }} /> 14-day response window expired</strong></span>
                             )}
                           </p>
                         )}
@@ -1384,7 +1411,7 @@ const OPWReviewPage = ({
               {/* Outside IR35 Info */}
               {ir35Determination === 'outside' && (
                 <NoticeBox type="success" style={{ marginBottom: 'var(--space-16)' }}>
-                  <strong>✓ Outside IR35 - Supplier Route</strong>
+                  <strong><CheckIcon size={14} style={{ verticalAlign: 'middle' }} /> Outside IR35 - Supplier Route</strong>
                   <p style={{ marginTop: '8px', marginBottom: 0 }}>
                     This worker operates a genuine business and can be paid as a supplier.
                     {contractRequired === 'yes' && ' Will proceed to Contract Drafter for agreement negotiation.'}
@@ -1504,7 +1531,7 @@ const OPWReviewPage = ({
         </div>
       )}
 
-      {/* Contract Negotiation - Next Stage Notice */}
+      {/* Next Stage Notice - only show when OPW review is complete */}
       {opwReview && opwReview.decision !== 'rejected' && (
         <div style={{
           marginTop: 'var(--space-32)',
@@ -1513,35 +1540,54 @@ const OPWReviewPage = ({
           borderRadius: 'var(--radius-base)',
           border: '2px solid #dbeafe',
         }}>
-          <h4 style={{ margin: '0 0 var(--space-16) 0', color: 'var(--nhs-blue)' }}>
-            📋 Next Stage: Contract Negotiation
-          </h4>
-
-          <NoticeBox type="info" style={{ marginBottom: 'var(--space-16)' }}>
-            <strong>Contract Drafter Stage:</strong>
-            <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-              This submission will now proceed to the <strong>Contract Drafter</strong> for agreement negotiation.
-            </p>
-            <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
-              The Contract Drafter will use a dedicated page to:
-            </p>
-            <ul style={{ marginTop: 'var(--space-8)', marginBottom: 0, paddingLeft: 'var(--space-20)' }}>
-              <li>Select and send the appropriate agreement template ({opwReview.ir35Status === 'outside_ir35' ? 'Consultancy Agreement' : 'Sole Trader Agreement'})</li>
-              <li>Exchange messages with the supplier and requester</li>
-              <li>Negotiate contract terms if needed</li>
-              <li>Review and approve the signed contract</li>
-              <li>Forward to AP Control for final verification</li>
-            </ul>
-          </NoticeBox>
-
-          <div style={{
-            padding: 'var(--space-12)',
-            backgroundColor: '#fef3c7',
-            border: '1px solid #fde047',
-            borderRadius: 'var(--radius-sm)',
-          }}>
-            <strong>ℹ️ Note:</strong> Contract upload is no longer done at this stage. The Contract Drafter will manage all agreement exchange and signature collection through their dedicated workflow page.
-          </div>
+          {/* Terminal State: Employed or Inside IR35 */}
+          {(opwReview.employmentStatus === 'employed' || opwReview.ir35Status === 'inside') ? (
+            <>
+              <h4 style={{ margin: '0 0 var(--space-16) 0', color: '#991b1b' }}>
+                Terminal State: Payroll/ESR Route
+              </h4>
+              <NoticeBox type="error">
+                <strong>This submission is complete. No further supplier setup stages are required.</strong>
+                <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+                  {opwReview.employmentStatus === 'employed'
+                    ? 'The worker has been assessed as employed for tax purposes. They must be engaged via NHS Payroll (ESR) through standard Trust recruitment processes.'
+                    : 'This engagement falls inside IR35. The worker must be paid via NHS Payroll (ESR). A Status Determination Statement (SDS) has been issued to the intermediary.'}
+                </p>
+                <p style={{ marginTop: 'var(--space-8)', marginBottom: 0, fontWeight: 'bold' }}>
+                  DO NOT create an Oracle supplier record for this engagement.
+                </p>
+              </NoticeBox>
+            </>
+          ) : submission.currentStage === 'contract' ? (
+            /* Contract Stage */
+            <>
+              <h4 style={{ margin: '0 0 var(--space-16) 0', color: 'var(--nhs-blue)' }}>
+                Next Stage: Contract Review
+              </h4>
+              <NoticeBox type="info" style={{ marginBottom: 'var(--space-16)' }}>
+                <strong>Contract Drafter Stage:</strong>
+                <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+                  This submission will now proceed to the <strong>Contract Drafter</strong> for agreement negotiation.
+                </p>
+                <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+                  Agreement type: <strong>{opwReview.ir35Status === 'outside' ? 'Barts Consultancy Agreement' : 'Sole Trader Agreement'}</strong>
+                </p>
+              </NoticeBox>
+            </>
+          ) : (
+            /* AP Control Stage (no contract required) */
+            <>
+              <h4 style={{ margin: '0 0 var(--space-16) 0', color: 'var(--nhs-blue)' }}>
+                Next Stage: AP Control
+              </h4>
+              <NoticeBox type="success">
+                <strong>Forwarded to AP Control for bank details verification.</strong>
+                <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+                  No contract was required. AP Control will verify banking details and create the Oracle supplier record.
+                </p>
+              </NoticeBox>
+            </>
+          )}
         </div>
       )}
 

@@ -79,16 +79,17 @@ This document tracks the project phases, current status, deployment timeline, an
 
 | Document | Status | Location |
 |----------|--------|----------|
-| Deployment Guide | ✅ Complete | `docs/DEPLOYMENT.md` |
-| Production Checklist | ✅ Complete | `docs/CHECKLIST.md` |
-| Alemba Integration | ✅ Complete | `docs/ALEMBA.md` |
-| User Guide (SOP) | ✅ Complete | `docs/USER_GUIDE.md` |
-| Future Roadmap | ✅ Complete | `docs/ROADMAP.md` |
-| Consistency Analysis | ✅ Complete | `docs/CONSISTENCY_ANALYSIS.md` |
-| SQL Server Setup Guide | ✅ Complete | `next-steps/01-SQL-SERVER-SETUP.md` |
-| SharePoint Setup Guide | ✅ Complete | `next-steps/02-SHAREPOINT-LIBRARIES-SETUP.md` |
-| Supplier Data Export Guide | ✅ Complete | `next-steps/03-SUPPLIER-DATA-EXPORT.md` |
-| Power Automate Guide | ✅ Complete | `next-steps/04-POWER-AUTOMATE-SETUP.md` |
+| Deployment Guide | ✅ Complete | `docs/deployment/DEPLOYMENT.md` |
+| Production Checklist | ✅ Complete | `docs/deployment/CHECKLIST.md` |
+| Production Deployment Checklist | ✅ Complete | `docs/deployment/PRODUCTION_DEPLOYMENT_CHECKLIST.md` |
+| Alemba Integration | ✅ Complete | `docs/user-guides/ALEMBA.md` |
+| User Guide (SOP) | ✅ Complete | `docs/user-guides/USER_GUIDE.md` |
+| Future Roadmap | ✅ Complete | `docs/reference/ROADMAP.md` |
+| SQL Server Setup Guide | ✅ Complete | `docs/deployment/setup/02-sql-server.md` |
+| SharePoint Setup Guide | ✅ Complete | `docs/deployment/setup/03-sharepoint.md` |
+| Environment Setup Guide | ✅ Complete | `docs/deployment/setup/01-environment.md` |
+| Power Automate Guide | ✅ Complete | `docs/deployment/setup/04-power-automate.md` |
+| Data Export Guide | ✅ Complete | `docs/deployment/setup/05-data-export.md` |
 
 ### Phase 3: Infrastructure 🔄 IN PROGRESS
 
@@ -97,7 +98,7 @@ This document tracks the project phases, current status, deployment timeline, an
 | SQL Server database | ⏳ Pending | Fahimul | Follow `01-SQL-SERVER-SETUP.md` |
 | SQL schema execution | ⏳ Pending | Fahimul | Run after database created |
 | SharePoint site | ⏳ Pending | Fahimul | Follow `02-SHAREPOINT-LIBRARIES-SETUP.md` |
-| SupplierDocuments library | ⏳ Pending | Fahimul | 6 folders |
+| SupplierDocuments library | ⏳ Pending | Fahimul | 4 folders |
 | SensitiveDocuments library | ⏳ Pending | Fahimul | 4 folders + restricted access |
 | NotificationQueue list | ⏳ Pending | Fahimul | For Power Automate |
 
@@ -194,6 +195,14 @@ This document tracks the project phases, current status, deployment timeline, an
 - [x] PBP Review page with approval/rejection/info request
 - [x] Procurement Review page with classification
 - [x] OPW Review page with IR35 determination
+- [x] OPW dual-path determination (sole trader vs intermediary) - Feb 2026
+- [x] Conditional routing based on supplier type and OPW determination - Feb 2026
+- [x] SDS tracking for Inside IR35 intermediaries - Feb 2026
+- [x] Contract stage made optional (contractRequired question) - Feb 2026
+- [x] Form questions conditionalised for OPW relevance (5%/60% interest) - Feb 2026
+- [x] Substantive position blocking question in Section 2 - Feb 2026
+- [x] Terminal states: completed_payroll, sds_issued - Feb 2026
+- [x] OPW RELEVANT / IR35 RELEVANT badges on review pages - Feb 2026
 - [x] Contract Drafter Review page - Email-based workflow (Feb 2026: Changed from in-app messaging to offline email negotiation for better alignment with NHS procurement processes)
 - [x] AP Control Review page with verification checks
 - [x] Requester Response page for PBP questions
