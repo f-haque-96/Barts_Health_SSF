@@ -18,7 +18,10 @@ const clinicalQuestionnaireSchema = z.object({
   patientContact: z.enum(['yes', 'no'], { required_error: 'Please select an option' }),
   patientDataAccess: z.enum(['yes', 'no'], { required_error: 'Please select an option' }),
   clinicalQualifications: z.string().min(10, 'Please provide more detail (minimum 10 characters)').max(500, 'Maximum 500 characters'),
-  annualValue: z.number().positive('Please enter a valid amount'),
+  annualValue: z.number({
+    required_error: 'Please enter an annual value',
+    invalid_type_error: 'Please enter a valid amount',
+  }).positive('Please enter a valid amount'),
   clinicalAssessment: z.enum(['yes', 'no', 'in_progress'], { required_error: 'Please select an option' }),
   additionalNotes: z.string().max(500, 'Maximum 500 characters').optional(),
 });
@@ -27,7 +30,10 @@ const nonClinicalQuestionnaireSchema = z.object({
   supplierName: z.string().min(2, 'Supplier name is required').max(200, 'Maximum 200 characters'),
   goodsServices: z.string().min(10, 'Please provide more detail (minimum 10 characters)').max(500, 'Maximum 500 characters'),
   procurementCategory: z.string().min(1, 'Please select a category'),
-  annualValue: z.number().positive('Please enter a valid amount'),
+  annualValue: z.number({
+    required_error: 'Please enter an annual value',
+    invalid_type_error: 'Please enter a valid amount',
+  }).positive('Please enter a valid amount'),
   frameworkAgreement: z.enum(['yes', 'no', 'unknown'], { required_error: 'Please select an option' }),
   supplierReason: z.string().min(10, 'Please provide more detail (minimum 10 characters)').max(500, 'Maximum 500 characters'),
   alternativesConsidered: z.enum(['yes', 'no'], { required_error: 'Please select an option' }),

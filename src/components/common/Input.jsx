@@ -1,6 +1,7 @@
 /**
  * Input Component
  * Text input with label, error handling, and validation support
+ * React 19: ref is a regular prop - no forwardRef needed
  */
 
 import React from 'react';
@@ -21,6 +22,7 @@ const Input = ({
   className,
   tooltip,
   maxLength,
+  ref,
   ...props
 }) => {
   return (
@@ -46,6 +48,7 @@ const Input = ({
         maxLength={maxLength}
         aria-invalid={error ? 'true' : 'false'}
         aria-describedby={error ? `${name}-error` : undefined}
+        ref={ref}
         {...props}
       />
 

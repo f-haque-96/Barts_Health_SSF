@@ -1,6 +1,7 @@
 /**
  * Select Component
  * Dropdown select with label and error handling
+ * React 19: ref is a regular prop - no forwardRef needed
  */
 
 import React from 'react';
@@ -18,6 +19,7 @@ const Select = ({
   disabled = false,
   placeholder = 'Select an option',
   className,
+  ref,
   ...props
 }) => {
   return (
@@ -39,6 +41,7 @@ const Select = ({
         disabled={disabled}
         aria-invalid={error ? 'true' : 'false'}
         aria-describedby={error ? `${name}-error` : undefined}
+        ref={ref}
         {...props}
       >
         {placeholder && <option value="">{placeholder}</option>}

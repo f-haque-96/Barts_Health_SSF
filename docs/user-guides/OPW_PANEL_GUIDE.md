@@ -1,6 +1,6 @@
 # OPW Panel Guide: Off-Payroll Working Review in the Supplier Setup System
 
-**Document Version:** 1.0
+**Document Version:** 1.1
 **Last Updated:** February 2026
 **Author:** Fahimul Haque - Systems & Data
 **Audience:** OPW Panel Members, HR/Payroll Team, Contract Drafters, System Administrators
@@ -25,7 +25,8 @@
 14. [Downstream Stage Visibility](#14-downstream-stage-visibility)
 15. [PDF Record](#15-pdf-record)
 16. [Key Reference Information](#16-key-reference-information)
-17. [FAQs](#17-faqs)
+17. [Saving Progress and Data Persistence](#17-saving-progress-and-data-persistence)
+18. [FAQs](#18-faqs)
 
 ---
 
@@ -787,7 +788,53 @@ This PDF serves as the **permanent record** of the full supplier setup process a
 
 ---
 
-## 17. FAQs
+## 17. Saving Progress and Data Persistence
+
+### How is OPW Review Data Saved?
+
+**In Production (Live System):**
+
+All OPW review data is saved to the **SQL Server database** via the backend API. When you fill in your determination and click "Submit Determination":
+
+1. **API call** → Your browser sends the review data to the backend API endpoint (`POST /api/submissions/:id/opw-review`)
+2. **Database write** → The backend stores the determination in the `Submissions` table:
+   - `OPWReviewData` (NVARCHAR(MAX)) — The full review JSON (worker classification, rationale, SDS tracking, etc.)
+   - `OPWDecision` — 'approved' or 'rejected'
+   - `OPWApprovedBy` — Your name
+   - `OPWDate` — Date of determination
+   - `IR35Determination` — 'inside', 'outside', or NULL
+   - `OutcomeRoute` — 'oracle_ap' or 'payroll_esr'
+   - `Status` and `CurrentStage` — Updated to reflect the new workflow stage
+3. **Audit trail** → An entry is written to the `AuditTrail` table recording your action
+4. **SharePoint** → Any uploaded documents (CEST forms, contracts) are stored in the SharePoint document library
+5. **Notifications** → Emails are queued in the `NotificationQueue` table for Power Automate to process
+
+**Important:** Data is **NOT stored in your browser's localStorage** in production. Everything is persisted server-side. This means:
+- If you close your browser and log back in, you will see the submission in its current state
+- Multiple OPW panel members can view the same submission
+- All data survives browser refreshes, machine restarts, and browser cache clears
+
+### Can I Leave and Come Back?
+
+**Before submitting your determination:**
+- The form fields you have filled in (classification, rationale, SDS tracking) are **not saved** until you click "Submit Determination"
+- If you navigate away or close the browser before submitting, your in-progress review work will be lost
+- **Recommendation:** Complete your determination in one sitting, or take notes elsewhere if you need to research before finalising
+
+**After submitting your determination:**
+- Everything is fully saved and persisted in the database
+- You can view the determination at any time by returning to the OPW review page for that submission
+- The determination is visible to all downstream stages (Contract Drafter, AP Control)
+
+### SDS Email Preview
+
+For a full preview of what the SDS email looks like when sent to intermediaries, see **[Section 12: Email Notifications → SDS Email to Intermediary](#12-email-notifications)**.
+
+The system automatically sends the formal SDS email when you submit an Inside IR35 determination. You do not need to compose or send the SDS email manually — the system generates it from your determination details and sends it immediately upon submission.
+
+---
+
+## 18. FAQs
 
 ### General Questions
 
@@ -828,6 +875,17 @@ A: Select "Yes" when the engagement needs a formal agreement. For Outside IR35 i
 **Q: What if Procurement incorrectly routed a standard supplier to OPW?**
 A: You can reject the submission with an explanation that OPW review is not required. The submission will be returned to Procurement for re-routing.
 
+### Progress Saving Questions
+
+**Q: Is my review progress saved if I leave the page before submitting?**
+A: No. In-progress review fields (classification, rationale, SDS tracking) are form state only. They are saved to the database only when you click "Submit Determination". If you close the browser before submitting, your in-progress work will be lost. We recommend completing your determination in one sitting.
+
+**Q: After I submit, is the data stored on my computer?**
+A: No. In production, all data is stored server-side in the SQL Server database and SharePoint. Nothing is stored in your browser. You can access the submission from any device by logging in with your NHS credentials.
+
+**Q: What is the SDS email and can I see what it looks like before it's sent?**
+A: The SDS email is the formal Status Determination Statement sent automatically to the intermediary when you submit an Inside IR35 determination. See [Section 12: Email Notifications](#12-email-notifications) for a full preview of the email content. You cannot edit the email — it is generated from your determination details (rationale, date, submission ID, etc.).
+
 ---
 
 ## Appendix A: Quick Reference Card
@@ -866,6 +924,7 @@ A: You can reject the submission with an explanation that OPW review is not requ
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | February 2026 | Fahimul Haque | Initial release |
+| 1.1 | February 2026 | Fahimul Haque | Added Section 17: Saving Progress & Data Persistence, SDS email preview reference, progress saving FAQs |
 
 ---
 

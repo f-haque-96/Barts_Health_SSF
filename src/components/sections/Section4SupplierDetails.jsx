@@ -23,6 +23,7 @@ const Section4SupplierDetails = () => {
     handleSubmit,
     setValue,
     watch,
+    trigger,
     formState: { errors },
   } = useForm({
     mode: 'onBlur',
@@ -103,6 +104,10 @@ const Section4SupplierDetails = () => {
 
   const handleFieldChange = (field, value) => {
     updateFormData(field, value);
+    // Re-validate field if it already has an error (clears error once input is correct)
+    if (errors[field]) {
+      trigger(field);
+    }
   };
 
   return (

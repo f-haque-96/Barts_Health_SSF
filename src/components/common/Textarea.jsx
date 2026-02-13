@@ -1,6 +1,7 @@
 /**
  * Textarea Component
  * Multi-line text input with character counter
+ * React 19: ref is a regular prop - no forwardRef needed
  */
 
 import React, { useState, useEffect } from 'react';
@@ -21,6 +22,7 @@ const Textarea = ({
   showCharCount = false,
   className,
   minCharWarning, // Destructure to prevent passing to DOM
+  ref,
   ...props
 }) => {
   const [charCount, setCharCount] = useState(value.length);
@@ -68,6 +70,7 @@ const Textarea = ({
         rows={rows}
         aria-invalid={error ? 'true' : 'false'}
         aria-describedby={error ? `${name}-error` : undefined}
+        ref={ref}
         {...props}
       />
 

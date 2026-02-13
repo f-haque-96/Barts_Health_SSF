@@ -110,7 +110,10 @@ export const section3BaseSchema = z.object({
   supplierType: z.enum(['limited_company', 'partnership', 'charity', 'sole_trader', 'public_sector'], {
     required_error: 'Please select a supplier type',
   }),
-  annualValue: z.number().positive('Please enter a valid amount'),
+  annualValue: z.number({
+    required_error: 'Please enter an annual value',
+    invalid_type_error: 'Please enter a valid amount',
+  }).positive('Please enter a valid amount'),
   employeeCount: z.enum(['micro', 'small', 'medium', 'large'], {
     required_error: 'Please select an option',
   }),
@@ -326,7 +329,10 @@ export const getSection6Schema = (formData) => {
   // Public liability insurance
   if (formData.publicLiability === 'yes') {
     schema = schema.extend({
-      plCoverage: z.number().positive('Please enter a valid amount'),
+      plCoverage: z.number({
+        required_error: 'Please enter a coverage amount',
+        invalid_type_error: 'Please enter a valid amount',
+      }).positive('Please enter a valid amount'),
       plExpiry: z.string().min(1, 'Expiry date is required').refine((date) => {
         const expiry = new Date(date);
         const today = new Date();

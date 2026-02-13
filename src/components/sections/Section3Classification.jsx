@@ -205,6 +205,10 @@ const Section3Classification = () => {
 
   const handleFieldChange = (field, value) => {
     updateFormData(field, value);
+    // Re-validate field if it already has an error (clears error once input is correct)
+    if (errors[field]) {
+      trigger(field);
+    }
   };
 
   // Get available supplier types based on Companies House registration

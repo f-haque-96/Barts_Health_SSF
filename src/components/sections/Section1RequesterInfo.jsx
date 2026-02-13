@@ -23,6 +23,7 @@ const Section1RequesterInfo = () => {
     formState: { errors },
     setValue,
     watch,
+    trigger,
   } = useForm({
     mode: 'onBlur',
     reValidateMode: 'onChange',
@@ -60,6 +61,10 @@ const Section1RequesterInfo = () => {
   // Update form store on field changes (for auto-save)
   const handleFieldChange = (field, value) => {
     updateFormData(field, value);
+    // Re-validate field if it already has an error (clears error once input is correct)
+    if (errors[field]) {
+      trigger(field);
+    }
   };
 
   return (
