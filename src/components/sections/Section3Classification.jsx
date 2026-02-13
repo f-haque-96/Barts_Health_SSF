@@ -129,21 +129,14 @@ const Section3Classification = () => {
     }
   }, [watchPartnershipInterest, updateFormData]);
 
-  // Trigger validation when supplier type or schema changes to clear errors on hidden fields
+  // Clear errors for hidden fields when supplier type changes
+  // Do NOT call trigger() here — it would validate all fields immediately,
+  // showing errors before the user has interacted with them (overriding mode: 'onBlur')
   useEffect(() => {
     if (selectedSupplierType) {
-      // Clear errors for ALL conditional fields first (not just some)
-      // This ensures no leftover validation errors from previous supplier type selections
       clearErrors(['limitedCompanyInterest', 'partnershipInterest', 'crn', 'crnCharity', 'charityNumber', 'organisationType', 'idType']);
-
-      // Wait for next tick to ensure state has updated, then trigger validation with new schema
-      const timer = setTimeout(() => {
-        trigger();
-      }, 0);
-
-      return () => clearTimeout(timer);
     }
-  }, [selectedSupplierType, validationSchema, clearErrors, trigger]);
+  }, [selectedSupplierType, validationSchema, clearErrors]);
 
   // Verify CRN when it changes (for limited company and partnership)
   useEffect(() => {
