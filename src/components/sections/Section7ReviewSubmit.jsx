@@ -189,7 +189,7 @@ const Section7ReviewSubmit = () => {
       // Clear validation error announcement when all fields are complete
       setAnnouncement('All required fields completed. Form is ready to submit.');
     }
-  }, [missingFields.length]);
+  }, [missingFields.length, announcement]);
 
   const canSubmit = canSubmitForm() && finalAcknowledgement && canSubmitWithUploads;
 

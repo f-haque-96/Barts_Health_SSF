@@ -684,7 +684,7 @@ const RequesterResponsePage = ({
     }
 
     setLoading(false);
-  }, [submissionId, propSubmission]);
+  }, [submissionId, propSubmission, setSubmission]);
 
   // Check status - support both PBP and Contract exchanges
   const pbpExchanges = submission?.pbpReview?.exchanges || [];

@@ -329,7 +329,7 @@ const APControlReviewPage = ({
     }
 
     setLoading(false);
-  }, [submissionId, propSubmission]);
+  }, [submissionId, propSubmission, setSubmission]);
 
   const handleSubmitVerification = async () => {
     if (!signatureName.trim()) {

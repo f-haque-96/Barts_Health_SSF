@@ -172,7 +172,7 @@ const ProcurementReviewPage = ({
     }
 
     setLoading(false);
-  }, [submissionId, propSubmission]);
+  }, [submissionId, propSubmission, setSubmission]);
 
   const handleDecision = async (action) => {
     if (!comments.trim() && action === 'rejected') {

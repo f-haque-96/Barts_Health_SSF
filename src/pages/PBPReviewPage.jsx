@@ -496,7 +496,7 @@ const PBPReviewPage = ({
     }
 
     setLoading(false);
-  }, [submissionId]);
+  }, [submissionId, propSubmission, setSubmission]);
 
   const handlePreviewDocument = (file) => {
     if (!file) {

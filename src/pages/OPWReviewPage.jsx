@@ -196,7 +196,7 @@ const OPWReviewPage = ({
     }
 
     setLoading(false);
-  }, [submissionId, propSubmission]);
+  }, [submissionId, propSubmission, setSubmission]);
 
   // Automatically determine worker classification based on supplier type
   useEffect(() => {
