@@ -2,17 +2,49 @@
  * Server-Side Validation Middleware
  * Using express-validator for request validation
  * CRITICAL: Never trust client-side validation alone
+ *
+ * AUDIT FIXES:
+ * - C2: Unicode name validation (\p{L} instead of ASCII [a-zA-Z])
+ * - M6: HTML sanitizer replaced with sanitize-html (TODO: install sanitize-html in production)
+ * - M3: City validation allows apostrophes, periods, digits (Bishop's Stortford, St. Albans)
+ * - H1: Comprehensive server-side validation for all form sections
+ * - M8: Review comment length limits (5000 chars)
  */
 
 const { body, param, query, validationResult } = require('express-validator');
 
+// M6: Use sanitize-html for proper XSS prevention if available, fallback to regex
+let sanitizeHtml;
+try {
+  sanitizeHtml = require('sanitize-html');
+} catch {
+  // Fallback: sanitize-html not yet installed - use improved regex sanitizer
+  sanitizeHtml = null;
+}
+
 /**
  * Custom sanitizer to remove HTML tags
- * Prevents XSS by stripping all HTML/script tags from user input
+ * M6: Uses sanitize-html if available, otherwise falls back to entity encoding
  */
 const sanitizeHTML = (value) => {
   if (typeof value !== 'string') return value;
-  return value.replace(/<[^>]*>/g, ''); // Remove all HTML tags
+
+  if (sanitizeHtml) {
+    // Production: use sanitize-html with strict whitelist (no tags allowed)
+    return sanitizeHtml(value, {
+      allowedTags: [],
+      allowedAttributes: {},
+      disallowedTagsMode: 'recursiveEscape',
+    });
+  }
+
+  // Fallback: escape HTML entities (safer than regex stripping)
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
 };
 
 /**
@@ -32,19 +64,22 @@ const validate = (req, res, next) => {
 
 /**
  * Validation rules for submission creation
+ * C2: Uses Unicode-aware regex \p{L} for international name support
  */
 const validateSubmissionCreate = [
   body('firstName')
     .trim()
+    .customSanitizer(sanitizeHTML)
     .notEmpty().withMessage('First name is required')
     .isLength({ max: 50 }).withMessage('First name must not exceed 50 characters')
-    .matches(/^[a-zA-Z\s\-']+$/).withMessage('First name contains invalid characters'),
+    .matches(/^[\p{L}\s\-']+$/u).withMessage('First name contains invalid characters'),
 
   body('lastName')
     .trim()
+    .customSanitizer(sanitizeHTML)
     .notEmpty().withMessage('Last name is required')
     .isLength({ max: 50 }).withMessage('Last name must not exceed 50 characters')
-    .matches(/^[a-zA-Z\s\-']+$/).withMessage('Last name contains invalid characters'),
+    .matches(/^[\p{L}\s\-']+$/u).withMessage('Last name contains invalid characters'),
 
   body('jobTitle')
     .trim()
@@ -115,6 +150,123 @@ const validateSubmissionUpdate = [
 ];
 
 /**
+ * H1: Comprehensive validation for complete form submission
+ * Validates all fields across Sections 2-7 that bypass basic create validation
+ */
+const validateSubmissionComplete = [
+  // Section 2: Pre-screening
+  body('formData.serviceCategory')
+    .optional()
+    .isIn(['clinical', 'non-clinical']).withMessage('Invalid service category'),
+
+  body('formData.procurementEngaged')
+    .optional()
+    .isIn(['yes', 'no']).withMessage('Invalid procurement engagement value'),
+
+  body('formData.justification')
+    .optional()
+    .trim()
+    .customSanitizer(sanitizeHTML)
+    .isLength({ min: 10, max: 350 }).withMessage('Justification must be between 10 and 350 characters'),
+
+  // Section 3: Classification
+  body('formData.companiesHouseRegistered')
+    .optional()
+    .isIn(['yes', 'no']).withMessage('Invalid Companies House registration value'),
+
+  body('formData.supplierType')
+    .optional()
+    .isIn(['limited_company', 'partnership', 'charity', 'sole_trader', 'public_sector'])
+    .withMessage('Invalid supplier type'),
+
+  body('formData.crn')
+    .optional()
+    .matches(/^[0-9]{7,8}$/).withMessage('CRN must be 7 or 8 digits'),
+
+  body('formData.charityNumber')
+    .optional()
+    .isLength({ max: 8 }).withMessage('Charity number must not exceed 8 characters'),
+
+  body('formData.annualValue')
+    .optional()
+    .isFloat({ min: 0.01 }).withMessage('Annual value must be a positive number'),
+
+  // Section 4: Supplier Details
+  body('formData.companyName')
+    .optional()
+    .trim()
+    .customSanitizer(sanitizeHTML)
+    .isLength({ max: 100 }).withMessage('Company name must not exceed 100 characters'),
+
+  body('formData.contactName')
+    .optional()
+    .trim()
+    .customSanitizer(sanitizeHTML)
+    .isLength({ max: 100 }).withMessage('Contact name must not exceed 100 characters')
+    .matches(/^[\p{L}\s\-']+$/u).withMessage('Contact name contains invalid characters'),
+
+  body('formData.contactEmail')
+    .optional()
+    .isEmail().withMessage('Invalid contact email'),
+
+  body('formData.contactPhone')
+    .optional()
+    .matches(/^[+]?[0-9 ()-]{7,15}$/).withMessage('Invalid contact phone number'),
+
+  // M3: City validation allows apostrophes, periods, digits
+  body('formData.city')
+    .optional()
+    .trim()
+    .isLength({ max: 50 }).withMessage('City must not exceed 50 characters')
+    .matches(/^[\p{L}\s\-'.0-9]+$/u).withMessage('City contains invalid characters'),
+
+  // M4: GDS-recommended UK postcode regex (covers BFPO, GIR 0AA, all standard formats)
+  body('formData.postcode')
+    .optional()
+    .matches(/^(GIR\s?0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}|BFPO\s?[0-9]{1,4})$/i)
+    .withMessage('Invalid UK postcode format'),
+
+  // Section 5: Service Description
+  body('formData.serviceDescription')
+    .optional()
+    .trim()
+    .customSanitizer(sanitizeHTML)
+    .isLength({ min: 10, max: 350 }).withMessage('Service description must be between 10 and 350 characters'),
+
+  // Section 6: Financial Info
+  body('formData.overseasSupplier')
+    .optional()
+    .isIn(['yes', 'no']).withMessage('Invalid overseas supplier value'),
+
+  body('formData.sortCode')
+    .optional()
+    .matches(/^[0-9\s-]{6,8}$/).withMessage('Invalid sort code format'),
+
+  body('formData.accountNumber')
+    .optional()
+    .matches(/^[0-9]{8}$/).withMessage('Account number must be 8 digits'),
+
+  body('formData.iban')
+    .optional()
+    .matches(/^[A-Z]{2}[0-9A-Z\s]{13,32}$/i).withMessage('Invalid IBAN format'),
+
+  body('formData.swiftCode')
+    .optional()
+    .matches(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/i)
+    .withMessage('Invalid SWIFT/BIC code format'),
+
+  body('formData.vatNumber')
+    .optional()
+    .matches(/^(GB)?[0-9]{9,12}$/).withMessage('Invalid VAT number format'),
+
+  body('formData.utrNumber')
+    .optional()
+    .matches(/^[0-9\s]{10,13}$/).withMessage('UTR must be 10 digits'),
+
+  validate
+];
+
+/**
  * Validation rules for document upload
  */
 const validateDocumentUpload = [
@@ -126,7 +278,8 @@ const validateDocumentUpload = [
     .isIn([
       'passport', 'driving_licence', 'identity_document',
       'vat_certificate', 'company_registration', 'insurance_certificate',
-      'bank_letter', 'signed_contract', 'purchase_order', 'quote', 'other'
+      'bank_letter', 'signed_contract', 'purchase_order', 'quote',
+      'letterhead', 'procurement_approval', 'cest_form', 'other'
     ]).withMessage('Invalid document type'),
 
   validate
@@ -157,11 +310,33 @@ const validateVendorCheck = [
   validate
 ];
 
+/**
+ * M8: Validation for review comments (5000 character limit)
+ */
+const validateReviewComment = [
+  body('comments')
+    .optional()
+    .trim()
+    .customSanitizer(sanitizeHTML)
+    .isLength({ max: 5000 }).withMessage('Review comments must not exceed 5,000 characters'),
+
+  body('rationale')
+    .optional()
+    .trim()
+    .customSanitizer(sanitizeHTML)
+    .isLength({ max: 5000 }).withMessage('Rationale must not exceed 5,000 characters'),
+
+  validate
+];
+
 module.exports = {
   validate,
+  sanitizeHTML,
   validateSubmissionCreate,
   validateSubmissionUpdate,
+  validateSubmissionComplete,
   validateDocumentUpload,
   validateCRNLookup,
-  validateVendorCheck
+  validateVendorCheck,
+  validateReviewComment
 };

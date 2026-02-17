@@ -11,6 +11,7 @@ import { formatDate, formatCurrency } from '../utils/helpers';
 import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes, formatEmployeeCount } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
 import { sendRejectionNotification, sendApprovalNotification, notifyDepartment } from '../services/notificationService';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const ReviewItem = ({ label, value, raw = false, badge = null }) => {
   if (!value && value !== 0) return null;
@@ -58,6 +59,7 @@ const ProcurementReviewPage = ({
 }) => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
+  useDocumentTitle('Procurement Review');
   // Use props if provided (from SecureReviewPage), otherwise use local state
   const [localSubmission, setLocalSubmission] = useState(null);
   const submission = propSubmission || localSubmission;

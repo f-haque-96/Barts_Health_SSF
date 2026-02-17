@@ -33,7 +33,6 @@ const FileUpload = ({
 
   // Use new props if provided, otherwise fall back to accept
   const finalExtensions = acceptedExtensions || accept;
-  const finalMimeTypes = acceptedTypes;
 
   // Convert file to base64 for persistent storage
   const convertToBase64 = (file) => {
@@ -124,10 +123,10 @@ const FileUpload = ({
 
   // Build accept object for dropzone
   const buildAcceptObject = () => {
-    if (finalMimeTypes) {
+    if (acceptedTypes) {
       // Use provided MIME types
       const acceptObj = {};
-      finalMimeTypes.forEach(mime => {
+      acceptedTypes.forEach(mime => {
         acceptObj[mime] = finalExtensions;
       });
       return acceptObj;

@@ -54,13 +54,14 @@ export const formatCRN = (value) => {
 
 /**
  * Generate unique submission ID
+ * C4: Unified format matching backend validation: SUP-YYYY-XXXXXXXX (8 hex chars)
  * SECURITY: Uses crypto.randomUUID() for cryptographically secure ID generation
  */
-export const generateSubmissionId = (prefix = 'SUB') => {
-  const timestamp = Date.now();
-  // Use crypto.randomUUID() which is cryptographically secure
-  const uuid = crypto.randomUUID().split('-')[0].toUpperCase(); // First segment of UUID
-  return `${prefix}-${timestamp}-${uuid}`;
+export const generateSubmissionId = () => {
+  const year = new Date().getFullYear();
+  // Use first 8 chars of a cryptographically secure UUID (hex)
+  const hex = crypto.randomUUID().replace(/-/g, '').substring(0, 8).toUpperCase();
+  return `SUP-${year}-${hex}`;
 };
 
 /**

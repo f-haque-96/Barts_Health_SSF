@@ -119,8 +119,8 @@ CREATE TABLE Submissions (
 
     -- Metadata
     CreatedBy NVARCHAR(255) NULL,
-    CreatedAt DATETIME DEFAULT GETDATE(),
-    UpdatedAt DATETIME DEFAULT GETDATE(),
+    CreatedAt DATETIME DEFAULT GETUTCDATE(),
+    UpdatedAt DATETIME DEFAULT GETUTCDATE(),
 
     -- Indexes
     INDEX IX_Submissions_Status (Status),
@@ -157,7 +157,7 @@ CREATE TABLE SubmissionDocuments (
 
     -- Metadata
     UploadedBy NVARCHAR(255) NOT NULL,
-    UploadedAt DATETIME DEFAULT GETDATE(),
+    UploadedAt DATETIME DEFAULT GETUTCDATE(),
 
     -- Foreign key
     CONSTRAINT FK_Documents_Submission FOREIGN KEY (SubmissionID)
@@ -202,7 +202,7 @@ CREATE TABLE AuditTrail (
     UserAgent NVARCHAR(500) NULL,
 
     -- Timestamp
-    PerformedAt DATETIME DEFAULT GETDATE(),
+    PerformedAt DATETIME DEFAULT GETUTCDATE(),
 
     -- Indexes
     INDEX IX_Audit_SubmissionID (SubmissionID),
@@ -236,8 +236,8 @@ CREATE TABLE VendorsReference (
     IsActive BIT DEFAULT 1,
 
     -- Metadata
-    CreatedAt DATETIME DEFAULT GETDATE(),
-    UpdatedAt DATETIME DEFAULT GETDATE(),
+    CreatedAt DATETIME DEFAULT GETUTCDATE(),
+    UpdatedAt DATETIME DEFAULT GETUTCDATE(),
 
     -- Indexes for fuzzy matching
     INDEX IX_Vendors_CompanyName (CompanyName),
@@ -273,7 +273,7 @@ CREATE TABLE NotificationQueue (
     ErrorMessage NVARCHAR(MAX) NULL,
 
     -- Metadata
-    CreatedAt DATETIME DEFAULT GETDATE(),
+    CreatedAt DATETIME DEFAULT GETUTCDATE(),
 
     -- Indexes
     INDEX IX_Notification_Processed (Processed),
@@ -300,9 +300,9 @@ CREATE TABLE Sessions (
     SessionData NVARCHAR(MAX) NULL,
 
     -- Metadata
-    CreatedAt DATETIME DEFAULT GETDATE(),
+    CreatedAt DATETIME DEFAULT GETUTCDATE(),
     ExpiresAt DATETIME NOT NULL,
-    LastAccessedAt DATETIME DEFAULT GETDATE(),
+    LastAccessedAt DATETIME DEFAULT GETUTCDATE(),
 
     -- Indexes
     INDEX IX_Sessions_UserEmail (UserEmail),
@@ -452,7 +452,7 @@ SELECT
     RequesterDepartment,
     CreatedAt,
     UpdatedAt,
-    DATEDIFF(day, CreatedAt, GETDATE()) AS DaysWaiting
+    DATEDIFF(day, CreatedAt, GETUTCDATE()) AS DaysWaiting
 FROM Submissions
 WHERE Status IN ('pending_review', 'pending_pbp_review', 'info_required')
     AND CurrentStage = 'pbp';

@@ -1,9 +1,20 @@
 /**
  * Development Authentication Configuration
  *
- * This file controls the test user's roles and permissions in development mode.
+ * C7: SECURITY GUARD - This file MUST NOT execute in production.
+ * It provides mock users that bypass Azure AD authentication.
+ * The dynamic import in StorageProvider.js ensures it's only loaded in dev mode.
+ *
  * Modify this to test different role combinations without changing production code.
  */
+
+// C7: Hard fail if this module is ever loaded in production
+if (typeof import.meta !== 'undefined' && import.meta.env?.PROD) {
+  throw new Error(
+    'SECURITY: devAuth.js must not be loaded in production. ' +
+    'Check that all imports use dynamic import() guarded by import.meta.env.DEV.'
+  );
+}
 
 // Available roles (must match ROLE_GROUPS in AuthContext.jsx)
 export const DEV_ROLES = {

@@ -22,11 +22,13 @@ import {
   sendContractRequestEmail,
   notifyContractApproved,
 } from '../services/notificationService';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 // ===== Main Contract Drafter Review Page =====
 const ContractDrafterReviewPage = ({ user, readOnly = false }) => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
+  useDocumentTitle('Contract Review');
 
   const [submission, setSubmission] = useState(null);
   const [loading, setLoading] = useState(true);

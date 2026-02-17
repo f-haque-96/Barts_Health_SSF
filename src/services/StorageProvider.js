@@ -111,13 +111,20 @@ class LocalStorageProvider {
   }
 
   generateId() {
+    // C4: Unified format matching backend validation: SUP-YYYY-XXXXXXXX (8 hex chars)
     const year = new Date().getFullYear();
-    const random = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
-    return `SUP-${year}-${random}`;
+    const hex = crypto.randomUUID().replace(/-/g, '').substring(0, 8).toUpperCase();
+    return `SUP-${year}-${hex}`;
   }
 }
 
 class ApiStorageProvider {
+  // H9: Request timeout (30 seconds)
+  static REQUEST_TIMEOUT_MS = 30000;
+  // H9: Retry config for 5xx errors and network failures
+  static MAX_RETRIES = 3;
+  static RETRY_DELAYS = [1000, 2000, 4000]; // Exponential backoff
+
   constructor(baseUrl) {
     this.baseUrl = baseUrl || import.meta.env.VITE_API_URL || '';
     this.csrfToken = null;
@@ -149,6 +156,28 @@ class ApiStorageProvider {
     this.csrfToken = null;
   }
 
+  /**
+   * H8: Safely parse JSON response with Content-Type validation
+   */
+  _parseJSON(response) {
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error(
+        'The server returned an unexpected response. ' +
+        'This may be caused by a network proxy or content filter. ' +
+        'Please try again or contact the helpdesk.'
+      );
+    }
+    return response.json();
+  }
+
+  /**
+   * H9: Sleep helper for retry delays
+   */
+  _sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   async request(endpoint, options = {}) {
     // For state-changing requests, include CSRF token
     const needsCSRF = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method);
@@ -164,28 +193,69 @@ class ApiStorageProvider {
       }
     }
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      ...options,
-      credentials: 'include', // Important for auth cookies
-      headers
-    });
+    // H9: Retry loop with exponential backoff for 5xx and network errors
+    let lastError;
+    for (let attempt = 0; attempt < ApiStorageProvider.MAX_RETRIES; attempt++) {
+      // H9: AbortController for request timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), ApiStorageProvider.REQUEST_TIMEOUT_MS);
 
-    if (response.status === 401) {
-      throw new Error('UNAUTHORIZED');
+      try {
+        const response = await fetch(`${this.baseUrl}${endpoint}`, {
+          ...options,
+          credentials: 'include',
+          headers,
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.status === 401) {
+          throw new Error('UNAUTHORIZED');
+        }
+
+        if (response.status === 403) {
+          this._clearCSRFToken();
+          throw new Error('ACCESS_DENIED');
+        }
+
+        // H9: Only retry on 5xx server errors, not 4xx client errors
+        if (response.status >= 500 && attempt < ApiStorageProvider.MAX_RETRIES - 1) {
+          lastError = new Error(`Server error: ${response.status}`);
+          await this._sleep(ApiStorageProvider.RETRY_DELAYS[attempt]);
+          continue;
+        }
+
+        if (!response.ok) {
+          const error = await this._parseJSON(response).catch(() => ({}));
+          throw new Error(error.message || 'API_ERROR');
+        }
+
+        // H8: Validate Content-Type before parsing JSON
+        return this._parseJSON(response);
+      } catch (error) {
+        clearTimeout(timeoutId);
+
+        // Don't retry auth errors or client errors
+        if (error.message === 'UNAUTHORIZED' || error.message === 'ACCESS_DENIED') {
+          throw error;
+        }
+
+        // H9: Retry on network errors and timeouts
+        if (error.name === 'AbortError') {
+          lastError = new Error('Request timed out. Please check your connection and try again.');
+        } else {
+          lastError = error;
+        }
+
+        if (attempt < ApiStorageProvider.MAX_RETRIES - 1) {
+          await this._sleep(ApiStorageProvider.RETRY_DELAYS[attempt]);
+          continue;
+        }
+      }
     }
 
-    if (response.status === 403) {
-      // Clear CSRF token on 403 to force refresh on retry
-      this._clearCSRFToken();
-      throw new Error('ACCESS_DENIED');
-    }
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.message || 'API_ERROR');
-    }
-
-    return response.json();
+    throw lastError;
   }
 
   async getSession() {
@@ -234,23 +304,39 @@ class ApiStorageProvider {
       headers['X-CSRF-Token'] = token;
     }
 
-    const response = await fetch(`${this.baseUrl}/api/documents/${submissionId}`, {
-      method: 'POST',
-      credentials: 'include',
-      headers,
-      body: formData
-    });
+    // H9: Upload timeout (60s for large files)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-    if (response.status === 403) {
-      this._clearCSRFToken();
-      throw new Error('ACCESS_DENIED');
+    try {
+      const response = await fetch(`${this.baseUrl}/api/documents/${submissionId}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: formData,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.status === 403) {
+        this._clearCSRFToken();
+        throw new Error('ACCESS_DENIED');
+      }
+
+      if (!response.ok) {
+        throw new Error('UPLOAD_FAILED');
+      }
+
+      // H8: Validate Content-Type before parsing
+      return this._parseJSON(response);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('Upload timed out. The file may be too large or the connection too slow.');
+      }
+      throw error;
     }
-
-    if (!response.ok) {
-      throw new Error('UPLOAD_FAILED');
-    }
-
-    return response.json();
   }
 
   async getDocument(documentId) {

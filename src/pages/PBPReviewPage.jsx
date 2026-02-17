@@ -14,6 +14,7 @@ import { formatDate, formatCurrency } from '../utils/helpers';
 import { formatYesNo, formatFieldValue, capitalizeWords } from '../utils/formatters';
 import PBPApprovalPDF from '../components/pdf/PBPApprovalPDF';
 import { sendRejectionNotification, sendApprovalNotification, checkAndFlagDuplicates, sendConflictOfInterestAlert } from '../services/notificationService';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 // ===== Exchange Thread Component =====
 // Displays the conversation history between PBP and Requester
@@ -351,6 +352,7 @@ const PBPReviewPage = ({
 }) => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
+  useDocumentTitle('PBP Review');
   // Use props if provided (from SecureReviewPage), otherwise use local state
   const [localSubmission, setLocalSubmission] = useState(null);
   const submission = propSubmission || localSubmission;

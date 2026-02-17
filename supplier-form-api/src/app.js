@@ -27,6 +27,7 @@ const app = express();
 const PORT = process.env.API_PORT || 3001;
 
 // Security middleware with enhanced CSP
+// M7: Added Referrer-Policy and Permissions-Policy
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -45,8 +46,16 @@ app.use(helmet({
     maxAge: 31536000, // 1 year
     includeSubDomains: true,
     preload: true
-  }
+  },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  permittedCrossDomainPolicies: { permittedPolicies: 'none' },
 }));
+
+// M7: Permissions-Policy header (not built into Helmet, set manually)
+app.use((req, res, next) => {
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  next();
+});
 
 // CORS configuration - only allow frontend origin
 app.use(cors({

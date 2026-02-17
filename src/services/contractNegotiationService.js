@@ -4,6 +4,8 @@
  * Simplified for offline email-based negotiation workflow
  */
 
+import { ROLE_GROUPS, ROLES } from '../context/AuthContext';
+
 export const contractNegotiationService = {
   /**
    * Get appropriate agreement template based on OPW determination
@@ -105,9 +107,9 @@ export const contractNegotiationService = {
    */
   canApproveContract(submission, user) {
     const userGroups = user.groups || [];
-    const isContract = userGroups.some(g =>
-      ['NHS-SupplierForm-Contract', 'NHS-SupplierForm-Admin'].includes(g)
-    );
+    // H5: Use ROLE_GROUPS constant instead of hardcoded AD group strings
+    const contractGroups = ROLE_GROUPS[ROLES.CONTRACT] || [];
+    const isContract = userGroups.some(g => contractGroups.includes(g));
     if (!isContract) return false;
     if (!submission.contractDrafter?.sentAt) return false;
     if (submission.contractDrafter?.decision) return false;

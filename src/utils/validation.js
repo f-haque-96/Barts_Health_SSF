@@ -32,11 +32,12 @@ const ukPhoneSchema = z
   .min(1, 'Phone number is required')
   .regex(/^[+]?[0-9 ()-]{7,15}$/, 'Please enter a valid UK phone number');
 
+// M4: GDS-recommended UK postcode regex (covers BFPO, GIR 0AA, and all standard formats)
 const ukPostcodeSchema = z
   .string()
   .min(1, 'Postcode is required')
   .regex(
-    /^[A-Z]{1,2}[0-9]{1,2}[A-Z]?\s?[0-9][A-Z]{2}$/i,
+    /^(GIR\s?0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}|BFPO\s?[0-9]{1,4})$/i,
     'Please enter a valid UK postcode'
   )
   .transform((val) => val.toUpperCase().replace(/\s+/g, ' ').trim());
@@ -72,32 +73,32 @@ export const section1Schema = z.object({
 
 export const section2Schema = z.object({
   substantivePosition: z.enum(['yes', 'no'], {
-    required_error: 'Please select an option',
+    error: 'Please select an option',
   }),
   supplierConnection: z.enum(['yes', 'no'], {
-    required_error: 'Please select an option',
+    error: 'Please select an option',
   }),
   letterheadAvailable: z.enum(['yes', 'no'], {
-    required_error: 'Please select an option',
+    error: 'Please select an option',
   }),
   justification: z
     .string()
     .min(10, 'Please provide more detail (minimum 10 characters)')
     .max(350, 'Maximum 350 characters'),
   usageFrequency: z.enum(['one-off', 'occasional', 'regular'], {
-    required_error: 'Please select an option',
+    error: 'Please select an option',
   }),
   soleTraderStatus: z.enum(['yes', 'no'], {
-    required_error: 'Please select an option',
+    error: 'Please select an option',
   }),
   serviceCategory: z.enum(['clinical', 'non-clinical'], {
-    required_error: 'Please select an option',
+    error: 'Please select an option',
   }),
   procurementEngaged: z.enum(['yes', 'no'], {
-    required_error: 'Please select an option',
+    error: 'Please select an option',
   }),
   prescreeningAcknowledgement: z.literal(true, {
-    errorMap: () => ({ message: 'You must acknowledge the declaration' }),
+    error: 'You must acknowledge the declaration',
   }),
 });
 
@@ -105,17 +106,14 @@ export const section2Schema = z.object({
 
 export const section3BaseSchema = z.object({
   companiesHouseRegistered: z.enum(['yes', 'no'], {
-    required_error: 'Please select an option',
+    error: 'Please select an option',
   }),
   supplierType: z.enum(['limited_company', 'partnership', 'charity', 'sole_trader', 'public_sector'], {
-    required_error: 'Please select a supplier type',
+    error: 'Please select a supplier type',
   }),
-  annualValue: z.number({
-    required_error: 'Please enter an annual value',
-    invalid_type_error: 'Please enter a valid amount',
-  }).positive('Please enter a valid amount'),
+  annualValue: z.number({ error: 'Please enter a valid amount' }).positive('Please enter a valid amount'),
   employeeCount: z.enum(['micro', 'small', 'medium', 'large'], {
-    required_error: 'Please select an option',
+    error: 'Please select an option',
   }),
   // Optional fields - only required for specific supplier types
   limitedCompanyInterest: z.enum(['yes', 'no']).optional(),
@@ -130,7 +128,7 @@ export const getLimitedCompanySchema = () =>
     .extend({
       crn: crnSchema,
       limitedCompanyInterest: z.enum(['yes', 'no'], {
-        required_error: 'Please select an option',
+        error: 'Please select an option',
       }),
     });
 
@@ -139,7 +137,7 @@ export const getPartnershipSchema = (companiesHouse) => {
     .omit({ limitedCompanyInterest: true })  // Exclude limited company field
     .extend({
       partnershipInterest: z.enum(['yes', 'no'], {
-        required_error: 'Please select an option',
+        error: 'Please select an option',
       }),
     });
 
@@ -174,7 +172,7 @@ export const getSoleTraderSchema = () =>
     .omit({ limitedCompanyInterest: true, partnershipInterest: true })  // Exclude both interest fields
     .extend({
       idType: z.enum(['passport', 'driving_licence'], {
-        required_error: 'Please select ID type',
+        error: 'Please select ID type',
       }),
     });
 
@@ -198,7 +196,8 @@ export const section4Schema = z.object({
     .string()
     .min(1, 'City is required')
     .max(50, 'Maximum 50 characters')
-    .regex(/^[a-zA-Z\s\-]+$/, 'Only letters, spaces, and hyphens are allowed'),
+    // M3: Allow apostrophes, periods, digits for UK cities (Bishop's Stortford, St. Albans)
+    .regex(/^[\p{L}\s\-'.0-9]+$/u, 'Only letters, spaces, hyphens, apostrophes, and periods are allowed'),
   postcode: ukPostcodeSchema,
   contactName: z.string().min(1, 'Contact name is required').max(100, 'Maximum 100 characters'),
   contactEmail: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
@@ -228,22 +227,22 @@ export const section5Schema = z.object({
 
 export const section6BaseSchema = z.object({
   overseasSupplier: z.enum(['yes', 'no'], {
-    required_error: 'Please select an option',
+    error: 'Please select an option',
   }),
   accountsAddressSame: z.enum(['yes', 'no'], {
-    required_error: 'Please select an option',
+    error: 'Please select an option',
   }),
   ghxDunsKnown: z.enum(['yes', 'no'], {
-    required_error: 'Please select an option',
+    error: 'Please select an option',
   }),
   cisRegistered: z.enum(['yes', 'no'], {
-    required_error: 'Please select an option',
+    error: 'Please select an option',
   }),
   publicLiability: z.enum(['yes', 'no'], {
-    required_error: 'Please select an option',
+    error: 'Please select an option',
   }),
   vatRegistered: z.enum(['yes', 'no'], {
-    required_error: 'Please select an option',
+    error: 'Please select an option',
   }),
 });
 
@@ -329,10 +328,7 @@ export const getSection6Schema = (formData) => {
   // Public liability insurance
   if (formData.publicLiability === 'yes') {
     schema = schema.extend({
-      plCoverage: z.number({
-        required_error: 'Please enter a coverage amount',
-        invalid_type_error: 'Please enter a valid amount',
-      }).positive('Please enter a valid amount'),
+      plCoverage: z.number({ error: 'Please enter a valid amount' }).positive('Please enter a valid amount'),
       plExpiry: z.string().min(1, 'Expiry date is required').refine((date) => {
         const expiry = new Date(date);
         const today = new Date();
@@ -367,14 +363,14 @@ export const getSection6Schema = (formData) => {
 
 export const section7Schema = z.object({
   finalAcknowledgement: z.literal(true, {
-    errorMap: () => ({ message: 'You must acknowledge before submitting' }),
+    error: 'You must acknowledge before submitting',
   }),
 });
 
 // Authorisation schema (for reviewers)
 export const authorisationSchema = z.object({
   assessment: z.enum(['standard', 'opw_ir35'], {
-    required_error: 'Please select an assessment type',
+    error: 'Please select an assessment type',
   }),
   notes: z.string().max(500, 'Maximum 500 characters').optional(),
   signatureName: z.string().min(1, 'Signature name is required'),

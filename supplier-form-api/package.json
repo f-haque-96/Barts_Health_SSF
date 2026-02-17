@@ -5,7 +5,10 @@
   "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",
-    "dev": "nodemon src/app.js"
+    "dev": "nodemon src/app.js",
+    "migrate": "node database/migrate.js",
+    "migrate:status": "node database/migrate.js --status",
+    "migrate:baseline": "node database/migrate.js --baseline"
   },
   "dependencies": {
     "@pnp/nodejs": "^2.15.0",

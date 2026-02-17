@@ -9,6 +9,7 @@ const session = require('express-session');
 const MSSQLStore = require('connect-mssql-v2');
 const logger = require('./logger');
 const { getPool } = require('./database');
+const { getUserByOid, cacheUserFromToken, getCachedUser, isGraphConfigured } = require('../services/graphService');
 
 const azureConfig = {
   identityMetadata: `https://login.microsoftonline.com/${process.env.AZURE_AD_TENANT_ID}/v2.0/.well-known/openid-configuration`,
@@ -74,6 +75,11 @@ function configurePassport(app) {
       oid: token.oid,
       groups: token.groups || []
     };
+
+    // C3: Pre-populate server-side cache from bearer token
+    // This ensures deserializeUser has fresh data if session auth is used
+    cacheUserFromToken(user);
+
     return done(null, user);
   }));
 
@@ -84,22 +90,42 @@ function configurePassport(app) {
     done(null, { oid: user.oid });
   });
 
-  // SECURITY: Reconstruct user from OID on each request
-  // In production, groups should be looked up from Azure AD or cached server-side
-  passport.deserializeUser((sessionData, done) => {
-    // TODO: In production, implement Azure AD group lookup via Microsoft Graph API
-    // For now, we'll need to look up user data from another source
-    // This is a placeholder - full implementation requires Graph API integration
+  // C3 FIX: Reconstruct user from OID using server-side cache + Graph API fallback
+  // Groups are NEVER stored in the session - always resolved from trusted sources
+  passport.deserializeUser(async (sessionData, done) => {
+    try {
+      const { oid } = sessionData;
+      if (!oid) {
+        return done(null, false);
+      }
 
-    // Minimal user object with OID only
-    // Groups will need to be fetched from Azure AD or database on each request
-    const user = {
-      oid: sessionData.oid,
-      // In production, call Azure AD Graph API here to get current user info
-      // Example: const graphUser = await getAzureADUser(sessionData.oid);
-    };
+      // 1. Try server-side cache first (populated by BearerStrategy on each API call)
+      const cachedUser = getCachedUser(oid);
+      if (cachedUser) {
+        return done(null, cachedUser);
+      }
 
-    done(null, user);
+      // 2. If Graph API is configured, look up user and groups from Azure AD
+      if (isGraphConfigured()) {
+        try {
+          const graphUser = await getUserByOid(oid);
+          logger.debug(`deserializeUser: Resolved user ${graphUser.email} via Graph API (${graphUser.groups.length} groups)`);
+          return done(null, graphUser);
+        } catch (graphError) {
+          logger.error(`deserializeUser: Graph API lookup failed for OID ${oid}:`, graphError.message);
+          // Fall through to minimal user (fail closed - no groups = no access)
+        }
+      } else {
+        logger.warn('deserializeUser: Graph API not configured - user will have no groups (RBAC will deny access)');
+      }
+
+      // 3. Fallback: return user with no groups (RBAC will deny access - fail closed)
+      // This is intentional: we never grant access without verified group membership
+      done(null, { oid, email: null, name: null, groups: [] });
+    } catch (error) {
+      logger.error('deserializeUser error:', error);
+      done(error);
+    }
   });
 
   logger.info('Passport authentication configured');

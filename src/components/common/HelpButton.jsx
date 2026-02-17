@@ -3,11 +3,13 @@
  * Floating help button that provides links to support resources
  */
 
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { XIcon, HelpCircleIcon, TicketIcon, InfoIcon, ExternalLinkIcon, RotateIcon, CodeIcon } from './Icons';
-import DevModeModal from './DevModeModal';
 import ResetFormModal from './ResetFormModal';
 import './HelpButton.css';
+
+// C6: Dynamic import keeps DevModeModal out of the production bundle
+const DevModeModal = import.meta.env.PROD ? null : lazy(() => import('./DevModeModal'));
 
 const HelpButton = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -87,9 +89,11 @@ const HelpButton = () => {
       {/* Reset Form Modal */}
       <ResetFormModal isOpen={isResetModalOpen} onClose={() => setIsResetModalOpen(false)} />
 
-      {/* Dev Mode Modal */}
-      {!import.meta.env.PROD && (
-        <DevModeModal isOpen={isDevModalOpen} onClose={() => setIsDevModalOpen(false)} />
+      {/* Dev Mode Modal - C6: Only loaded in development */}
+      {!import.meta.env.PROD && DevModeModal && (
+        <Suspense fallback={null}>
+          <DevModeModal isOpen={isDevModalOpen} onClose={() => setIsDevModalOpen(false)} />
+        </Suspense>
       )}
     </div>
   );

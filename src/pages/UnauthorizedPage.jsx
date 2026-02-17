@@ -4,8 +4,10 @@
  */
 
 import React from 'react';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const UnauthorizedPage = () => {
+  useDocumentTitle('Access Denied');
   return (
     <div style={{
       maxWidth: '600px',

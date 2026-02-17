@@ -12,6 +12,7 @@ import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, for
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
 import { sendApprovalNotification, notifyDepartment, sendRejectionNotification, sendContractRequestEmail, notifyEmployedDetermination, notifyInsideIR35WithSDS, notifyAPControlDirect } from '../services/notificationService';
 import { contractNegotiationService } from '../services/contractNegotiationService';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const ReviewItem = ({ label, value, raw = false, badge = null }) => {
   if (!value && value !== 0) return null;
@@ -59,6 +60,7 @@ const OPWReviewPage = ({
 }) => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
+  useDocumentTitle('OPW Panel Review');
   // Use props if provided (from SecureReviewPage), otherwise use local state
   const [localSubmission, setLocalSubmission] = useState(null);
   const submission = propSubmission || localSubmission;

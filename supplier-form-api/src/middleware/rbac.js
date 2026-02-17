@@ -8,7 +8,7 @@
 const logger = require('../config/logger');
 const { logAudit } = require('../services/auditService');
 
-// Role to AD group mapping - MUST MATCH FRONTEND AuthContext.jsx
+// H5: Role to AD group mapping - keys MUST MATCH FRONTEND AuthContext.jsx ROLES values
 // These are the AD security groups that IT will create
 // If IT uses different names, update BOTH here AND in frontend AuthContext.jsx
 const ROLE_GROUPS = {
@@ -16,7 +16,7 @@ const ROLE_GROUPS = {
   procurement: ['NHS-SupplierForm-Procurement', 'NHS-SupplierForm-Admin'],
   opw: ['NHS-SupplierForm-OPW', 'NHS-SupplierForm-Admin'],
   contract: ['NHS-SupplierForm-Contract', 'NHS-SupplierForm-Admin'],
-  apControl: ['NHS-SupplierForm-APControl', 'NHS-SupplierForm-Admin'],
+  ap_control: ['NHS-SupplierForm-APControl', 'NHS-SupplierForm-Admin'],
   admin: ['NHS-SupplierForm-Admin']
 };
 
@@ -129,8 +129,8 @@ const canAccessSubmission = async (req, res, next) => {
     'procurement': ROLE_GROUPS.procurement,
     'opw': ROLE_GROUPS.opw,
     'contract': ROLE_GROUPS.contract,
-    'ap_control': ROLE_GROUPS.apControl,
-    'ap': ROLE_GROUPS.apControl
+    'ap_control': ROLE_GROUPS.ap_control,
+    'ap': ROLE_GROUPS.ap_control
   };
 
   const allowedGroups = stageRoleMap[stage] || [];

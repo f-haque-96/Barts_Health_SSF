@@ -1,9 +1,10 @@
 /**
  * useFormNavigation Hook
  * Handles form section navigation logic
+ * L7: Scroll side effect moved here from Zustand store (separation of concerns)
  */
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import useFormStore from '../stores/formStore';
 
 const useFormNavigation = () => {
@@ -16,6 +17,15 @@ const useFormNavigation = () => {
     markSectionComplete,
     markSectionIncomplete,
   } = useFormStore();
+
+  // L7: Track section changes and scroll to top
+  const prevSectionRef = useRef(currentSection);
+  useEffect(() => {
+    if (prevSectionRef.current !== currentSection) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      prevSectionRef.current = currentSection;
+    }
+  }, [currentSection]);
 
   const handleNext = useCallback(() => {
     // Mark current section as complete before moving forward

@@ -91,20 +91,77 @@ async function create(data, user) {
 }
 
 /**
+ * H2: Validate and sanitise FormDataJSON before storage
+ * Enforces size limits and sanitises all string values
+ */
+function validateFormDataJSON(jsonString) {
+  if (!jsonString) return jsonString;
+
+  // Size limit: 500KB maximum
+  const MAX_JSON_SIZE = 500 * 1024;
+  if (typeof jsonString === 'string' && Buffer.byteLength(jsonString, 'utf8') > MAX_JSON_SIZE) {
+    throw new Error('FormDataJSON exceeds maximum size of 500KB');
+  }
+
+  // Parse and sanitise all string values
+  let parsed;
+  try {
+    parsed = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
+  } catch {
+    throw new Error('FormDataJSON is not valid JSON');
+  }
+
+  // Recursively sanitise all string values
+  function sanitiseStrings(obj) {
+    if (typeof obj === 'string') {
+      return obj
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/javascript:/gi, '')
+        .replace(/on\w+\s*=/gi, '');
+    }
+    if (Array.isArray(obj)) return obj.map(sanitiseStrings);
+    if (obj && typeof obj === 'object') {
+      const clean = {};
+      for (const [key, value] of Object.entries(obj)) {
+        clean[key] = sanitiseStrings(value);
+      }
+      return clean;
+    }
+    return obj;
+  }
+
+  const sanitised = sanitiseStrings(parsed);
+  return JSON.stringify(sanitised);
+}
+
+/**
  * Update submission
+ * H3: Uses SQL transaction to ensure atomicity of update + audit log
  */
 async function update(id, data, user) {
+  const pool = getPool();
+  const transaction = new sql.Transaction(pool);
+
   try {
-    const pool = getPool();
+    await transaction.begin();
+
     const existing = await getById(id);
 
     if (!existing) {
+      await transaction.rollback();
       throw new Error('Submission not found');
+    }
+
+    // H2: Validate FormDataJSON if present
+    if (data.formDataJSON) {
+      data.formDataJSON = validateFormDataJSON(data.formDataJSON);
     }
 
     // Build dynamic update query based on provided fields
     const updates = [];
-    const request = pool.request().input('SubmissionID', sql.NVarChar(50), id);
+    const request = new sql.Request(transaction)
+      .input('SubmissionID', sql.NVarChar(50), id);
 
     // Define all updateable fields with their SQL types
     const fieldMappings = {
@@ -200,8 +257,8 @@ async function update(id, data, user) {
       }
     }
 
-    // Always update the timestamp
-    updates.push('UpdatedAt = GETDATE()');
+    // L8: Use GETUTCDATE() for timezone consistency
+    updates.push('UpdatedAt = GETUTCDATE()');
 
     if (updates.length > 1) { // More than just UpdatedAt
       await request.query(`
@@ -211,18 +268,25 @@ async function update(id, data, user) {
       `);
     }
 
-    // Log audit
-    await logAudit({
-      submissionId: id,
-      action: 'SUBMISSION_UPDATED',
-      user: user.email,
-      previousStatus: existing.Status,
-      newStatus: data.status || existing.Status,
-      details: Object.keys(data)
-    });
+    // H3: Audit log is inside the same transaction - both succeed or both rollback
+    const auditRequest = new sql.Request(transaction);
+    await auditRequest
+      .input('AuditSubmissionID', sql.NVarChar(50), id)
+      .input('Action', sql.NVarChar(100), 'SUBMISSION_UPDATED')
+      .input('PerformedBy', sql.NVarChar(255), user.email)
+      .input('PreviousStatus', sql.NVarChar(50), existing.Status)
+      .input('NewStatus', sql.NVarChar(50), data.status || existing.Status)
+      .input('Details', sql.NVarChar(sql.MAX), JSON.stringify(Object.keys(data)))
+      .query(`
+        INSERT INTO AuditTrail (SubmissionID, Action, PerformedBy, PreviousStatus, NewStatus, Details, CreatedAt)
+        VALUES (@AuditSubmissionID, @Action, @PerformedBy, @PreviousStatus, @NewStatus, @Details, GETUTCDATE())
+      `);
 
+    await transaction.commit();
     return { success: true };
   } catch (error) {
+    // H3: Rollback on any failure
+    try { await transaction.rollback(); } catch { /* already rolled back */ }
     logger.error('Failed to update submission:', error);
     throw error;
   }
@@ -230,10 +294,16 @@ async function update(id, data, user) {
 
 /**
  * Get work queue for a review stage
+ * H6: Paginated with configurable page size (default 25, max 100)
  */
-async function getWorkQueue(stage, user) {
+async function getWorkQueue(stage, user, { page = 1, pageSize = 25 } = {}) {
   try {
     const pool = getPool();
+
+    // H6: Enforce pagination limits
+    const sanitisedPage = Math.max(1, parseInt(page) || 1);
+    const sanitisedPageSize = Math.min(100, Math.max(1, parseInt(pageSize) || 25));
+    const offset = (sanitisedPage - 1) * sanitisedPageSize;
 
     // Map stage to status values
     const stageStatusMap = {
@@ -248,7 +318,7 @@ async function getWorkQueue(stage, user) {
     const statuses = stageStatusMap[stage] || [];
 
     if (statuses.length === 0) {
-      return [];
+      return { items: [], total: 0, page: sanitisedPage, pageSize: sanitisedPageSize };
     }
 
     // Build parameterized query to prevent SQL injection
@@ -259,9 +329,17 @@ async function getWorkQueue(stage, user) {
       return `@${paramName}`;
     }).join(',');
 
+    // H6: Get total count and paginated results
     const result = await request
       .input('CurrentStage', sql.NVarChar(50), stage)
+      .input('Offset', sql.Int, offset)
+      .input('PageSize', sql.Int, sanitisedPageSize)
       .query(`
+        SELECT COUNT(*) AS TotalCount
+        FROM Submissions
+        WHERE Status IN (${placeholders})
+          AND CurrentStage = @CurrentStage;
+
         SELECT SubmissionID, DisplayReference, Status, CurrentStage,
                CompanyName, RequesterFirstName, RequesterLastName,
                RequesterEmail, CreatedAt, UpdatedAt
@@ -269,9 +347,19 @@ async function getWorkQueue(stage, user) {
         WHERE Status IN (${placeholders})
           AND CurrentStage = @CurrentStage
         ORDER BY CreatedAt ASC
+        OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
       `);
 
-    return result.recordset;
+    const total = result.recordsets[0][0]?.TotalCount || 0;
+    const items = result.recordsets[1] || [];
+
+    return {
+      items,
+      total,
+      page: sanitisedPage,
+      pageSize: sanitisedPageSize,
+      totalPages: Math.ceil(total / sanitisedPageSize),
+    };
   } catch (error) {
     logger.error('Failed to get work queue:', error);
     throw error;

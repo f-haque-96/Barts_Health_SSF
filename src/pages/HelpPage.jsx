@@ -5,9 +5,11 @@
 
 import React from 'react';
 import { TicketIcon } from '../components/common';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 import './HelpPage.css';
 
 const HelpPage = () => {
+  useDocumentTitle('Help & FAQ');
   const faqs = [
     {
       question: 'What is the Supplier Setup Form?',

@@ -15,14 +15,11 @@ import useFormStore from '../../stores/formStore';
 const clinicalQuestionnaireSchema = z.object({
   supplierName: z.string().min(2, 'Supplier name is required').max(200, 'Maximum 200 characters'),
   clinicalServices: z.string().min(10, 'Please provide more detail (minimum 10 characters)').max(500, 'Maximum 500 characters'),
-  patientContact: z.enum(['yes', 'no'], { required_error: 'Please select an option' }),
-  patientDataAccess: z.enum(['yes', 'no'], { required_error: 'Please select an option' }),
+  patientContact: z.enum(['yes', 'no'], { error: 'Please select an option' }),
+  patientDataAccess: z.enum(['yes', 'no'], { error: 'Please select an option' }),
   clinicalQualifications: z.string().min(10, 'Please provide more detail (minimum 10 characters)').max(500, 'Maximum 500 characters'),
-  annualValue: z.number({
-    required_error: 'Please enter an annual value',
-    invalid_type_error: 'Please enter a valid amount',
-  }).positive('Please enter a valid amount'),
-  clinicalAssessment: z.enum(['yes', 'no', 'in_progress'], { required_error: 'Please select an option' }),
+  annualValue: z.number({ error: 'Please enter a valid amount' }).positive('Please enter a valid amount'),
+  clinicalAssessment: z.enum(['yes', 'no', 'in_progress'], { error: 'Please select an option' }),
   additionalNotes: z.string().max(500, 'Maximum 500 characters').optional(),
 });
 
@@ -30,13 +27,10 @@ const nonClinicalQuestionnaireSchema = z.object({
   supplierName: z.string().min(2, 'Supplier name is required').max(200, 'Maximum 200 characters'),
   goodsServices: z.string().min(10, 'Please provide more detail (minimum 10 characters)').max(500, 'Maximum 500 characters'),
   procurementCategory: z.string().min(1, 'Please select a category'),
-  annualValue: z.number({
-    required_error: 'Please enter an annual value',
-    invalid_type_error: 'Please enter a valid amount',
-  }).positive('Please enter a valid amount'),
-  frameworkAgreement: z.enum(['yes', 'no', 'unknown'], { required_error: 'Please select an option' }),
+  annualValue: z.number({ error: 'Please enter a valid amount' }).positive('Please enter a valid amount'),
+  frameworkAgreement: z.enum(['yes', 'no', 'unknown'], { error: 'Please select an option' }),
   supplierReason: z.string().min(10, 'Please provide more detail (minimum 10 characters)').max(500, 'Maximum 500 characters'),
-  alternativesConsidered: z.enum(['yes', 'no'], { required_error: 'Please select an option' }),
+  alternativesConsidered: z.enum(['yes', 'no'], { error: 'Please select an option' }),
   additionalNotes: z.string().max(500, 'Maximum 500 characters').optional(),
 });
 

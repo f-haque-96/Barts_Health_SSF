@@ -90,7 +90,7 @@ const useFormStore = create(
             currentSection: nextSection,
             visitedSections: newVisited
           });
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          // L7: window.scrollTo moved to useFormNavigation hook (side effects belong in components)
         }
       },
 
@@ -108,7 +108,7 @@ const useFormStore = create(
             currentSection: prevSection,
             visitedSections: newVisited
           });
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          // L7: window.scrollTo moved to useFormNavigation hook (side effects belong in components)
         }
       },
 
@@ -124,7 +124,7 @@ const useFormStore = create(
             currentSection: section,
             visitedSections: newVisited
           });
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          // L7: window.scrollTo moved to useFormNavigation hook (side effects belong in components)
         }
       },
 
@@ -978,10 +978,24 @@ const useFormStore = create(
     {
       name: 'nhs-supplier-form-storage',
       partialize: (state) => {
-        // BUG FIX: Smart persistence strategy to avoid localStorage quota exceeded
+        // SECURITY (C1): Sensitive bank details MUST NOT be persisted to localStorage
+        // On shared NHS workstations, localStorage data is accessible to subsequent users
+        // via browser developer tools (F12 > Application > Local Storage)
+        // This is a UK GDPR Article 32 requirement and NHS DSPT compliance measure
+        const SENSITIVE_FIELDS = [
+          'sortCode', 'accountNumber', 'iban', 'swiftCode',
+          'bankRouting', 'nameOnAccount', 'bankName', 'buildingSocietyRef'
+        ];
+
+        // Strip sensitive fields from formData before persisting
+        const safeFormData = { ...state.formData };
+        SENSITIVE_FIELDS.forEach(field => {
+          delete safeFormData[field];
+        });
+
+        // Smart persistence strategy to avoid localStorage quota exceeded
         // - Files under 1MB: Keep base64 (most PDFs, images are under this)
         // - Files over 1MB: Strip base64, keep metadata only
-        // This ensures small files persist while avoiding quota errors on large files
         const serializedUploads = Object.keys(state.uploadedFiles).reduce((acc, key) => {
           if (state.uploadedFiles[key]) {
             const fileData = state.uploadedFiles[key];
@@ -991,31 +1005,41 @@ const useFormStore = create(
             if (fileSize < MAX_SIZE_FOR_PERSISTENCE) {
               // Small file - keep base64 for persistence
               const { file, ...dataWithBase64 } = fileData;
-              acc[key] = dataWithBase64; // Keep: name, size, type, uploadDate, base64, data
+              acc[key] = dataWithBase64;
             } else {
               // Large file - strip base64 to avoid quota
               const { file, base64, data, ...metadata } = fileData;
-              acc[key] = metadata; // Keep only: name, size, type, uploadDate
+              acc[key] = metadata;
             }
           }
           return acc;
         }, {});
 
+        // CRN cache: enforce LRU eviction (max 50 entries) - fixes H7
+        let boundedCrnCache = { ...state.crnCache };
+        const cacheKeys = Object.keys(boundedCrnCache);
+        if (cacheKeys.length > 50) {
+          const sorted = cacheKeys.sort(
+            (a, b) => (boundedCrnCache[a].timestamp || 0) - (boundedCrnCache[b].timestamp || 0)
+          );
+          sorted.slice(0, cacheKeys.length - 50).forEach(key => {
+            delete boundedCrnCache[key];
+          });
+        }
+
         return {
-          // Only persist these fields
           currentSection: state.currentSection,
-          completedSections: Array.from(state.completedSections), // Persist to allow navigation
+          completedSections: Array.from(state.completedSections),
           visitedSections: state.visitedSections,
-          formData: state.formData, // Now includes bank details (user requested persistence on refresh)
-          uploadedFiles: serializedUploads, // Smart persistence: small files keep base64, large files metadata only
+          formData: safeFormData, // SECURITY: Bank details excluded from persistence
+          uploadedFiles: serializedUploads,
           reviewComments: state.reviewComments,
           authorisationState: state.authorisationState,
           prescreeningProgress: state.prescreeningProgress,
-          crnCache: state.crnCache,
+          crnCache: boundedCrnCache,
           lastSaved: state.lastSaved,
           submissionId: state.submissionId,
           submissionStatus: state.submissionStatus,
-          // NOTE: Bank details (sortCode, accountNumber, iban, swiftCode) ARE NOW persisted to localStorage for usability
         };
       },
       // Custom deserializer to reconstruct Set from array

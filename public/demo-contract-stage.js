@@ -200,7 +200,7 @@ Peter`,
     email: 'peter.persaud@nhs.net',
     displayName: 'Peter Persaud',
     name: 'Peter Persaud',
-    groups: ['NHS-SupplierForm-Contract', 'NHS-SupplierForm-All'],
+    groups: ['NHS-SupplierForm-Contract', 'NHS-SupplierForm-Admin'],
     roles: ['contract', 'admin']
   };
 

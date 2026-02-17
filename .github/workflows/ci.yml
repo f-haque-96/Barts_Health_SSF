@@ -39,9 +39,10 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      # L4: ESLint failures now block deployment
       - name: Lint frontend code
         run: npm run lint --if-present
-        continue-on-error: true
+        continue-on-error: false
 
       - name: Build frontend
         run: |
@@ -65,22 +66,23 @@ jobs:
           npm ci
           echo "✓ Backend dependencies installed"
 
+      # L4: ESLint failures now block deployment
       - name: Lint backend code
         run: |
           cd supplier-form-api
           npm run lint --if-present
-        continue-on-error: true
+        continue-on-error: false
 
-      # Security Audit
+      # L5: Security audit failures now block deployment
       - name: Run npm audit (frontend)
         run: npm audit --audit-level=high
-        continue-on-error: true
+        continue-on-error: false
 
       - name: Run npm audit (backend)
         run: |
           cd supplier-form-api
           npm audit --audit-level=high
-        continue-on-error: true
+        continue-on-error: false
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

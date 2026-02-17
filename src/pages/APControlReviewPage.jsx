@@ -11,6 +11,7 @@ import { formatDate, formatCurrency } from '../utils/helpers';
 import { formatFieldValue, formatSupplierType, formatServiceTypes, formatEmployeeCount } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
 import { closeAlembaOnCompletion, sendRejectionNotification } from '../services/notificationService';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const ReviewItem = ({ label, value, highlight, raw = false, badge }) => {
   if (!value && value !== 0) return null;
@@ -93,6 +94,7 @@ const APControlReviewPage = ({
 }) => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
+  useDocumentTitle('AP Control Review');
   // Use props if provided (from SecureReviewPage), otherwise use local state
   const [localSubmission, setLocalSubmission] = useState(null);
   const submission = propSubmission || localSubmission;

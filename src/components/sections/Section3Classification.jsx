@@ -80,7 +80,7 @@ const Section3Classification = () => {
       charityNumber: formData.charityNumber || '',
       idType: formData.idType || '',
       organisationType: formData.organisationType || '',
-      annualValue: formData.annualValue || '',
+      annualValue: formData.annualValue ?? '',
       employeeCount: formData.employeeCount || '',
       limitedCompanyInterest: formData.limitedCompanyInterest || '',
       partnershipInterest: formData.partnershipInterest || '',

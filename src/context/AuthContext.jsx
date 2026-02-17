@@ -5,7 +5,7 @@
  * CRITICAL: This enforces RBAC on the frontend. Backend API must also enforce RBAC.
  */
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import storage from '../services/StorageProvider';
 
 const AuthContext = createContext(null);
@@ -67,29 +67,31 @@ export const AuthProvider = ({ children }) => {
 
   /**
    * Check if user has a specific role
+   * M9: Wrapped in useCallback to prevent stale closures in useEffect dependencies
    */
-  const hasRole = (role) => {
+  const hasRole = useCallback((role) => {
     if (!user?.groups) return false;
     const allowedGroups = ROLE_GROUPS[role] || [];
     return user.groups.some(g => allowedGroups.includes(g));
-  };
+  }, [user]);
 
   /**
    * Check if user has any of the specified roles
    */
-  const hasAnyRole = (roles) => {
+  const hasAnyRole = useCallback((roles) => {
     return roles.some(role => hasRole(role));
-  };
+  }, [hasRole]);
 
   /**
    * Check if user is an admin
    */
-  const isAdmin = () => hasRole(ROLES.ADMIN);
+  const isAdmin = useCallback(() => hasRole(ROLES.ADMIN), [hasRole]);
 
   /**
    * Check if user can access a specific submission based on its stage and ownership
+   * M9: Wrapped in useCallback to prevent infinite re-renders when used in useEffect deps
    */
-  const canAccessSubmission = (submission) => {
+  const canAccessSubmission = useCallback((submission) => {
     if (!user) return false;
 
     // Admin can access everything
@@ -146,19 +148,19 @@ export const AuthProvider = ({ children }) => {
     }
 
     return false;
-  };
+  }, [user, isAdmin, hasRole]);
 
   /**
    * Get the role required for a specific stage
    */
-  const getRoleForStage = (stage) => {
+  const getRoleForStage = useCallback((stage) => {
     return STAGE_ROLES[stage?.toLowerCase()] || null;
-  };
+  }, []);
 
   /**
    * Check if user can perform review actions (not just view)
    */
-  const canReview = (submission, stage) => {
+  const canReview = useCallback((submission, stage) => {
     if (!user) return false;
     if (isAdmin()) return true;
 
@@ -166,9 +168,10 @@ export const AuthProvider = ({ children }) => {
     if (!requiredRole) return false;
 
     return hasRole(requiredRole) && canAccessSubmission(submission);
-  };
+  }, [user, isAdmin, getRoleForStage, hasRole, canAccessSubmission]);
 
-  const value = {
+  // M9: Memoize context value to prevent unnecessary re-renders of consumers
+  const value = useMemo(() => ({
     user,
     loading,
     error,
@@ -181,7 +184,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user,
     ROLES,
     ROLE_GROUPS
-  };
+  }), [user, loading, error, hasRole, hasAnyRole, isAdmin, canAccessSubmission, canReview, getRoleForStage]);
 
   return (
     <AuthContext.Provider value={value}>

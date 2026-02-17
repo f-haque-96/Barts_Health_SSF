@@ -33,6 +33,7 @@ import {
 } from '../components/common';
 import { formatDate } from '../utils/helpers';
 import PBPApprovalPDF from '../components/pdf/PBPApprovalPDF';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 // ===== Exchange Thread Component =====
 const ExchangeThread = ({ exchanges, onPreviewDocument, userRole }) => {
@@ -637,6 +638,7 @@ const RequesterResponsePage = ({
 }) => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
+  useDocumentTitle('Submission Status');
   // Use props if provided (from SecureReviewPage), otherwise use local state
   const [localSubmission, setLocalSubmission] = useState(null);
   const submission = propSubmission || localSubmission;

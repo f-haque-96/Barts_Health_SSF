@@ -21,6 +21,7 @@ const submissionService = require('../services/submissionService');
 const { logAudit, getAuditTrail } = require('../services/auditService');
 const documentService = require('../services/documentService');
 const sharePointService = require('../services/sharePointService');
+const { scanBuffer } = require('../services/avScanService');
 const logger = require('../config/logger');
 
 // Configure multer for file uploads (memory storage for SharePoint upload)
@@ -168,13 +169,13 @@ router.put('/submissions/:id', requireAuth, validateSubmissionUpdate, canAccessS
 router.get('/reviews/:stage/queue', requireAuth, (req, res, next) => {
   const { stage } = req.params;
 
-  // Map stage to required role and enforce it
+  // H5: Map stage to required role key (must match ROLE_GROUPS keys in rbac.js)
   const stageRoles = {
     'pbp': 'pbp',
     'procurement': 'procurement',
     'opw': 'opw',
     'contract': 'contract',
-    'ap': 'apControl'
+    'ap': 'ap_control'
   };
 
   const requiredRole = stageRoles[stage];
@@ -187,7 +188,9 @@ router.get('/reviews/:stage/queue', requireAuth, (req, res, next) => {
 }, async (req, res, next) => {
   try {
     const { stage } = req.params;
-    const queue = await submissionService.getWorkQueue(stage, req.user);
+    // H6: Pass pagination params from query string
+    const { page, pageSize } = req.query;
+    const queue = await submissionService.getWorkQueue(stage, req.user, { page, pageSize });
     res.json(queue);
   } catch (error) {
     next(error);
@@ -216,13 +219,13 @@ router.post('/reviews/:stage/:id', requireAuth, async (req, res, next) => {
       return res.status(400).json({ error: 'VALIDATION_ERROR', message: 'Invalid decision value' });
     }
 
-    // --- Enforce reviewer role (NOT canAccessSubmission) ---
+    // H5: Enforce reviewer role (NOT canAccessSubmission) - keys match ROLE_GROUPS in rbac.js
     const stageRoles = {
       'pbp': 'pbp',
       'procurement': 'procurement',
       'opw': 'opw',
       'contract': 'contract',
-      'ap': 'apControl'
+      'ap': 'ap_control'
     };
     const { ROLE_GROUPS } = require('../middleware/rbac');
     const userGroups = req.user.groups || [];
@@ -418,6 +421,22 @@ router.post('/documents/:submissionId', requireAuth, validateDocumentUpload, can
       });
     }
 
+    // C8: Antivirus scan before storage (fail closed - rejects on scan failure)
+    const avResult = await scanBuffer(req.file.buffer, req.file.originalname);
+    if (!avResult.clean) {
+      logger.warn(`AV scan rejected upload: ${req.file.originalname} for submission ${submissionId} - ${avResult.details}`);
+      await logAudit({
+        submissionId,
+        action: 'DOCUMENT_UPLOAD_BLOCKED_MALWARE',
+        user: req.user.email,
+        details: { fileName: req.file.originalname, avDetails: avResult.details }
+      });
+      return res.status(422).json({
+        error: 'MALWARE_DETECTED',
+        message: 'The uploaded file was flagged by antivirus scanning and has been rejected.'
+      });
+    }
+
     // Upload to SharePoint
     const spResult = await sharePointService.uploadDocument(
       submissionId,
@@ -509,13 +528,14 @@ router.delete('/documents/:documentId', requireAuth, async (req, res, next) => {
     // Check stage-based access
     const stage = submission.CurrentStage?.toLowerCase();
     const userGroups = user.groups || [];
+    // H5: Stage-to-role mapping - keys match ROLE_GROUPS in rbac.js
     const stageRoleMap = {
       'pbp': ROLE_GROUPS.pbp,
       'procurement': ROLE_GROUPS.procurement,
       'opw': ROLE_GROUPS.opw,
       'contract': ROLE_GROUPS.contract,
-      'ap_control': ROLE_GROUPS.apControl,
-      'ap': ROLE_GROUPS.apControl
+      'ap_control': ROLE_GROUPS.ap_control,
+      'ap': ROLE_GROUPS.ap_control
     };
     const allowedGroups = stageRoleMap[stage] || [];
     const hasStageAccess = userGroups.some(g => allowedGroups.includes(g));
