@@ -25,7 +25,7 @@ import {
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 // ===== Main Contract Drafter Review Page =====
-const ContractDrafterReviewPage = ({ user, readOnly = false }) => {
+const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
   useDocumentTitle('Contract Review');
@@ -33,7 +33,7 @@ const ContractDrafterReviewPage = ({ user, readOnly = false }) => {
   const [submission, setSubmission] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [customFile, setCustomFile] = useState(null);
+  const [_customFile, setCustomFile] = useState(null);
   const [instructions, setInstructions] = useState('');
   const [actionInProgress, setActionInProgress] = useState(false);
   const [approvalComments, setApprovalComments] = useState('');

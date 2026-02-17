@@ -90,7 +90,7 @@ const ReviewCard = ({ title, children, highlight }) => {
 const APControlReviewPage = ({
   submission: propSubmission,
   setSubmission: propSetSubmission,
-  readOnly = false
+  readOnly: _readOnly = false
 }) => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
@@ -111,9 +111,9 @@ const APControlReviewPage = ({
   const [signatureDate, setSignatureDate] = useState(new Date().toISOString().split('T')[0]);
   const [supplierName, setSupplierName] = useState('');
   const [supplierNumber, setSupplierNumber] = useState('');
-  const [additionalInfo, setAdditionalInfo] = useState('');
+  const [_additionalInfo, setAdditionalInfo] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
-  const [showRejectionSection, setShowRejectionSection] = useState(false);
+  const [_showRejectionSection, _setShowRejectionSection] = useState(false);
   const [actionType, setActionType] = useState(null); // null, 'complete', 'reject'
 
   // Function to get full submission with ALL authorisations for PDF
@@ -735,7 +735,7 @@ const APControlReviewPage = ({
               document={<SupplierFormPDF submission={getFullSubmissionForPDF()} isAPControlPDF={true} />}
               fileName={`NHS-Supplier-Form-${submission?.formData?.companyName?.replace(/\s+/g, '_') || 'Supplier'}-COMPLETE-${new Date().toISOString().split('T')[0]}.pdf`}
             >
-              {({ loading, error }) => (
+              {({ loading, error: _error }) => (
                 <button className="btn-download-complete" disabled={loading}>
                   {loading ? (
                     <><ClockIcon size={16} style={{ marginRight: '4px' }} /> Generating PDF...</>
@@ -1820,7 +1820,7 @@ const APControlReviewPage = ({
         fileName={`Supplier_Form_COMPLETE_${submission?.alembaReference || submission?.submissionId || 'unknown'}.pdf`}
         style={{ display: 'none' }}
       >
-        {({ loading }) => null}
+        {({ loading: _loading }) => null}
       </PDFDownloadLink>
 
       {/* Back Button */}

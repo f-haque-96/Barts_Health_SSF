@@ -634,7 +634,7 @@ const RequesterResponsePage = ({
   submission: propSubmission,
   setSubmission: propSetSubmission,
   user,
-  readOnly = false
+  readOnly: _readOnly = false
 }) => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
@@ -798,7 +798,7 @@ const RequesterResponsePage = ({
 
   // Remove attachment
   const removeAttachment = (fileName) => {
-    const { [fileName]: removed, ...rest } = responseAttachments;
+    const { [fileName]: _removed, ...rest } = responseAttachments;
     setResponseAttachments(rest);
   };
 

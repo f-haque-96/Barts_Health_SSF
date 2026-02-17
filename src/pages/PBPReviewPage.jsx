@@ -10,7 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { Button, NoticeBox, ApprovalStamp, Textarea, FileUpload, CheckIcon, XIcon, WarningIcon, ClockIcon, ClipboardIcon, DocumentIcon, DownloadIcon, CircleCheckIcon, CircleXIcon, PaperclipIcon } from '../components/common';
-import { formatDate, formatCurrency } from '../utils/helpers';
+import { formatDate } from '../utils/helpers';
 import { formatYesNo, formatFieldValue, capitalizeWords } from '../utils/formatters';
 import PBPApprovalPDF from '../components/pdf/PBPApprovalPDF';
 import { sendRejectionNotification, sendApprovalNotification, checkAndFlagDuplicates, sendConflictOfInterestAlert } from '../services/notificationService';
@@ -347,8 +347,8 @@ const NonClinicalQuestionnaireReview = ({ data }) => {
 const PBPReviewPage = ({
   submission: propSubmission,
   setSubmission: propSetSubmission,
-  user,
-  readOnly = false
+  user: _user,
+  readOnly: _readOnly = false
 }) => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
@@ -363,8 +363,8 @@ const PBPReviewPage = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reviewerName, setReviewerName] = useState('');
   const [signatureDate, setSignatureDate] = useState(new Date().toISOString().split('T')[0]);
-  const [questionnaireUploads, setQuestionnaireUploads] = useState({});
-  const [allUploads, setAllUploads] = useState({
+  const [_questionnaireUploads, _setQuestionnaireUploads] = useState({});
+  const [_allUploads, setAllUploads] = useState({
     letterhead: null,
     procurementApproval: null
   });
@@ -421,7 +421,7 @@ const PBPReviewPage = ({
 
   // Remove exchange attachment
   const removeExchangeAttachment = (fileName) => {
-    const { [fileName]: removed, ...rest } = exchangeAttachments;
+    const { [fileName]: _removed, ...rest } = exchangeAttachments;
     setExchangeAttachments(rest);
   };
 

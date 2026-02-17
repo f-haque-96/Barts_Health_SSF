@@ -8,9 +8,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { Button, NoticeBox, ApprovalStamp, Textarea, RadioGroup, SignatureSection, FileUpload, Input, CheckIcon, XIcon, WarningIcon, DocumentIcon, UploadIcon, CircleXIcon, VerificationBadge } from '../components/common';
 import { formatDate } from '../utils/helpers';
-import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes } from '../utils/formatters';
+import { formatFieldValue, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
-import { sendApprovalNotification, notifyDepartment, sendRejectionNotification, sendContractRequestEmail, notifyEmployedDetermination, notifyInsideIR35WithSDS, notifyAPControlDirect } from '../services/notificationService';
+import { notifyDepartment, sendRejectionNotification, sendContractRequestEmail, notifyEmployedDetermination, notifyInsideIR35WithSDS, notifyAPControlDirect } from '../services/notificationService';
 import { contractNegotiationService } from '../services/contractNegotiationService';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
@@ -55,8 +55,8 @@ const ReviewCard = ({ title, children, highlight }) => {
 const OPWReviewPage = ({
   submission: propSubmission,
   setSubmission: propSetSubmission,
-  user,
-  readOnly = false
+  user: _user,
+  readOnly: _readOnly = false
 }) => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
@@ -72,8 +72,8 @@ const OPWReviewPage = ({
   const [signatureName, setSignatureName] = useState('');
   const [signatureDate, setSignatureDate] = useState(new Date().toISOString().split('T')[0]);
   const [contractFile, setContractFile] = useState(null);
-  const [contractUploadedBy, setContractUploadedBy] = useState('');
-  const [isSavingContract, setIsSavingContract] = useState(false);
+  const [contractUploadedBy, _setContractUploadedBy] = useState('');
+  const [_isSavingContract, setIsSavingContract] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [actionSelected, setActionSelected] = useState(false); // Track if user clicked proceed to sign
 
@@ -568,14 +568,14 @@ const OPWReviewPage = ({
     }
   };
 
-  const handleContractUpload = async (fileData) => {
+  const _handleContractUpload = async (fileData) => {
     // FileUpload component passes an object with {name, size, type, file, base64}
     if (fileData) {
       setContractFile(fileData);
     }
   };
 
-  const handleSaveContract = async () => {
+  const _handleSaveContract = async () => {
     if (!contractFile) {
       alert('Please upload a contract document');
       return;

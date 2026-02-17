@@ -8,7 +8,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { Button, NoticeBox, ApprovalStamp, Textarea, SignatureSection, Input, CheckIcon, XIcon, CircleXIcon, InfoIcon, WarningIcon, ClockIcon, VerificationBadge } from '../components/common';
 import { formatDate, formatCurrency } from '../utils/helpers';
-import { formatYesNo, formatFieldValue, capitalizeWords, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes, formatEmployeeCount } from '../utils/formatters';
+import { formatFieldValue, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes, formatEmployeeCount } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
 import { sendRejectionNotification, sendApprovalNotification, notifyDepartment } from '../services/notificationService';
 import useDocumentTitle from '../hooks/useDocumentTitle';
@@ -54,8 +54,8 @@ const ReviewCard = ({ title, children }) => {
 const ProcurementReviewPage = ({
   submission: propSubmission,
   setSubmission: propSetSubmission,
-  user,
-  readOnly = false
+  user: _user,
+  readOnly: _readOnly = false
 }) => {
   const { submissionId } = useParams();
   const navigate = useNavigate();

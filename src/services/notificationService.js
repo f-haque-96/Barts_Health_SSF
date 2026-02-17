@@ -4,7 +4,7 @@
  * In production, these would integrate with Power Automate via SharePoint lists
  */
 
-import { findPotentialDuplicates, checkSupplierWatchlist } from '../utils/helpers';
+import { findPotentialDuplicates } from '../utils/helpers';
 
 // Department email mappings (in production, these come from SharePoint/config)
 const DEPARTMENT_EMAILS = {
@@ -96,7 +96,7 @@ export const generateAlembaResolutionSummary = ({
   rejectionReason,
   rejectedBy,
   rejectedAtStage,
-  ir35Status,
+  ir35Status: _ir35Status,
 }) => {
   switch (outcome) {
     case 'approved':

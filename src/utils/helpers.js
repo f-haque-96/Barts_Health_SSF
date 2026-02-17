@@ -150,7 +150,7 @@ export const sanitizeInput = (input) => {
     '/': '&#x2F;',
   };
 
-  return input.trim().replace(/[&<>"'\/]/g, (char) => escapeMap[char]);
+  return input.trim().replace(/[&<>"'/]/g, (char) => escapeMap[char]);
 };
 
 /**
@@ -195,7 +195,7 @@ export const validators = {
 
   phone: (value) => {
     if (!value) return null;
-    return !/^[\d\s\+\-()]{7,15}$/.test(value) ? 'Please enter a valid phone number' : null;
+    return !/^[\d\s+\-()]{7,15}$/.test(value) ? 'Please enter a valid phone number' : null;
   },
 
   postcode: (value) => {

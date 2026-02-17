@@ -602,18 +602,20 @@ const useFormStore = create(
               missing.push('Justification (maximum 350 characters)');
             }
 
-            // Conditional uploads
-            // Helper function to check if file exists
-            const fileExists = (fileObj) => !!(fileObj?.name || fileObj?.base64 || fileObj?.data);
+            {
+              // Conditional uploads
+              // Helper function to check if file exists
+              const fileExists = (fileObj) => !!(fileObj?.name || fileObj?.base64 || fileObj?.data);
 
-            if (formData.procurementEngaged === 'yes' && !fileExists(uploadedFiles.procurementApproval)) {
-              missing.push('Procurement Approval Document');
-            }
-            if (formData.letterheadAvailable === 'yes' && !fileExists(uploadedFiles.letterhead)) {
-              missing.push('Letterhead with Bank Details');
-            }
-            if (formData.soleTraderStatus === 'yes') {
-              if (!fileExists(uploadedFiles.cestForm)) missing.push('CEST Form');
+              if (formData.procurementEngaged === 'yes' && !fileExists(uploadedFiles.procurementApproval)) {
+                missing.push('Procurement Approval Document');
+              }
+              if (formData.letterheadAvailable === 'yes' && !fileExists(uploadedFiles.letterhead)) {
+                missing.push('Letterhead with Bank Details');
+              }
+              if (formData.soleTraderStatus === 'yes') {
+                if (!fileExists(uploadedFiles.cestForm)) missing.push('CEST Form');
+              }
             }
             break;
 
@@ -696,7 +698,7 @@ const useFormStore = create(
               missing.push('City');
             } else if (formData.city.trim().length > 50) {
               missing.push('City (maximum 50 characters)');
-            } else if (!/^[a-zA-Z\s\-]+$/.test(formData.city)) {
+            } else if (!/^[a-zA-Z\s-]+$/.test(formData.city)) {
               missing.push('City (only letters, spaces, and hyphens allowed)');
             }
 
@@ -968,7 +970,7 @@ const useFormStore = create(
           formData,
           uploadedFiles: Object.keys(uploadedFiles).reduce((acc, key) => {
             // Return metadata only, exclude file object and base64
-            const { file, base64, ...metadata } = uploadedFiles[key];
+            const { file: _file, base64: _base64, ...metadata } = uploadedFiles[key];
             acc[key] = metadata;
             return acc;
           }, {}),
@@ -1004,11 +1006,11 @@ const useFormStore = create(
 
             if (fileSize < MAX_SIZE_FOR_PERSISTENCE) {
               // Small file - keep base64 for persistence
-              const { file, ...dataWithBase64 } = fileData;
+              const { file: _f, ...dataWithBase64 } = fileData;
               acc[key] = dataWithBase64;
             } else {
               // Large file - strip base64 to avoid quota
-              const { file, base64, data, ...metadata } = fileData;
+              const { file: _f2, base64: _b64, data: _d, ...metadata } = fileData;
               acc[key] = metadata;
             }
           }

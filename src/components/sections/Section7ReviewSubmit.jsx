@@ -62,7 +62,7 @@ const CRNStatusBadge = ({ crn, verificationData }) => {
 };
 
 const ReviewCard = ({ title, children, sectionNumber }) => {
-  const { goToSection, getMissingFields, formData } = useFormStore();
+  const { goToSection, getMissingFields } = useFormStore();
   const missingFields = getMissingFields(sectionNumber);
   const isIncomplete = missingFields.length > 0;
 

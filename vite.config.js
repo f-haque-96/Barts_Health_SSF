@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   build: {
     // M2: Strip console.log and console.warn from production builds
@@ -11,7 +11,7 @@ export default defineConfig({
     // C6: Ensure dev files are excluded via tree-shaking (dynamic imports)
   },
   esbuild: {
-    // M2: Remove console.log and console.warn in production
-    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+    // M2: Remove console and debugger in production only
+    drop: mode === 'production' ? ['console', 'debugger'] : [],
   },
-})
+}))
