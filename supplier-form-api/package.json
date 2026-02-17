@@ -32,6 +32,12 @@
   "devDependencies": {
     "nodemon": "^3.0.2"
   },
+  "overrides": {
+    "axios": "1.13.5",
+    "jsonwebtoken": "9.0.3",
+    "node-fetch": "2.7.0",
+    "qs": "6.15.0"
+  },
   "engines": {
     "node": ">=18.0.0"
   },
