@@ -35,6 +35,9 @@ jobs:
           fi
           echo "✓ package-lock.json found"
 
+      - name: Validate markdown links
+        run: npm run docs:check-links
+
       # Frontend
       - name: Install frontend dependencies
         run: npm ci

@@ -1,6 +1,6 @@
 # NHS Supplier Setup Smart Form
 
-[![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen)](https://github.com/f-haque-96/Barts_Health_SSF)
+[![Status](https://img.shields.io/badge/status-frontend%20complete%20%7C%20deployment%20pending-orange)](https://github.com/f-haque-96/Barts_Health_SSF)
 [![React](https://img.shields.io/badge/react-19-blue)](https://reactjs.org/)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-green)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/license-NHS%20Internal-blue)](LICENSE)
@@ -11,7 +11,7 @@ A comprehensive React-based web application for NHS supplier onboarding and setu
 
 ## 🔒 Security Updates (February 2026)
 
-**This project is now production-ready with critical security enhancements:**
+**Security hardening is implemented in code, but production deployment is still pending backend infrastructure setup (environment, SQL Server, SharePoint, and Power Automate).**
 
 ✅ **All critical vulnerabilities fixed** (SQL injection, CSRF protection, file validation)
 ✅ **Enhanced data protection** (encryption, audit logging, GDPR compliance)
@@ -170,11 +170,37 @@ npm run build      # Build for production
 npm run preview    # Preview production build
 ```
 
+## Why You Might Not See Updates on GitHub
+
+If you run commands in one environment (for example: GitHub Codespaces) but changes were created in another environment (for example: an AI agent container), the commits do **not** automatically sync between those environments.
+
+To make your latest local commits appear on GitHub, run:
+
+```bash
+git status
+git branch --show-current
+git push -u origin $(git branch --show-current)
+```
+
+If you see `Everything up-to-date`, that means there are no local commits waiting to upload from your current environment.
+
+### What is a PR?
+
+**PR** means **Pull Request**.
+
+A Pull Request is a proposed set of changes from one branch into another branch (usually into `main`/`master`) so reviewers can:
+
+1. See exactly what changed.
+2. Discuss and request edits.
+3. Approve and merge safely.
+
+In short: a commit saves your work locally, a push uploads it to GitHub, and a PR asks to merge it.
+
 ---
 
 ## Project Structure
 
-**📖 Complete Structure Guide:** [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)
+**📖 Complete Structure Guide:** [docs/README.md](./docs/README.md)
 
 The project is organized into clear folders:
 
@@ -465,9 +491,9 @@ VITE_INTRANET_URL=https://intranet.nhs.uk
 
 | Document | Purpose | Read This If... |
 |----------|---------|-----------------|
-| **[docs/getting-started/START_HERE.md](./docs/getting-started/START_HERE.md)** 👈 | **Complete beginner's guide** | **This is your first time** |
-| [docs/getting-started/DEVELOPMENT_MODE_GUIDE.md](./docs/getting-started/DEVELOPMENT_MODE_GUIDE.md) | How development vs production works | You want to develop locally |
-| [docs/getting-started/CRN_SETUP_GUIDE.md](./docs/getting-started/CRN_SETUP_GUIDE.md) | Company lookup setup | You want to test or set up CRN verification |
+| [docs/README.md](./docs/README.md) | Documentation index for setup and deployment | You are new to the project |
+| [docs/deployment/setup/01-environment.md](./docs/deployment/setup/01-environment.md) | Environment and backend setup prerequisites | You are preparing backend setup |
+| [docs/deployment/setup/02-sql-server.md](./docs/deployment/setup/02-sql-server.md) | SQL Server setup guide | You are setting up the database |
 
 ### 🚀 For Deployment
 
@@ -525,10 +551,10 @@ For issues or questions:
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 2.0 | February 2026 | **Major security update** - Fixed all critical vulnerabilities, added CSRF protection, server-side validation, duplicate detection. See [docs/archive/CHANGES_IMPLEMENTED.md](./docs/archive/CHANGES_IMPLEMENTED.md) |
+| 2.0 | February 2026 | **Major security update** - Fixed all critical vulnerabilities, added CSRF protection, server-side validation, duplicate detection. See [docs/archive/PRODUCTION_FIXES_2026-02-04.md](./docs/archive/PRODUCTION_FIXES_2026-02-04.md) |
 | 1.0 | January 2026 | Initial release with core functionality |
 
 ---
 
 *Last updated: February 4, 2026*
-*Project Status: ✅ Production Ready (all security fixes implemented)*
+*Project Status: 🟡 Frontend complete; backend environment and deployment setup pending*
