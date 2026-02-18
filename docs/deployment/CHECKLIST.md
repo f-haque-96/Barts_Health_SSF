@@ -66,7 +66,7 @@ Required tables:
 
 ### 4. SharePoint Setup
 
-- [ ] Create SharePoint site: `NHS-Supplier-Forms`
+- [x] Create SharePoint site: `NHS-Supplier-Forms`
 - [ ] Create document libraries:
   - [ ] `SupplierDocuments` (business documents - can sync to Alemba)
   - [ ] `SensitiveDocuments` (passports, ID docs - NEVER sync to Alemba)
