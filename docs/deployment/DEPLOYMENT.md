@@ -735,7 +735,7 @@ For DLP compliance, use **SharePoint list triggers** (not HTTP triggers).
 ## Additional Resources
 
 **For complete details on security fixes and implementation changes:**
-See [CHANGES_IMPLEMENTED.md](../CHANGES_IMPLEMENTED.md) - Comprehensive summary of all fixes, testing checklist, and beginner-friendly explanations.
+See [CHANGES_IMPLEMENTED.md](../archive/CHANGES_IMPLEMENTED.md) - Comprehensive summary of all fixes, testing checklist, and beginner-friendly explanations.
 
 **For beginner-friendly setup guides:**
 See [setup/](setup/) folder for step-by-step instructions on database setup, SharePoint configuration, and Power Automate flows.

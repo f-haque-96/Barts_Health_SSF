@@ -1,5 +1,14 @@
 # Documentation Index
 
+
+## Getting Started
+
+| Document | Description |
+|----------|-------------|
+| [START_HERE.md](getting-started/START_HERE.md) | New developer onboarding path |
+| [DEVELOPMENT_MODE_GUIDE.md](getting-started/DEVELOPMENT_MODE_GUIDE.md) | Frontend-only and full-stack development modes |
+| [CRN_SETUP_GUIDE.md](getting-started/CRN_SETUP_GUIDE.md) | Companies House (CRN) setup prerequisites |
+
 ## Deployment
 
 | Document | Description |
