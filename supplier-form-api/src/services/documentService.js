@@ -22,7 +22,12 @@ const DOCUMENT_TYPES = {
   SIGNED_CONTRACT: { id: 'signed_contract', label: 'Signed Contract', isSensitive: false, allowAlembaSync: true },
   PURCHASE_ORDER: { id: 'purchase_order', label: 'Purchase Order', isSensitive: false, allowAlembaSync: true },
   QUOTE: { id: 'quote', label: 'Quote/Estimate', isSensitive: false, allowAlembaSync: true },
-  OTHER: { id: 'other', label: 'Other Document', isSensitive: false, allowAlembaSync: true }
+  OTHER: { id: 'other', label: 'Other Document', isSensitive: false, allowAlembaSync: true },
+
+  // Form upload types (used by frontend file uploads)
+  LETTERHEAD: { id: 'letterhead', label: 'Letterhead with Bank Details', isSensitive: false, allowAlembaSync: true },
+  PROCUREMENT_APPROVAL: { id: 'procurement_approval', label: 'Procurement Approval', isSensitive: false, allowAlembaSync: true },
+  CEST_FORM: { id: 'cest_form', label: 'CEST Form (IR35)', isSensitive: true, allowAlembaSync: false },
 };
 
 /**

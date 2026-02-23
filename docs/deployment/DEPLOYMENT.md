@@ -143,9 +143,9 @@ This deployment guide has been updated to reflect critical security fixes implem
 
 1. Go to **API permissions** → **Add a permission**
 2. Add:
-   - Microsoft Graph → **User.Read** (Delegated)
-   - Microsoft Graph → **GroupMember.Read.All** (Application)
-3. Click **Grant admin consent**
+   - Microsoft Graph → **User.Read.All** (Application) - Required for deserializeUser to resolve user profile
+   - Microsoft Graph → **GroupMember.Read.All** (Application) - Required for RBAC group membership checks
+3. Click **Grant admin consent** for BOTH permissions (Application permissions require admin consent)
 
 ### 3.4 Create Security Groups
 

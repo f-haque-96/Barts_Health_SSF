@@ -698,13 +698,13 @@ const useFormStore = create(
               missing.push('City');
             } else if (formData.city.trim().length > 50) {
               missing.push('City (maximum 50 characters)');
-            } else if (!/^[a-zA-Z\s-]+$/.test(formData.city)) {
-              missing.push('City (only letters, spaces, and hyphens allowed)');
+            } else if (!/^[\p{L}\s\-'.0-9]+$/u.test(formData.city)) {
+              missing.push('City (only letters, spaces, hyphens, apostrophes, and periods allowed)');
             }
 
             if (!formData.postcode?.trim()) {
               missing.push('Postcode');
-            } else if (!/^[A-Z]{1,2}[0-9]{1,2}[A-Z]?\s?[0-9][A-Z]{2}$/i.test(formData.postcode)) {
+            } else if (!/^(GIR\s?0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}|BFPO\s?[0-9]{1,4})$/i.test(formData.postcode)) {
               missing.push('Postcode (invalid UK postcode format)');
             }
 
@@ -813,7 +813,7 @@ const useFormStore = create(
               if (!formData.accountsCity?.trim()) missing.push('Accounts City');
               if (!formData.accountsPostcode?.trim()) {
                 missing.push('Accounts Postcode');
-              } else if (!/^[A-Z]{1,2}[0-9]{1,2}[A-Z]?\s?[0-9][A-Z]{2}$/i.test(formData.accountsPostcode)) {
+              } else if (!/^(GIR\s?0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}|BFPO\s?[0-9]{1,4})$/i.test(formData.accountsPostcode)) {
                 missing.push('Accounts Postcode (invalid UK postcode format)');
               }
               if (!formData.accountsPhone?.trim()) missing.push('Accounts Phone');

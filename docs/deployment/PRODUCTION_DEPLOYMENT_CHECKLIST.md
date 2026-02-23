@@ -68,9 +68,10 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 - [ ] App Registration created in Azure AD
 - [ ] Redirect URIs configured for frontend URL
-- [ ] API permissions granted:
-  - [ ] Microsoft Graph - User.Read
-  - [ ] Microsoft Graph - GroupMember.Read.All (for RBAC)
+- [ ] API permissions granted (Application type, NOT Delegated):
+  - [ ] Microsoft Graph - **User.Read.All** (Application) - for user profile resolution
+  - [ ] Microsoft Graph - **GroupMember.Read.All** (Application) - for RBAC group checks
+  - [ ] **Admin consent granted** for both permissions
 - [ ] Client secret generated and stored securely
 
 ### 3. Azure AD Security Groups
@@ -130,7 +131,32 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 - [ ] App registration created for SharePoint access
 - [ ] API permissions granted for SharePoint
 
-### 6. Power Automate Flows
+### 6. Antivirus Scanning
+
+The backend implements fail-closed AV scanning on all file uploads. If no scanner is found in production, ALL file uploads will be rejected.
+
+- [ ] **Windows Server:** Verify Windows Defender CLI is accessible from the Node.js process:
+  ```bash
+  # Test Windows Defender CLI
+  "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File test.txt
+  ```
+- [ ] **Linux Server:** Install ClamAV:
+  ```bash
+  apt install clamav && freshclam
+  ```
+- [ ] Set `AV_SCANNER` environment variable if needed:
+  - `defender` - Force Windows Defender
+  - `clamav` - Force ClamAV
+  - `none` - Disable AV scanning (NOT recommended for production)
+  - Leave unset for auto-detection (recommended)
+- [ ] Test: Upload a file via the form and verify AV scan completes in server logs
+- [ ] Verify the EICAR test file is correctly blocked:
+  ```bash
+  # Create EICAR test file and attempt upload - should be rejected
+  echo 'X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > eicar.txt
+  ```
+
+### 7. Power Automate Flows
 
 - [ ] Email notification flow created
 - [ ] Flow triggered by submission to NotificationQueue table
@@ -140,7 +166,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ## ✅ SECURITY VERIFICATION
 
-### 7. Security Checklist
+### 8. Security Checklist
 
 - [ ] **Authentication bypass removed** - No optional auth in CRN endpoint
 - [ ] **SESSION_SECRET rotated** - Not using development default

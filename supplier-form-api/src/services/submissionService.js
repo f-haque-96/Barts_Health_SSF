@@ -278,8 +278,8 @@ async function update(id, data, user) {
       .input('NewStatus', sql.NVarChar(50), data.status || existing.Status)
       .input('Details', sql.NVarChar(sql.MAX), JSON.stringify(Object.keys(data)))
       .query(`
-        INSERT INTO AuditTrail (SubmissionID, Action, PerformedBy, PreviousStatus, NewStatus, Details, CreatedAt)
-        VALUES (@AuditSubmissionID, @Action, @PerformedBy, @PreviousStatus, @NewStatus, @Details, GETUTCDATE())
+        INSERT INTO AuditTrail (SubmissionID, ActionType, PerformedBy, PreviousStatus, NewStatus, ActionDetails)
+        VALUES (@AuditSubmissionID, @Action, @PerformedBy, @PreviousStatus, @NewStatus, @Details)
       `);
 
     await transaction.commit();
