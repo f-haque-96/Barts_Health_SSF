@@ -1,6 +1,7 @@
 /**
  * NHS Supplier Setup Form - Zustand State Management Store
  * Manages form data, navigation, file uploads, and reviewer comments with persistence
+ * Updated: Feb 2026 - Unicode city regex, GDS postcode validation, BFPO/GIR support
  *
  * PERF-01: For production optimisation, consider implementing:
  * - Debounced persistence (2-second delay after last change)
