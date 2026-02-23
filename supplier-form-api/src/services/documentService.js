@@ -1,6 +1,7 @@
 /**
  * Document Service
  * Handles document metadata and governance rules
+ * Updated: Feb 2026 - Added letterhead, procurement_approval, cest_form types
  */
 
 const { getPool, sql } = require('../config/database');

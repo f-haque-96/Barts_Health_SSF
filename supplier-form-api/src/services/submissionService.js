@@ -1,6 +1,7 @@
 /**
  * Submission Service
  * Handles all submission-related database operations
+ * Updated: Feb 2026 - Fixed audit trail column names (ActionType, ActionDetails)
  */
 
 const { getPool, sql } = require('../config/database');
