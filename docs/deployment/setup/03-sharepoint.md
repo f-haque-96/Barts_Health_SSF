@@ -12,7 +12,7 @@
 
 | Library | What Goes Here | Who Can See |
 |---------|----------------|-------------|
-| **SupplierDocuments** | Contracts, letterheads, PBP certificates | All reviewers |
+| **SupplierDocuments** | VAT certificates, contracts, letterheads | All reviewers |
 | **SensitiveDocuments** | Passports, driving licences, ID docs | AP Control + Admin ONLY |
 
 **IMPORTANT:** Keeping sensitive documents separate protects personal data and ensures passports/IDs are never accidentally shared or synced to Alemba.
@@ -21,9 +21,9 @@
 
 ## Before You Start Checklist
 
-- [ ] I have a web browser (Chrome, Edge, or Firefox)
-- [ ] I can access SharePoint (https://bartshealth.sharepoint.com)
-- [ ] I have permission to create sites/libraries (if not, I'll request access)
+- [x] I have a web browser (Chrome, Edge, or Firefox)
+- [x] I can access SharePoint (https://bartshealth.sharepoint.com)
+- [x] I have permission to create sites/libraries (if not, I'll request access)
 
 ---
 
@@ -130,7 +130,7 @@ A panel will appear on the right side.
 | Field | What to Enter |
 |-------|---------------|
 | **Name** | `SupplierDocuments` |
-| **Description** | `Business documents - contracts, letterheads, PBP certificates. Can sync to Alemba.` |
+| **Description** | `Business documents - VAT certificates, contracts, letterheads. Can sync to Alemba.` |
 
 ### Step 4: Click "Create"
 
@@ -150,33 +150,35 @@ Click on **"SupplierDocuments"** in the left navigation (or from the site home p
 
 1. Click **"+ New"** button
 2. Click **"Folder"**
-3. Name it: `Letterheads`
+3. Name it: `VAT_Certificates`
 4. Click **"Create"**
 
 ### Step 3: Create More Folders
 
 Repeat Step 2 for each of these folders:
 
-- [ ] `Letterheads` (done above)
-- [ ] `Contracts`
-- [ ] `PBP_Certificates`
-- [ ] `Other`
-
-**Note:** The "Other" folder is for additional documents exchanged between PBP and requester when PBP requests more information.
+- [x] `VAT_Certificates` (done above)
+- [x] `Contracts`
+- [x] `Letterheads`
+- [x] `PBP_Certificates`
+- [x] `Insurance_Documents`
+- [x] `Other`
 
 ### Step 4: Verify Folders
 
-You should now see 4 folders in your SupplierDocuments library:
+You should now see 6 folders in your SupplierDocuments library:
 
 ```
 SupplierDocuments/
-├── Letterheads/
+├── VAT_Certificates/
 ├── Contracts/
+├── Letterheads/
 ├── PBP_Certificates/
+├── Insurance_Documents/
 └── Other/
 ```
 
-**✅ CHECKPOINT: Can you see all 4 folders? If yes, continue.**
+**✅ CHECKPOINT: Can you see all 6 folders? If yes, continue.**
 
 ---
 
@@ -214,10 +216,10 @@ Click on **"SensitiveDocuments"** in the left navigation.
 
 Create these folders (same process as before):
 
-- [ ] `Passports`
-- [ ] `DrivingLicences`
-- [ ] `IDDocuments`
-- [ ] `ProofOfAddress`
+- [x] `Passports`
+- [x] `DrivingLicences`
+- [x] `IDDocuments`
+- [x] `ProofOfAddress`
 
 ### Step 3: Verify
 
@@ -289,17 +291,17 @@ SHAREPOINT INFORMATION
 ======================
 
 Site URL:
-https://bartshealth.sharepoint.com/sites/NHS-Supplier-Forms
+https://nhs.sharepoint.com/sites/R1H_FIN_Legacy_Procurement
 
 SupplierDocuments Library URL:
-https://bartshealth.sharepoint.com/sites/NHS-Supplier-Forms/SupplierDocuments
+https://nhs.sharepoint.com/sites/R1H_FIN_Legacy_Procurement/SupplierDocuments
 
 SensitiveDocuments Library URL:
-https://bartshealth.sharepoint.com/sites/NHS-Supplier-Forms/SensitiveDocuments
+https://nhs.sharepoint.com/sites/R1H_FIN_Legacy_Procurement/SensitiveDocuments
 
-Site Created By: ___________________
+Site Created By: Fahimul Haque
 
-Date Created: ___________________
+Date Created: 07/03/2026
 ```
 
 ---
@@ -308,11 +310,11 @@ Date Created: ___________________
 
 Before moving to the next step, verify:
 
-- [ ] SharePoint site "NHS-Supplier-Forms" exists
-- [ ] SupplierDocuments library exists with 4 folders
-- [ ] SensitiveDocuments library exists with 4 folders
-- [ ] SensitiveDocuments has restricted permissions (only AP Control + Admin)
-- [ ] I wrote down the URLs above
+- [x] SharePoint site "NHS-Supplier-Forms" exists
+- [x] SupplierDocuments library exists with 6 folders
+- [x] SensitiveDocuments library exists with 4 folders
+- [x] SensitiveDocuments has restricted permissions (only AP Control + Admin)
+- [x] I wrote down the URLs above
 
 ---
 
@@ -371,7 +373,7 @@ If stuck, search Google for "SharePoint Online break permission inheritance [you
 ## Next Step
 
 Once this checklist is complete, move on to:
-**→ [04-power-automate.md](04-power-automate.md)** (Power Automate Notification Flows)
+**→ 03-SUPPLIER-DATA-EXPORT.md**
 
 ---
 
