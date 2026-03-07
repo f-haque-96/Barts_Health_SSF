@@ -21,9 +21,9 @@
 
 ## Before You Start Checklist
 
-- [ ] I have a web browser (Chrome, Edge, or Firefox)
-- [ ] I can access SharePoint (https://bartshealth.sharepoint.com)
-- [ ] I have permission to create sites/libraries (if not, I'll request access)
+- [x] I have a web browser (Chrome, Edge, or Firefox)
+- [x] I can access SharePoint (https://bartshealth.sharepoint.com)
+- [x] I have permission to create sites/libraries (if not, I'll request access)
 
 ---
 
@@ -157,12 +157,12 @@ Click on **"SupplierDocuments"** in the left navigation (or from the site home p
 
 Repeat Step 2 for each of these folders:
 
-- [ ] `VAT_Certificates` (done above)
-- [ ] `Contracts`
-- [ ] `Letterheads`
-- [ ] `PBP_Certificates`
-- [ ] `Insurance_Documents`
-- [ ] `Other`
+- [x] `VAT_Certificates` (done above)
+- [x] `Contracts`
+- [x] `Letterheads`
+- [x] `PBP_Certificates`
+- [x] `Insurance_Documents`
+- [x] `Other`
 
 ### Step 4: Verify Folders
 
@@ -216,10 +216,10 @@ Click on **"SensitiveDocuments"** in the left navigation.
 
 Create these folders (same process as before):
 
-- [ ] `Passports`
-- [ ] `DrivingLicences`
-- [ ] `IDDocuments`
-- [ ] `ProofOfAddress`
+- [x] `Passports`
+- [x] `DrivingLicences`
+- [x] `IDDocuments`
+- [x] `ProofOfAddress`
 
 ### Step 3: Verify
 
@@ -291,17 +291,17 @@ SHAREPOINT INFORMATION
 ======================
 
 Site URL:
-https://bartshealth.sharepoint.com/sites/NHS-Supplier-Forms
+https://nhs.sharepoint.com/sites/R1H_FIN_Legacy_Procurement
 
 SupplierDocuments Library URL:
-https://bartshealth.sharepoint.com/sites/NHS-Supplier-Forms/SupplierDocuments
+https://nhs.sharepoint.com/sites/R1H_FIN_Legacy_Procurement/SupplierDocuments
 
 SensitiveDocuments Library URL:
-https://bartshealth.sharepoint.com/sites/NHS-Supplier-Forms/SensitiveDocuments
+https://nhs.sharepoint.com/sites/R1H_FIN_Legacy_Procurement/SensitiveDocuments
 
-Site Created By: ___________________
+Site Created By: Fahimul Haque
 
-Date Created: ___________________
+Date Created: 07/03/2026
 ```
 
 ---
@@ -310,11 +310,11 @@ Date Created: ___________________
 
 Before moving to the next step, verify:
 
-- [ ] SharePoint site "NHS-Supplier-Forms" exists
-- [ ] SupplierDocuments library exists with 6 folders
-- [ ] SensitiveDocuments library exists with 4 folders
-- [ ] SensitiveDocuments has restricted permissions (only AP Control + Admin)
-- [ ] I wrote down the URLs above
+- [x] SharePoint site "NHS-Supplier-Forms" exists
+- [x] SupplierDocuments library exists with 6 folders
+- [x] SensitiveDocuments library exists with 4 folders
+- [x] SensitiveDocuments has restricted permissions (only AP Control + Admin)
+- [x] I wrote down the URLs above
 
 ---
 
