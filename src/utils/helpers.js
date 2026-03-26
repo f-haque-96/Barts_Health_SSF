@@ -1,6 +1,7 @@
 /**
  * Helper Functions
  * Utility functions for formatting, validation, etc.
+ * Updated: Mar 2026 - Audit compliance updates
  */
 
 /**

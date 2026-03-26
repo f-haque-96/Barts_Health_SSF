@@ -1,6 +1,7 @@
 /**
  * Validation Schemas
  * Zod schemas for all form sections
+ * Updated: Mar 2026 - Audit compliance updates
  */
 
 import { z } from 'zod';

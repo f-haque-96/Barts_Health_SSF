@@ -1,6 +1,7 @@
 /**
  * Formatters for capitalisation and display values
  * Used across review pages and PDF generation
+ * Updated: Mar 2026 - Audit compliance updates
  */
 
 /**

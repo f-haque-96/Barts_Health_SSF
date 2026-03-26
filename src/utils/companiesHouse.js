@@ -1,5 +1,6 @@
 // Companies House API Integration
 // SECURITY: API key is stored server-side only. All requests route through backend proxy.
+// Updated: Mar 2026 - Audit compliance updates
 
 // Error types for better handling
 export const CRN_ERROR_TYPES = {

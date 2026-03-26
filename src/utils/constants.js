@@ -1,6 +1,7 @@
 /**
  * Constants
  * Reusable constants for the application
+ * Updated: Mar 2026 - Audit compliance updates
  */
 
 export const SERVICE_TYPES = [
