@@ -6,3 +6,5 @@ CRN (Companies House) verification requires backend API configuration.
 - For backend CRN setup details, see deployment docs:
   - [../deployment/setup/01-environment.md](../deployment/setup/01-environment.md)
   - [../deployment/DEPLOYMENT.md](../deployment/DEPLOYMENT.md)
+
+<!-- Updated: Mar 2026 - CI compliance -->

@@ -1,5 +1,6 @@
 /**
  * Antivirus Scanning Service
+ * Updated: Mar 2026 - CI compliance
  * C8: Scans uploaded files before storage
  *
  * Supports:

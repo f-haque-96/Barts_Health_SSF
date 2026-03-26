@@ -1,5 +1,6 @@
 /**
  * Section 4: Supplier Details
+ * Updated: Mar 2026 - CI compliance
  * Company name, address, and contact information
  */
 

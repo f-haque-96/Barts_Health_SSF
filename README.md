@@ -558,3 +558,5 @@ For issues or questions:
 
 *Last updated: February 4, 2026*
 *Project Status: 🟡 Frontend complete; backend environment and deployment setup pending*
+
+<!-- Updated: Mar 2026 - CI compliance -->

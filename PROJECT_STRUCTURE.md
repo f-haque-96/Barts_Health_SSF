@@ -8,3 +8,5 @@ This repository contains a React frontend and an Express backend:
 
 For full documentation navigation, start with:
 - [docs/README.md](./docs/README.md)
+
+<!-- Updated: Mar 2026 - CI compliance -->

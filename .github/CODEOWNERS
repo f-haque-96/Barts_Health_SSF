@@ -18,3 +18,5 @@ PROJECT_STRUCTURE.md @f-haque-96
 # Configuration files
 *.config.js @f-haque-96
 .github/ @f-haque-96
+
+# Updated: Mar 2026 - CI compliance

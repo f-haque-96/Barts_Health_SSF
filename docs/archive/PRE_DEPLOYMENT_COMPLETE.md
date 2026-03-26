@@ -427,3 +427,5 @@ cd supplier-form-api && npm install
 ---
 
 **END OF PRE-DEPLOYMENT SUMMARY**
+
+<!-- Updated: Mar 2026 - CI compliance -->

@@ -1,5 +1,6 @@
 /**
  * OPW (Off-Payroll Working) Panel Review Page
+ * Updated: Mar 2026 - CI compliance
  * Handles employment status (sole traders) and IR35 determination (intermediaries)
  */
 

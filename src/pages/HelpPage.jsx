@@ -1,5 +1,6 @@
 /**
  * HelpPage Component
+ * Updated: Mar 2026 - CI compliance
  * FAQ and help resources for the Supplier Setup Form
  */
 

@@ -1,5 +1,6 @@
 /**
  * Procurement Review Page
+ * Updated: Mar 2026 - CI compliance
  * Allows Procurement team to review and approve/request info/reject supplier setup forms
  */
 

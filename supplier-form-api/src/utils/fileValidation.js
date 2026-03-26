@@ -1,5 +1,6 @@
 /**
  * File Type Validation Using Magic Numbers (File Signatures)
+ * Updated: Mar 2026 - CI compliance
  * CRITICAL: Prevents MIME type spoofing attacks
  *
  * Magic numbers are the first few bytes of a file that identify the file type.

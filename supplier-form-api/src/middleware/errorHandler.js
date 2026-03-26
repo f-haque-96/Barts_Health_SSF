@@ -1,5 +1,6 @@
 /**
  * Error Handling Middleware
+ * Updated: Mar 2026 - CI compliance
  */
 
 const logger = require('../config/logger');

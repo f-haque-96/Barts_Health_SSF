@@ -1,5 +1,6 @@
 /**
  * NHS Barts Health Supplier Setup Form
+ * Updated: Mar 2026 - CI compliance
  * Main Application Component
  *
  * SECURITY: All review routes are protected with RBAC

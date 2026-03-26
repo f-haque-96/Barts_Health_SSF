@@ -31,3 +31,5 @@ export default defineConfig([
     },
   },
 ])
+
+// Updated: Mar 2026 - CI compliance

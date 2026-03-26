@@ -1,5 +1,6 @@
 /**
  * API Routes Index
+ * Updated: Mar 2026 - CI compliance
  * Main router that combines all route modules
  * Updated: February 2026 - Self-approval prevention & validation enhancements
  */

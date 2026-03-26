@@ -1,5 +1,6 @@
 /**
  * Unauthorised Page
+ * Updated: Mar 2026 - CI compliance
  * Shown when user is not authenticated
  */
 

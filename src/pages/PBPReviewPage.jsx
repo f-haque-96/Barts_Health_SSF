@@ -1,5 +1,6 @@
 /**
  * PBP (Procurement Business Partner) Review Page
+ * Updated: Mar 2026 - CI compliance
  * Reviews ONLY Section 1 (Requester Info) and Questionnaire answers
  * PBP's role is to review supplier suitability, NOT to set up the supplier
  *

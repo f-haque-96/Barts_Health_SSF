@@ -9,3 +9,5 @@ Please see:
 ## Why this file exists
 
 Some legacy documentation and CI documentation checks still reference this historical filename. This compatibility page is kept to preserve stable links.
+
+<!-- Updated: Mar 2026 - CI compliance -->

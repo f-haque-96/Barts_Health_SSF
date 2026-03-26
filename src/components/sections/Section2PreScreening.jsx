@@ -1,5 +1,6 @@
 /**
  * Section 2: Pre-screening & Authorisation
+ * Updated: Mar 2026 - CI compliance
  * Implements progressive disclosure - questions unlock sequentially
  */
 

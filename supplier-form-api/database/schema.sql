@@ -1,3 +1,4 @@
+-- Updated: Mar 2026 - CI compliance
 -- =============================================================================
 -- NHS Supplier Setup Form - Database Schema
 -- SQL Server

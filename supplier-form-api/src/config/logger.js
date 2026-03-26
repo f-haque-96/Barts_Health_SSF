@@ -1,5 +1,6 @@
 /**
  * Winston Logger Configuration
+ * Updated: Mar 2026 - CI compliance
  */
 
 const winston = require('winston');

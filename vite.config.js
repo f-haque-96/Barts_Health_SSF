@@ -15,3 +15,5 @@ export default defineConfig(({ mode }) => ({
     drop: mode === 'production' ? ['console', 'debugger'] : [],
   },
 }))
+
+// Updated: Mar 2026 - CI compliance

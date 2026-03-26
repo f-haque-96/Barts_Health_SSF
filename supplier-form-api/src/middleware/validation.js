@@ -1,5 +1,6 @@
 /**
  * Server-Side Validation Middleware
+ * Updated: Mar 2026 - CI compliance
  * Using express-validator for request validation
  * CRITICAL: Never trust client-side validation alone
  *

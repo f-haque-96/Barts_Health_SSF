@@ -1,5 +1,6 @@
 /**
  * ProgressIndicator Component
+ * Updated: Mar 2026 - CI compliance
  * Shows current progress through the 7-section form
  */
 

@@ -1,5 +1,6 @@
 /**
  * Section 3: Supplier Classification
+ * Updated: Mar 2026 - CI compliance
  * CRN verification, supplier type selection, and classification details
  */
 

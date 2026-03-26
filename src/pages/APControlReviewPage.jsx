@@ -1,5 +1,6 @@
 /**
  * AP (Accounts Payable) Control Review Page
+ * Updated: Mar 2026 - CI compliance
  * Verifies supplier banking and financial details before system setup
  */
 

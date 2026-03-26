@@ -1,5 +1,6 @@
 /**
  * Contract Drafter Review Page
+ * Updated: Mar 2026 - CI compliance
  * Manages contract workflow with offline email-based negotiation
  * Simplified to 3-state flow: Not Sent -> Sent (Awaiting Upload) -> Approved
  */

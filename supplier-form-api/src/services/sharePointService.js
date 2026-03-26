@@ -1,5 +1,6 @@
 /**
  * SharePoint Service
+ * Updated: Mar 2026 - CI compliance
  * Handles document uploads to SharePoint libraries using @pnp/sp
  */
 

@@ -66,3 +66,5 @@ See [PRODUCTION_DEPLOYMENT_CHECKLIST.md](../docs/deployment/PRODUCTION_DEPLOYMEN
 
 **Last Updated:** February 5, 2026
 **Security Contact:** NHS Barts Health IT Security Team
+
+<\!-- Updated: Mar 2026 - CI compliance -->

@@ -1,5 +1,6 @@
 /**
  * Audit Logging Middleware
+ * Updated: Mar 2026 - CI compliance
  * Logs all API requests for compliance and security
  */
 

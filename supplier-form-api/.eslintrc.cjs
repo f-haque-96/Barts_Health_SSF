@@ -1,3 +1,4 @@
+// Updated: Mar 2026 - CI compliance
 /**
  * ESLint Configuration for Backend API (Node.js)
  */

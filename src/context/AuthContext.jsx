@@ -1,5 +1,6 @@
 /**
  * Authentication Context
+ * Updated: Mar 2026 - CI compliance
  * Provides authentication state and role-based access control throughout the app
  *
  * CRITICAL: This enforces RBAC on the frontend. Backend API must also enforce RBAC.

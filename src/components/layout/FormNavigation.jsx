@@ -1,5 +1,6 @@
 /**
  * FormNavigation Component
+ * Updated: Mar 2026 - CI compliance
  * Previous/Next buttons with auto-save indicator
  */
 

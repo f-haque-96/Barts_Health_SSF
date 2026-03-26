@@ -1,5 +1,6 @@
 /**
  * Requester & Supplier Response Portal
+ * Updated: Mar 2026 - CI compliance
  * Unified page for both requesters and suppliers to:
  * - View workflow progress
  * - Communicate with authorised personnel

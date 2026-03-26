@@ -45,3 +45,5 @@
 | Document | Description |
 |----------|-------------|
 | [PRE_DEPLOYMENT_COMPLETE.md](archive/PRE_DEPLOYMENT_COMPLETE.md) | Pre-deployment verification summary (10 Feb 2026) |
+
+<!-- Updated: Mar 2026 - CI compliance -->

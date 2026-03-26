@@ -1,5 +1,6 @@
 /**
  * Microsoft Graph API Service
+ * Updated: Mar 2026 - CI compliance
  * Provides user and group lookups from Azure AD
  *
  * AUDIT FIX C3: Implements server-side group lookup for passport.deserializeUser

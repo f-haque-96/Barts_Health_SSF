@@ -1,5 +1,6 @@
 /**
  * Role-Based Access Control Middleware
+ * Updated: Mar 2026 - CI compliance
  * Enforces role requirements for protected routes
  *
  * CRITICAL: Update ROLE_GROUPS with actual AD group names from IT

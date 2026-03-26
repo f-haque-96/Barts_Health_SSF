@@ -1,5 +1,6 @@
 /**
  * Authentication Middleware
+ * Updated: Mar 2026 - CI compliance
  * Verifies user is authenticated before allowing access
  * Updated: February 2026 - Security enhancements and CSRF protection
  */

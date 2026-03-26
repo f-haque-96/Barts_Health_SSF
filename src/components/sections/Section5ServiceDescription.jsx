@@ -1,5 +1,6 @@
 /**
  * Section 5: Service Description & Requirements
+ * Updated: Mar 2026 - CI compliance
  * Service types and detailed description
  */
 

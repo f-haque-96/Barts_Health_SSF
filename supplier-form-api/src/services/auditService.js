@@ -1,5 +1,6 @@
 /**
  * Audit Service
+ * Updated: Mar 2026 - CI compliance
  * Logs all actions to AuditTrail table for compliance
  */
 

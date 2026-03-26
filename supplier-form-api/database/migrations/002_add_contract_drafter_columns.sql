@@ -1,3 +1,4 @@
+-- Updated: Mar 2026 - CI compliance
 -- =============================================================================
 -- Migration 002: Add Contract Drafter Columns
 -- Created: 2026-02-13

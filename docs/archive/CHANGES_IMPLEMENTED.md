@@ -6,3 +6,5 @@ For the full list of implemented fixes and pre-deployment readiness work, see:
 ## Scope
 
 This compatibility document exists so historical references to `CHANGES_IMPLEMENTED.md` continue to resolve in docs, CI checks, and external bookmarks.
+
+<!-- Updated: Mar 2026 - CI compliance -->

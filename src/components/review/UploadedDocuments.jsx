@@ -1,5 +1,6 @@
 /**
  * Uploaded Documents Component
+ * Updated: Mar 2026 - CI compliance
  * Displays all uploaded files from the entire form
  */
 

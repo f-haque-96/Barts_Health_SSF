@@ -1,5 +1,6 @@
 /**
  * Section 1: Requester Information
+ * Updated: Mar 2026 - CI compliance
  * Collects contact details of the person requesting supplier setup
  */
 

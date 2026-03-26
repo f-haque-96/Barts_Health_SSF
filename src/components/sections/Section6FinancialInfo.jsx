@@ -1,5 +1,6 @@
 /**
  * Section 6: Financial & Accounts Information
+ * Updated: Mar 2026 - CI compliance
  * Banking details, insurance, VAT - Most conditional fields
  */
 

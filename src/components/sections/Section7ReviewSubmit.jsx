@@ -1,5 +1,6 @@
 /**
  * Section 7: Review & Submit
+ * Updated: Mar 2026 - CI compliance
  * Summary of all form data and final submission
  */
 

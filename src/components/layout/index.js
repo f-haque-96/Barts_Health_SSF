@@ -1,5 +1,6 @@
 /**
  * Layout Components Index
+ * Updated: Mar 2026 - CI compliance
  */
 
 export { default as Header } from './Header';

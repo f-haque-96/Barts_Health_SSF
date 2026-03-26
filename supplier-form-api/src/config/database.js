@@ -1,5 +1,6 @@
 /**
  * SQL Server Database Configuration
+ * Updated: Mar 2026 - CI compliance
  * Connects to SupplierSetupDB for form data storage
  */
 

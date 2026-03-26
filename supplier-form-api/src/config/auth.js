@@ -1,5 +1,6 @@
 /**
  * Passport Authentication Configuration
+ * Updated: Mar 2026 - CI compliance
  * Supports Azure AD / ADFS authentication
  */
 

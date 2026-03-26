@@ -1,5 +1,6 @@
 /**
  * L9: Database Migration Runner
+ * Updated: Mar 2026 - CI compliance
  *
  * Tracks and applies numbered SQL migrations against SQL Server.
  * Uses a _MigrationHistory table to record which migrations have been applied.

@@ -1,5 +1,6 @@
 /**
  * Document Type Definitions with Governance Rules
+ * Updated: Mar 2026 - CI compliance
  *
  * CRITICAL: These rules determine which documents can be synced to Alemba
  * and which are sensitive (requiring special handling)

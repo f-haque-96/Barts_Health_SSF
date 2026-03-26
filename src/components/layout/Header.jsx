@@ -1,5 +1,6 @@
 /**
  * Header Component
+ * Updated: Mar 2026 - CI compliance
  * NHS header with Barts Health logo and form title
  */
 

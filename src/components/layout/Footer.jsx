@@ -1,5 +1,6 @@
 /**
  * Footer Component
+ * Updated: Mar 2026 - CI compliance
  * Simple footer with copyright
  */
 

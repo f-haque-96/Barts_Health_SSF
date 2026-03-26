@@ -85,3 +85,5 @@ main().catch((err) => {
   console.error('❌ Failed to run markdown link check:', err);
   process.exit(1);
 });
+
+// Updated: Mar 2026 - CI compliance
