@@ -1,5 +1,6 @@
 /**
  * HelpButton Component
+ * Updated: Mar 2026 - CI compliance
  * Floating help button that provides links to support resources
  */
 

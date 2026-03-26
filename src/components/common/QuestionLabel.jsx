@@ -1,5 +1,6 @@
 /**
  * QuestionLabel Component
+ * Updated: Mar 2026 - CI compliance
  * Displays question numbers in format 1.1, 1.2, 2.1, etc.
  */
 

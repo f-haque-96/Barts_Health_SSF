@@ -1,4 +1,5 @@
 /**
+ * Updated: Mar 2026 - CI compliance
  * useFocusTrap Hook
  * Traps focus within a container (e.g., modal) for accessibility
  * ACC-03: Prevents users from tabbing out of modal dialogs

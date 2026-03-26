@@ -1,5 +1,6 @@
 /**
  * Error Boundary Component
+ * Updated: Mar 2026 - CI compliance
  * ARC-03: Prevents entire app from crashing when a component errors
  * Catches JavaScript errors anywhere in the child component tree
  */

@@ -1,4 +1,5 @@
 /**
+ * Updated: Mar 2026 - CI compliance
  * Notification Service
  * Handles all notification logic for the supplier setup workflow
  * In production, these would integrate with Power Automate via SharePoint lists

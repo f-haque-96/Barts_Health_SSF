@@ -1,5 +1,6 @@
 /**
  * Checkbox Component
+ * Updated: Mar 2026 - CI compliance
  * Single checkbox or checkbox group
  */
 

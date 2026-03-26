@@ -1,5 +1,6 @@
 /**
  * Tooltip Component
+ * Updated: Mar 2026 - CI compliance
  * Accessible tooltip with mobile/touch and keyboard support
  * UI-03: Enhanced tooltips for better UX
  */

@@ -1,5 +1,6 @@
 /**
  * Modal Component
+ * Updated: Mar 2026 - CI compliance
  * Accessible modal dialog with focus trap
  * ACC-03: Prevents users from tabbing out of modal
  */

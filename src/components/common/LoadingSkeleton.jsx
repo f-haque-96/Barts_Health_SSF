@@ -1,5 +1,6 @@
 /**
  * Loading Skeleton Component
+ * Updated: Mar 2026 - CI compliance
  * UX-01: Provides visual feedback during data loading
  * Reduces perceived wait time on slower NHS network connections
  */

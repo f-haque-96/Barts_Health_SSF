@@ -1,5 +1,6 @@
 /**
  * Supplier Type Icons
+ * Updated: Mar 2026 - CI compliance
  * Professional line-style SVG icons for supplier type cards
  */
 

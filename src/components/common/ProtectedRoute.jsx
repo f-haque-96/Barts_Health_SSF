@@ -1,5 +1,6 @@
 /**
  * Protected Route Component
+ * Updated: Mar 2026 - CI compliance
  * Wraps routes that require authentication and/or specific roles
  *
  * CRITICAL: This is the frontend guard. The API must also enforce access control.

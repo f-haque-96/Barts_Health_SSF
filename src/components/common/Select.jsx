@@ -1,5 +1,6 @@
 /**
  * Select Component
+ * Updated: Mar 2026 - CI compliance
  * Dropdown select with label and error handling
  * React 19: ref is a regular prop - no forwardRef needed
  */

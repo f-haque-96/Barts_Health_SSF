@@ -1,5 +1,6 @@
 /**
  * NoticeBox Component
+ * Updated: Mar 2026 - CI compliance
  * Informational notice boxes with different types
  */
 

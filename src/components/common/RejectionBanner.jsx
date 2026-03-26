@@ -1,5 +1,6 @@
 /**
  * RejectionBanner Component
+ * Updated: Mar 2026 - CI compliance
  * Displays rejection notice to requester when their submission was rejected
  * Shows flagging warning and provides "Submit Another Supplier" button
  */

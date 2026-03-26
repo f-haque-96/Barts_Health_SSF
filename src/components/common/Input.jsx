@@ -1,5 +1,6 @@
 /**
  * Input Component
+ * Updated: Mar 2026 - CI compliance
  * Text input with label, error handling, and validation support
  * React 19: ref is a regular prop - no forwardRef needed
  */

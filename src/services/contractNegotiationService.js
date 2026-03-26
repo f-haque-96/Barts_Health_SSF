@@ -1,4 +1,5 @@
 /**
+ * Updated: Mar 2026 - CI compliance
  * Contract Negotiation Service
  * Centralized logic for contract workflow management
  * Simplified for offline email-based negotiation workflow

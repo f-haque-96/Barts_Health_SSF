@@ -1,5 +1,6 @@
 /**
  * ApprovalStamp Component
+ * Updated: Mar 2026 - CI compliance
  * Visual stamp for approval/rejection/pending status
  */
 

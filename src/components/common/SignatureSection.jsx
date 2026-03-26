@@ -1,5 +1,6 @@
 /**
  * SignatureSection Component
+ * Updated: Mar 2026 - CI compliance
  * Digital signature capture with full name and date
  */
 

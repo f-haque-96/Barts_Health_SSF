@@ -1,5 +1,6 @@
 /**
  * ResetFormModal Component
+ * Updated: Mar 2026 - CI compliance
  * Modal for confirming form reset with all data deletion
  */
 

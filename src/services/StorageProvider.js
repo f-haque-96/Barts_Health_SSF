@@ -1,4 +1,5 @@
 /**
+ * Updated: Mar 2026 - CI compliance
  * Storage Provider Abstraction
  * Allows switching between localStorage (development) and API (production)
  *

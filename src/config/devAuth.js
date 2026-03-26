@@ -1,4 +1,5 @@
 /**
+ * Updated: Mar 2026 - CI compliance
  * Development Authentication Configuration
  *
  * C7: SECURITY GUARD - This file MUST NOT execute in production.

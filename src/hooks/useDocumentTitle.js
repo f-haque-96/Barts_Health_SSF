@@ -1,4 +1,5 @@
 /**
+ * Updated: Mar 2026 - CI compliance
  * M11: Per-page document title hook
  * Updates document.title based on the current page/section
  * Helps screen reader users and users with many tabs distinguish pages

@@ -1,5 +1,6 @@
 /**
  * DevModeModal Component
+ * Updated: Mar 2026 - CI compliance
  * Development-only modal for quick access to authorisation pages and section skipping
  * NEVER appears in production builds (!import.meta.env.PROD)
  */

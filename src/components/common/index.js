@@ -1,5 +1,6 @@
 /**
  * Common Components Index
+ * Updated: Mar 2026 - CI compliance
  * Centralized exports for all common components
  */
 

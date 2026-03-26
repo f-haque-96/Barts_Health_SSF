@@ -1,5 +1,6 @@
 /**
  * Button Component
+ * Updated: Mar 2026 - CI compliance
  * Reusable button with multiple variants following NHS design system
  */
 

@@ -1,5 +1,6 @@
 /**
  * Secure Review Page Wrapper
+ * Updated: Mar 2026 - CI compliance
  * Fetches submission data with authorization checks before rendering child components
  *
  * CRITICAL: This ensures data is only shown after auth verification

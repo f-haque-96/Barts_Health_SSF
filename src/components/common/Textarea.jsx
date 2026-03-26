@@ -1,5 +1,6 @@
 /**
  * Textarea Component
+ * Updated: Mar 2026 - CI compliance
  * Multi-line text input with character counter
  * React 19: ref is a regular prop - no forwardRef needed
  */

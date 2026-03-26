@@ -1,5 +1,6 @@
 /**
  * FileUpload Component
+ * Updated: Mar 2026 - CI compliance
  * Drag-and-drop file upload with validation
  */
 

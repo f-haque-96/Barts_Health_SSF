@@ -1,4 +1,5 @@
 /**
+ * Updated: Mar 2026 - CI compliance
  * useCRNVerification Hook
  * Handles Companies House CRN verification with caching
  * Uses mock data for testing, with fallback for CORS/API errors

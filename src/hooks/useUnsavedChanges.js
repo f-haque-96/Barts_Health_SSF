@@ -1,4 +1,5 @@
 /**
+ * Updated: Mar 2026 - CI compliance
  * useUnsavedChanges Hook
  * Warns users when they try to leave the page with unsaved form data
  * UX-01: Prevents accidental data loss

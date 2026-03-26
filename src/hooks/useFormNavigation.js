@@ -1,4 +1,5 @@
 /**
+ * Updated: Mar 2026 - CI compliance
  * useFormNavigation Hook
  * Handles form section navigation logic
  * L7: Scroll side effect moved here from Zustand store (separation of concerns)

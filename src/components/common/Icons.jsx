@@ -1,5 +1,6 @@
 /**
  * Icons Component
+ * Updated: Mar 2026 - CI compliance
  * Professional SVG icons for consistent UI across the application
  */
 

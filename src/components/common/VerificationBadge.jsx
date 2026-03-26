@@ -1,5 +1,6 @@
 /**
  * VerificationBadge Component
+ * Updated: Mar 2026 - CI compliance
  * Displays verification status for CRN-verified companies
  */
 
