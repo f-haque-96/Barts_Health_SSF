@@ -23,6 +23,7 @@ import {
   sendContractRequestEmail,
   notifyContractApproved,
 } from '../services/notificationService';
+import { STATUS, STAGE } from '../utils/workflowStatus';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 // ===== Main Contract Drafter Review Page =====
@@ -88,7 +89,8 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
 
       const updatedSubmission = {
         ...submission,
-        currentStage: 'contract',
+        status: STATUS.PENDING_CONTRACT,
+        currentStage: STAGE.CONTRACT,
         contractDrafter: {
           ...submission.contractDrafter,
           sentAt: new Date().toISOString(),
@@ -108,6 +110,7 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
         stored[index] = {
           ...stored[index],
           contractDrafter: updatedSubmission.contractDrafter,
+          status: updatedSubmission.status,
           currentStage: updatedSubmission.currentStage
         };
         localStorage.setItem('all_submissions', JSON.stringify(stored));
@@ -182,7 +185,9 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
 
       const updatedSubmission = {
         ...submission,
-        currentStage: 'ap',
+        // contract_uploaded places the submission in the AP Control work queue
+        status: STATUS.CONTRACT_UPLOADED,
+        currentStage: STAGE.AP,
         contractDrafter: {
           ...submission.contractDrafter,
           decision: 'approved',
@@ -205,6 +210,7 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
         stored[index] = {
           ...stored[index],
           contractDrafter: updatedSubmission.contractDrafter,
+          status: updatedSubmission.status,
           currentStage: updatedSubmission.currentStage
         };
         localStorage.setItem('all_submissions', JSON.stringify(stored));

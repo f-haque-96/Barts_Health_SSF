@@ -243,7 +243,7 @@ const useFormStore = create(
               type: fileData.type,
               uploadDate: new Date().toISOString(),
               file: fileData.file, // File object (non-serializable, excluded from persist)
-              base64: fileData.base64, // Base64 data (NOW PERSISTED via Zustand)
+              base64: fileData.base64, // Base64 data (in-memory only — stripped by partialize, never persisted)
               data: fileData.base64, // Alias for backwards compatibility
             },
           };
@@ -996,24 +996,16 @@ const useFormStore = create(
           delete safeFormData[field];
         });
 
-        // Smart persistence strategy to avoid localStorage quota exceeded
-        // - Files under 1MB: Keep base64 (most PDFs, images are under this)
-        // - Files over 1MB: Strip base64, keep metadata only
+        // SECURITY (C1 follow-up): NEVER persist document content to localStorage.
+        // Uploaded documents include letterheads with bank details and ID scans —
+        // persisting their base64 to localStorage on shared NHS workstations
+        // defeats the bank-details exclusion above (UK GDPR Art. 32 / NHS DSPT).
+        // Only metadata (name, size, type, upload date) is persisted; users must
+        // re-upload documents after a refresh, as stated in the Section 2 notice.
         const serializedUploads = Object.keys(state.uploadedFiles).reduce((acc, key) => {
           if (state.uploadedFiles[key]) {
-            const fileData = state.uploadedFiles[key];
-            const fileSize = fileData.size || 0;
-            const MAX_SIZE_FOR_PERSISTENCE = 1024 * 1024; // 1MB
-
-            if (fileSize < MAX_SIZE_FOR_PERSISTENCE) {
-              // Small file - keep base64 for persistence
-              const { file: _f, ...dataWithBase64 } = fileData;
-              acc[key] = dataWithBase64;
-            } else {
-              // Large file - strip base64 to avoid quota
-              const { file: _f2, base64: _b64, data: _d, ...metadata } = fileData;
-              acc[key] = metadata;
-            }
+            const { file: _f, base64: _b64, data: _d, ...metadata } = state.uploadedFiles[key];
+            acc[key] = metadata;
           }
           return acc;
         }, {});

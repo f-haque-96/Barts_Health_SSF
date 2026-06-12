@@ -6,6 +6,8 @@
  * CRITICAL: In production, all data access goes through the API which enforces RBAC
  */
 
+import { STAGE_QUEUE_STATUSES } from '../utils/workflowStatus';
+
 // Development-only LocalStorageProvider
 class LocalStorageProvider {
   async getSession() {
@@ -74,15 +76,11 @@ class LocalStorageProvider {
   }
 
   matchesStage(submission, stage) {
+    // Exact match against the canonical status model (utils/workflowStatus.js).
+    // Substring matching was previously used and caused cross-queue leakage
+    // (e.g. 'procurement_approved_opw' contains 'approved').
     const status = submission?.status?.toLowerCase();
-    const stageStatusMap = {
-      'pbp': ['pending_review', 'pending_pbp_review', 'info_required'],
-      'procurement': ['approved', 'pending_procurement_review', 'pbp_approved'],
-      'opw': ['pending_opw_review', 'procurement_approved_opw', 'opw_pending'],
-      'contract': ['pending_contract', 'opw_complete', 'opw_approved'],
-      'ap': ['pending_ap_control', 'contract_uploaded', 'pending_ap_review']
-    };
-    return stageStatusMap[stage]?.some(s => status?.includes(s.toLowerCase()));
+    return STAGE_QUEUE_STATUSES[stage]?.includes(status) || false;
   }
 
   async uploadDocument(submissionId, file, documentType) {

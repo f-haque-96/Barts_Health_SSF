@@ -12,6 +12,7 @@ import { formatDate, formatCurrency } from '../utils/helpers';
 import { formatFieldValue, formatSupplierType, formatServiceTypes, formatEmployeeCount } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
 import { closeAlembaOnCompletion, sendRejectionNotification } from '../services/notificationService';
+import { STATUS, STAGE } from '../utils/workflowStatus';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const ReviewItem = ({ label, value, highlight, raw = false, badge }) => {
@@ -383,8 +384,9 @@ const APControlReviewPage = ({
           completedAt: completedTimestamp, // Workflow checks for this
         },
         // Update workflow status - CRITICAL for RequesterResponsePage workflow display
-        currentStage: 'complete', // Move to final stage
-        finalStatus: 'complete', // Mark as complete
+        status: STATUS.COMPLETED, // Canonical terminal status (Oracle vendor created)
+        currentStage: STAGE.COMPLETED, // Move to final stage
+        finalStatus: 'complete', // Mark as complete (legacy display field)
         vendorNumber: supplierNumber, // Assign vendor number
         completedAt: completedTimestamp, // Record completion date
         apStatus: 'verified', // Legacy status field
@@ -398,7 +400,8 @@ const APControlReviewPage = ({
       const index = submissions.findIndex(s => s.submissionId === submissionId);
       if (index !== -1) {
         submissions[index].apStatus = 'verified';
-        submissions[index].currentStage = 'complete';
+        submissions[index].status = STATUS.COMPLETED;
+        submissions[index].currentStage = STAGE.COMPLETED;
         submissions[index].finalStatus = 'complete';
         submissions[index].vendorNumber = supplierNumber;
         submissions[index].completedAt = completedTimestamp;
@@ -462,8 +465,8 @@ const APControlReviewPage = ({
       const updatedSubmission = {
         ...currentSubmission,
         apControlReview: apControlReviewData,
-        status: 'Rejected_AP',
-        currentStage: 'Rejected',
+        status: STATUS.REJECTED,
+        currentStage: STAGE.REJECTED,
       };
 
       // Save to localStorage
@@ -639,7 +642,7 @@ const APControlReviewPage = ({
       </div>
 
       {/* Terminal State Notice - Employed (No Oracle supplier record needed) */}
-      {submission.status === 'Completed_Payroll' && (
+      {submission.status === STATUS.COMPLETED_PAYROLL && (
         <NoticeBox
           type="error"
           style={{ marginBottom: 'var(--space-24)' }}
@@ -1580,7 +1583,7 @@ const APControlReviewPage = ({
       </div>
 
       {/* AP Verification Checklist - Hide for terminal states (Employed/Inside IR35 go to payroll, not AP) */}
-      {!apControlReview && submission.status !== 'Completed_Payroll' && submission.status !== 'inside_ir35_sds_issued' && submission.currentStage !== 'sds_issued' && submission.currentStage !== 'completed_payroll' && (
+      {!apControlReview && submission.status !== STATUS.COMPLETED_PAYROLL && submission.status !== STATUS.INSIDE_IR35_SDS_ISSUED && submission.currentStage !== STAGE.SDS_ISSUED && submission.currentStage !== STAGE.COMPLETED_PAYROLL && (
         <div style={{
           marginTop: 'var(--space-32)',
           padding: 'var(--space-24)',

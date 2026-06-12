@@ -271,17 +271,22 @@ router.post('/reviews/:stage/:id', requireAuth, async (req, res, next) => {
       const reviewData = { classification, determination, contractRequired };
       updateData.currentStage = getNextStage(stage, reviewData, submission);
 
-      // Set appropriate status based on routing outcome
-      if (updateData.currentStage === 'completed_payroll') {
-        updateData.status = 'Completed_Payroll';
-        if (outcomeRoute) updateData.outcomeRoute = outcomeRoute;
-      } else if (updateData.currentStage === 'sds_issued') {
-        updateData.status = 'inside_ir35_sds_issued';
-        if (outcomeRoute) updateData.outcomeRoute = outcomeRoute;
-      } else {
-        updateData.status = `${stage}_approved`;
-        if (outcomeRoute) updateData.outcomeRoute = outcomeRoute;
-      }
+      // Status must match the next stage's work-queue filter (stageStatusMap
+      // in submissionService.getWorkQueue), otherwise the submission never
+      // appears in the next team's queue.
+      const stageEntryStatus = {
+        procurement: 'pbp_approved',
+        opw: 'procurement_approved_opw',
+        contract: 'pending_contract',
+        // Contract approvals arrive at AP as 'contract_uploaded';
+        // direct routes (procurement standard / OPW no-contract) as 'pending_ap_control'
+        ap: stage === 'contract' ? 'contract_uploaded' : 'pending_ap_control',
+        completed: 'completed',
+        completed_payroll: 'completed_payroll',
+        sds_issued: 'inside_ir35_sds_issued',
+      };
+      updateData.status = stageEntryStatus[updateData.currentStage] || `${stage}_approved`;
+      if (outcomeRoute) updateData.outcomeRoute = outcomeRoute;
     } else if (decision === 'rejected') {
       updateData.status = 'rejected';
     } else if (decision === 'info_required') {
@@ -607,9 +612,11 @@ router.post('/contracts/:submissionId/send-to-supplier', requireAuth, requireRol
       instructions: instructions.trim()
     };
 
+    // NOTE: keys must be camelCase to match fieldMappings in submissionService.update
     await submissionService.update(submissionId, {
-      ContractReviewData: JSON.stringify(contractData),
-      CurrentStage: 'contract'
+      contractReviewData: JSON.stringify(contractData),
+      currentStage: 'contract',
+      status: 'pending_contract'
     }, req.user);
 
     // Log audit
@@ -684,10 +691,13 @@ router.post('/contracts/:submissionId/approve', requireAuth, requireRole('contra
       finalizedAgreement: finalAgreement
     };
 
+    // 'contract_uploaded' places the submission in the AP Control work queue
+    // (see stageStatusMap in submissionService.getWorkQueue)
+    // NOTE: keys must be camelCase to match fieldMappings in submissionService.update
     await submissionService.update(submissionId, {
-      ContractReviewData: JSON.stringify(updatedContractData),
-      CurrentStage: 'ap',
-      Status: 'contract_approved'
+      contractReviewData: JSON.stringify(updatedContractData),
+      currentStage: 'ap',
+      status: 'contract_uploaded'
     }, req.user);
 
     // Log audit
@@ -695,7 +705,7 @@ router.post('/contracts/:submissionId/approve', requireAuth, requireRole('contra
       submissionId,
       action: 'CONTRACT_APPROVED',
       user: req.user.email,
-      newStatus: 'contract_approved'
+      newStatus: 'contract_uploaded'
     });
 
     // In production, trigger notification emails via Power Automate

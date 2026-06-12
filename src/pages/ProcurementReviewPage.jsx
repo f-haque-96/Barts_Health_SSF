@@ -12,6 +12,7 @@ import { formatDate, formatCurrency } from '../utils/helpers';
 import { formatFieldValue, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes, formatEmployeeCount } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
 import { sendRejectionNotification, sendApprovalNotification, notifyDepartment } from '../services/notificationService';
+import { STATUS, STAGE } from '../utils/workflowStatus';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const ReviewItem = ({ label, value, raw = false, badge = null }) => {
@@ -208,10 +209,14 @@ const ProcurementReviewPage = ({
         // Store Alemba reference at top level for easy access
         alembaReference: action === 'approved' ? alembaReference : currentSubmission.alembaReference,
         displayReference: action === 'approved' ? alembaReference : currentSubmission.displayReference,
-        // Update currentStage based on classification
+        // Update status and currentStage based on classification
+        // Status drives the next team's work queue (see utils/workflowStatus.js)
+        status: action === 'approved'
+          ? (supplierClassification === 'opw_ir35' ? STATUS.PROCUREMENT_APPROVED_OPW : STATUS.PENDING_AP_CONTROL)
+          : STATUS.REJECTED,
         currentStage: action === 'approved'
-          ? (supplierClassification === 'opw_ir35' ? 'opw' : 'ap')
-          : 'rejected',
+          ? (supplierClassification === 'opw_ir35' ? STAGE.OPW : STAGE.AP)
+          : STAGE.REJECTED,
         // Add procurement review
         procurementReview: {
           classification: supplierClassification, // Store classification for workflow logic
@@ -237,6 +242,13 @@ const ProcurementReviewPage = ({
       const index = submissions.findIndex(s => s.submissionId === submissionId);
       if (index !== -1) {
         submissions[index].procurementStatus = action;
+        // Keep the summary list in sync so the requester rejection banner
+        // (App.jsx) and dev work queues see the correct workflow status
+        submissions[index].status = updatedSubmission.status;
+        submissions[index].currentStage = updatedSubmission.currentStage;
+        if (action === 'rejected') {
+          submissions[index].rejectedBy = 'Procurement';
+        }
         localStorage.setItem('all_submissions', JSON.stringify(submissions));
       }
 

@@ -15,6 +15,8 @@ import { formatCurrency, scrollToFirstError } from '../../utils/helpers';
 import { formatFieldValue, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes, formatOrganisationType } from '../../utils/formatters';
 import useFormStore from '../../stores/formStore';
 import useFormNavigation from '../../hooks/useFormNavigation';
+import storage from '../../services/StorageProvider';
+import { STATUS, STAGE } from '../../utils/workflowStatus';
 import UploadedDocuments from '../review/UploadedDocuments';
 import SupplierFormPDF from '../pdf/SupplierFormPDF';
 
@@ -230,18 +232,15 @@ const Section7ReviewSubmit = () => {
         console.error('[Section7] Error loading questionnaire uploads:', error);
       }
 
-      // Mock API submission - simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Generate submission ID
-      const submissionId = `SUP-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
       const submissionDate = new Date().toISOString();
 
-      // Store submission in localStorage (mock database)
+      // Submit through the storage abstraction:
+      // dev → LocalStorageProvider (browser storage, SUP-YYYY-XXXXXXXX id)
+      // prod → ApiStorageProvider / SharePoint provider (server-enforced RBAC)
       const submission = {
-        submissionId,
         submissionDate,
-        status: 'pending_review',
+        status: STATUS.PENDING_REVIEW,
+        currentStage: STAGE.PBP,
         formData: {
           ...allData.formData,
           // Include final acknowledgement from Section 7 form
@@ -257,18 +256,22 @@ const Section7ReviewSubmit = () => {
         submittedBy: allData.formData.nhsEmail,
       };
 
-      // Store in localStorage
-      localStorage.setItem(`submission_${submissionId}`, JSON.stringify(submission));
+      const result = await storage.saveSubmission(submission);
+      const submissionId = result.id || result.submissionId;
 
-      // Add to submissions list
-      const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
-      submissions.push({
-        submissionId,
-        submissionDate,
-        submittedBy: allData.formData.nhsEmail,
-        status: 'pending_review',
-      });
-      localStorage.setItem('all_submissions', JSON.stringify(submissions));
+      // Maintain the dev-mode summary list used by the rejection banner and
+      // dev work queues (no-op concern in production: the API/SharePoint
+      // provider is the source of truth there)
+      if (import.meta.env.DEV) {
+        const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+        submissions.push({
+          submissionId,
+          submissionDate,
+          submittedBy: allData.formData.nhsEmail,
+          status: STATUS.PENDING_REVIEW,
+        });
+        localStorage.setItem('all_submissions', JSON.stringify(submissions));
+      }
 
       // Update form store
       setSubmissionId(submissionId);

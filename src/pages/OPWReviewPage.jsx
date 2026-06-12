@@ -10,6 +10,7 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import { Button, NoticeBox, ApprovalStamp, Textarea, RadioGroup, SignatureSection, FileUpload, Input, CheckIcon, XIcon, WarningIcon, DocumentIcon, UploadIcon, CircleXIcon, VerificationBadge } from '../components/common';
 import { formatDate } from '../utils/helpers';
 import { formatFieldValue, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes } from '../utils/formatters';
+import { STATUS, STAGE } from '../utils/workflowStatus';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
 import { notifyDepartment, sendRejectionNotification, sendContractRequestEmail, notifyEmployedDetermination, notifyInsideIR35WithSDS, notifyAPControlDirect } from '../services/notificationService';
 import { contractNegotiationService } from '../services/contractNegotiationService';
@@ -307,8 +308,8 @@ const OPWReviewPage = ({
         const updatedSubmission = {
           ...currentSubmission,
           opwReview: opwReviewData,
-          status: 'Rejected_OPW',
-          currentStage: 'Rejected',
+          status: STATUS.REJECTED,
+          currentStage: STAGE.REJECTED,
         };
 
         // Save to localStorage
@@ -375,8 +376,8 @@ const OPWReviewPage = ({
           updatedSubmission = {
             ...currentSubmission,
             opwReview: opwReviewData,
-            status: 'Completed_Payroll',
-            currentStage: 'completed_payroll',
+            status: STATUS.COMPLETED_PAYROLL,
+            currentStage: STAGE.COMPLETED_PAYROLL,
             outcomeRoute: 'payroll_esr',
             completedAt: new Date().toISOString(),
           };
@@ -394,8 +395,8 @@ const OPWReviewPage = ({
             updatedSubmission = {
               ...currentSubmission,
               opwReview: opwReviewData,
-              status: 'Pending_Contract',
-              currentStage: 'contract',
+              status: STATUS.PENDING_CONTRACT,
+              currentStage: STAGE.CONTRACT,
               outcomeRoute: 'oracle_ap',
               contractDrafter: {
                 status: 'pending_review',
@@ -415,8 +416,8 @@ const OPWReviewPage = ({
             updatedSubmission = {
               ...currentSubmission,
               opwReview: opwReviewData,
-              status: 'Pending_AP',
-              currentStage: 'ap',
+              status: STATUS.PENDING_AP_CONTROL,
+              currentStage: STAGE.AP,
               outcomeRoute: 'oracle_ap',
             };
 
@@ -458,8 +459,8 @@ const OPWReviewPage = ({
           updatedSubmission = {
             ...currentSubmission,
             opwReview: opwReviewData,
-            status: 'inside_ir35_sds_issued',
-            currentStage: 'sds_issued',
+            status: STATUS.INSIDE_IR35_SDS_ISSUED,
+            currentStage: STAGE.SDS_ISSUED,
             outcomeRoute: 'payroll_esr',
             completedAt: new Date().toISOString(),
           };
@@ -478,8 +479,8 @@ const OPWReviewPage = ({
             updatedSubmission = {
               ...currentSubmission,
               opwReview: opwReviewData,
-              status: 'Pending_Contract',
-              currentStage: 'contract',
+              status: STATUS.PENDING_CONTRACT,
+              currentStage: STAGE.CONTRACT,
               outcomeRoute: 'oracle_ap',
               contractDrafter: {
                 status: 'pending_review',
@@ -499,8 +500,8 @@ const OPWReviewPage = ({
             updatedSubmission = {
               ...currentSubmission,
               opwReview: opwReviewData,
-              status: 'Pending_AP',
-              currentStage: 'ap',
+              status: STATUS.PENDING_AP_CONTROL,
+              currentStage: STAGE.AP,
               outcomeRoute: 'oracle_ap',
             };
 

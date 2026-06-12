@@ -166,6 +166,7 @@ export const formatSubmissionStatus = (status) => {
     'pending_review': 'Pending Review',
     'pending_pbp_review': 'Pending PBP Review',
     'info_required': 'Information Required',
+    'approved': 'PBP Approved', // canonical PBP-approved value (see utils/workflowStatus.js)
     'pbp_approved': 'PBP Approved',
     'pending_procurement_review': 'Pending Procurement Review',
     'procurement_approved': 'Procurement Approved',
