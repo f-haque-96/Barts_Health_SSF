@@ -54,38 +54,32 @@ jobs:
           echo "✓ Frontend build complete"
           ls -lh dist/ || echo "Warning: dist/ directory not found"
 
-      # Backend
-      - name: Verify backend package-lock.json exists
-        run: |
-          if [ ! -f supplier-form-api/package-lock.json ]; then
-            echo "Error: Backend package-lock.json not found"
-            exit 1
-          fi
-          echo "✓ Backend package-lock.json found"
-
-      - name: Install backend dependencies
-        run: |
-          cd supplier-form-api
-          npm ci
-          echo "✓ Backend dependencies installed"
-
-      # L4: ESLint failures now block deployment
-      - name: Lint backend code
-        run: |
-          cd supplier-form-api
-          npm run lint --if-present
-        continue-on-error: false
-
-      # L5: Security audit failures now block deployment
+      # L5: Security audit failures now block deployment (frontend only — the
+      # backend is frozen per the June 2026 platform addendum)
       - name: Run npm audit (frontend)
         run: npm audit --audit-level=high
         continue-on-error: false
 
-      - name: Run npm audit (backend)
+      # Backend (supplier-form-api/) is FROZEN — kept for reference, not deployed.
+      # These steps are informational only and must never block a frontend release.
+      - name: Install backend dependencies (frozen - informational)
+        run: |
+          cd supplier-form-api
+          npm ci
+          echo "✓ Backend dependencies installed"
+        continue-on-error: true
+
+      - name: Lint backend code (frozen - informational)
+        run: |
+          cd supplier-form-api
+          npm run lint --if-present
+        continue-on-error: true
+
+      - name: Run npm audit (backend, frozen - informational)
         run: |
           cd supplier-form-api
           npm audit --audit-level=high
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

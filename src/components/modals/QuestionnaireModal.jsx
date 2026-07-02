@@ -10,6 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Modal, Button, Input, Textarea, RadioGroup, Select, NoticeBox } from '../common';
 import useFormStore from '../../stores/formStore';
+import storage from '../../services/StorageProvider';
 
 // ===== Validation Schemas =====
 
@@ -187,8 +188,9 @@ const QuestionnaireModal = ({ isOpen, onClose, onComplete, type = 'clinical', se
         isQuestionnaire: true,
       };
 
-      // Save to localStorage for PBP review
-      localStorage.setItem(`submission_${questionnaireId}`, JSON.stringify(questionnaireSubmission));
+      // Save through the storage abstraction for PBP review
+      // (dev → localStorage; prod → Graph/SharePoint provider)
+      await storage.saveSubmission(questionnaireSubmission);
 
       // Also save questionnaire submission separately for backup retrieval
       localStorage.setItem('questionnaireSubmission', JSON.stringify({
@@ -201,17 +203,19 @@ const QuestionnaireModal = ({ isOpen, onClose, onComplete, type = 'clinical', se
         submittedAt: submissionDate,
       }));
 
-      // Add to submissions list
-      const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
-      submissions.push({
-        submissionId: questionnaireId,
-        submissionDate: submissionDate,
-        submittedBy: formData.nhsEmail || 'Unknown',
-        status: 'pending_review',
-        type: 'questionnaire',
-        questionnaireType: type,
-      });
-      localStorage.setItem('all_submissions', JSON.stringify(submissions));
+      // Dev-only summary list; in production the SharePoint list is the source of truth
+      if (import.meta.env.DEV) {
+        const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+        submissions.push({
+          submissionId: questionnaireId,
+          submissionDate: submissionDate,
+          submittedBy: formData.nhsEmail || 'Unknown',
+          status: 'pending_review',
+          type: 'questionnaire',
+          questionnaireType: type,
+        });
+        localStorage.setItem('all_submissions', JSON.stringify(submissions));
+      }
 
       // Update prescreening progress to unlock remaining questions
       updatePrescreeningProgress({

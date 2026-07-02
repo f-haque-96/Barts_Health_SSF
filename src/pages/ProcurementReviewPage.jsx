@@ -13,6 +13,7 @@ import { formatFieldValue, formatSupplierType, formatServiceCategory, formatUsag
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
 import { sendRejectionNotification, sendApprovalNotification, notifyDepartment } from '../services/notificationService';
 import { STATUS, STAGE } from '../utils/workflowStatus';
+import storage from '../services/StorageProvider';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const ReviewItem = ({ label, value, raw = false, badge = null }) => {
@@ -200,8 +201,8 @@ const ProcurementReviewPage = ({
     setIsSubmitting(true);
 
     try {
-      // Load fresh from localStorage to get any updates
-      const currentSubmission = JSON.parse(localStorage.getItem(`submission_${submissionId}`)) || submission;
+      // Load fresh from storage to get any updates
+      const currentSubmission = (await storage.getSubmission(submissionId)) || submission;
 
       // Update submission with procurement review
       const updatedSubmission = {
@@ -234,22 +235,24 @@ const ProcurementReviewPage = ({
         requiresOPW: supplierClassification === 'opw_ir35',
       };
 
-      // Save back to localStorage
-      localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
+      // Persist the decision through the storage abstraction
+      // (dev → localStorage; prod → Graph/SharePoint provider)
+      await storage.updateSubmission(submissionId, updatedSubmission);
 
-      // Update submissions list
-      const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
-      const index = submissions.findIndex(s => s.submissionId === submissionId);
-      if (index !== -1) {
-        submissions[index].procurementStatus = action;
-        // Keep the summary list in sync so the requester rejection banner
-        // (App.jsx) and dev work queues see the correct workflow status
-        submissions[index].status = updatedSubmission.status;
-        submissions[index].currentStage = updatedSubmission.currentStage;
-        if (action === 'rejected') {
-          submissions[index].rejectedBy = 'Procurement';
+      // Dev-only summary list for the rejection banner and dev work queues;
+      // in production the SharePoint list is the source of truth
+      if (import.meta.env.DEV) {
+        const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+        const index = submissions.findIndex(s => s.submissionId === submissionId);
+        if (index !== -1) {
+          submissions[index].procurementStatus = action;
+          submissions[index].status = updatedSubmission.status;
+          submissions[index].currentStage = updatedSubmission.currentStage;
+          if (action === 'rejected') {
+            submissions[index].rejectedBy = 'Procurement';
+          }
+          localStorage.setItem('all_submissions', JSON.stringify(submissions));
         }
-        localStorage.setItem('all_submissions', JSON.stringify(submissions));
       }
 
       // Get requester details for notifications

@@ -14,11 +14,14 @@ node_modules
 dist
 dist-ssr
 
-# Environment files (keep .env.example and .env.production as templates)
+# Environment files (keep .env.example and .env.production.example as templates)
+# .env.production is ignored deliberately: Vite auto-loads it into every `vite build`,
+# so a committed copy bakes stale/placeholder URLs into production bundles.
 *.local
 .env
 .env.local
 .env.*.local
+.env.production
 
 # Editor directories and files
 .vscode/*

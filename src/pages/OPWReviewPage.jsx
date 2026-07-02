@@ -14,6 +14,7 @@ import { STATUS, STAGE } from '../utils/workflowStatus';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
 import { notifyDepartment, sendRejectionNotification, sendContractRequestEmail, notifyEmployedDetermination, notifyInsideIR35WithSDS, notifyAPControlDirect } from '../services/notificationService';
 import { contractNegotiationService } from '../services/contractNegotiationService';
+import storage from '../services/StorageProvider';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const ReviewItem = ({ label, value, raw = false, badge = null }) => {
@@ -289,8 +290,8 @@ const OPWReviewPage = ({
     setIsSubmitting(true);
 
     try {
-      // Load fresh from localStorage to get any updates
-      const currentSubmission = JSON.parse(localStorage.getItem(`submission_${submissionId}`)) || submission;
+      // Load fresh from storage to get any updates
+      const currentSubmission = (await storage.getSubmission(submissionId)) || submission;
 
       // Handle rejection case
       if (ir35Determination === 'rejected') {
@@ -312,16 +313,18 @@ const OPWReviewPage = ({
           currentStage: STAGE.REJECTED,
         };
 
-        // Save to localStorage
-        localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
+        // Persist through the storage abstraction (dev → localStorage; prod → Graph)
+        await storage.updateSubmission(submissionId, updatedSubmission);
 
-        // Update submissions list
-        const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
-        const index = submissions.findIndex(s => s.submissionId === submissionId);
-        if (index !== -1) {
-          submissions[index].status = 'rejected';
-          submissions[index].rejectedBy = 'OPW Panel';
-          localStorage.setItem('all_submissions', JSON.stringify(submissions));
+        // Dev-only summary list; in production the SharePoint list is the source of truth
+        if (import.meta.env.DEV) {
+          const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+          const index = submissions.findIndex(s => s.submissionId === submissionId);
+          if (index !== -1) {
+            submissions[index].status = 'rejected';
+            submissions[index].rejectedBy = 'OPW Panel';
+            localStorage.setItem('all_submissions', JSON.stringify(submissions));
+          }
         }
 
         // Send rejection notification
@@ -514,22 +517,24 @@ const OPWReviewPage = ({
         }
       }
 
-      // Save back to localStorage
-      localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
+      // Persist through the storage abstraction (dev → localStorage; prod → Graph)
+      await storage.updateSubmission(submissionId, updatedSubmission);
 
-      // Update submissions list
-      const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
-      const index = submissions.findIndex(s => s.submissionId === submissionId);
-      if (index !== -1) {
-        submissions[index].status = updatedSubmission.status;
-        submissions[index].currentStage = updatedSubmission.currentStage;
-        // Store classification and routing info
-        if (workerClassification === 'sole_trader') {
-          submissions[index].employmentStatus = employmentStatus;
-        } else {
-          submissions[index].ir35Status = ir35Determination;
+      // Dev-only summary list; in production the SharePoint list is the source of truth
+      if (import.meta.env.DEV) {
+        const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+        const index = submissions.findIndex(s => s.submissionId === submissionId);
+        if (index !== -1) {
+          submissions[index].status = updatedSubmission.status;
+          submissions[index].currentStage = updatedSubmission.currentStage;
+          // Store classification and routing info
+          if (workerClassification === 'sole_trader') {
+            submissions[index].employmentStatus = employmentStatus;
+          } else {
+            submissions[index].ir35Status = ir35Determination;
+          }
+          localStorage.setItem('all_submissions', JSON.stringify(submissions));
         }
-        localStorage.setItem('all_submissions', JSON.stringify(submissions));
       }
 
       setSubmission(updatedSubmission);
@@ -591,12 +596,12 @@ const OPWReviewPage = ({
     setIsSavingContract(true);
 
     try {
-      // Load fresh from localStorage to get any updates
-      const currentSubmission = JSON.parse(localStorage.getItem(`submission_${submissionId}`)) || submission;
+      // Load fresh from storage to get any updates
+      const currentSubmission = (await storage.getSubmission(submissionId)) || submission;
 
       // Update submission with contract upload
       const updatedSubmission = {
-        ...currentSubmission, // Use fresh data from localStorage
+        ...currentSubmission, // Use fresh data from storage
         // Add contract drafter info
         contractDrafter: {
           contract: contractFile,
@@ -607,15 +612,17 @@ const OPWReviewPage = ({
         },
       };
 
-      // Save back to localStorage
-      localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
+      // Persist through the storage abstraction (dev → localStorage; prod → Graph)
+      await storage.updateSubmission(submissionId, updatedSubmission);
 
-      // Update submissions list
-      const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
-      const index = submissions.findIndex(s => s.submissionId === submissionId);
-      if (index !== -1) {
-        submissions[index].contractUploaded = true;
-        localStorage.setItem('all_submissions', JSON.stringify(submissions));
+      // Dev-only summary list; in production the SharePoint list is the source of truth
+      if (import.meta.env.DEV) {
+        const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+        const index = submissions.findIndex(s => s.submissionId === submissionId);
+        if (index !== -1) {
+          submissions[index].contractUploaded = true;
+          localStorage.setItem('all_submissions', JSON.stringify(submissions));
+        }
       }
 
       setSubmission(updatedSubmission);

@@ -187,6 +187,16 @@ const useCRNVerification = () => {
           return { valid: false, error: CRN_ERROR_TYPES.NOT_FOUND, message: apiResult.message };
         }
 
+        // No proxy configured (e.g. CRN flow URL not set) — same "verify manually
+        // and continue" UX as a CORS-blocked lookup
+        if (apiResult.error === CRN_ERROR_TYPES.NOT_CONFIGURED) {
+          setStatus('cors_blocked');
+          setError(apiResult.message);
+          setErrorType(CRN_ERROR_TYPES.NOT_CONFIGURED);
+          setCompanyData(null);
+          return { valid: false, error: CRN_ERROR_TYPES.NOT_CONFIGURED, message: apiResult.message };
+        }
+
         // Generic invalid status for other errors
         setStatus('invalid');
         setError(apiResult.message || 'Company not found. Please check the CRN and try again.');

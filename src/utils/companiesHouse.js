@@ -1,6 +1,10 @@
 // Companies House API Integration
-// SECURITY: API key is stored server-side only. All requests route through backend proxy.
-// Updated: Mar 2026 - Audit compliance updates
+// SECURITY: the API key must never ship in this SPA. All requests route through a
+// proxy that holds the key:
+//   - Production (hybrid architecture): a Power Automate HTTP-trigger flow
+//     (VITE_CRN_FLOW_URL — see docs/deployment/setup/07-browser-agent-playbook.md Task 8)
+//   - Dev only: the frozen Express API on localhost, if running (VITE_API_URL)
+// If neither is configured, verification degrades gracefully to manual checking.
 
 // Error types for better handling
 export const CRN_ERROR_TYPES = {
@@ -9,6 +13,7 @@ export const CRN_ERROR_TYPES = {
   NETWORK_ERROR: 'NETWORK_ERROR',
   INVALID_CRN: 'INVALID_CRN',
   API_ERROR: 'API_ERROR',
+  NOT_CONFIGURED: 'NOT_CONFIGURED',
 };
 
 export const getCompanyDetails = async (companyNumber) => {
@@ -23,16 +28,38 @@ export const getCompanyDetails = async (companyNumber) => {
       };
     }
 
-    // Use backend API proxy to avoid CORS issues
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const FLOW_URL = import.meta.env.VITE_CRN_FLOW_URL;
+    let response;
 
-    const response = await fetch(`${API_URL}/api/companies-house/${cleanedNumber}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include' // Include cookies for auth
-    });
+    if (FLOW_URL) {
+      // Production proxy: Power Automate HTTP-trigger flow holding the CH API key
+      // (playbook Task 8). Deliberately a plain GET with the CRN as a query
+      // parameter and NO custom headers: that keeps it a CORS "simple request",
+      // so the browser never sends a preflight OPTIONS call (which Power Automate
+      // HTTP triggers do not answer). The flow returns the raw Companies House
+      // profile JSON, or HTTP 404 if the company is not found.
+      response = await fetch(`${FLOW_URL}&crn=${encodeURIComponent(cleanedNumber)}`, {
+        method: 'GET',
+      });
+    } else if (import.meta.env.DEV) {
+      // Dev-only fallback: the frozen Express proxy, if running locally
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      response = await fetch(`${API_URL}/api/companies-house/${cleanedNumber}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+    } else {
+      // No proxy configured in a production build — degrade gracefully
+      return {
+        success: false,
+        error: CRN_ERROR_TYPES.NOT_CONFIGURED,
+        message:
+          'Automatic Companies House verification is not available. Please check the ' +
+          'CRN yourself at find-and-update.company-information.service.gov.uk, then ' +
+          'continue and enter the company details manually in the next section.',
+      };
+    }
 
     if (!response.ok) {
       if (response.status === 404) {

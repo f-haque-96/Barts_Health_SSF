@@ -35,7 +35,11 @@ Trust already operates.
 3. **Right-sizes the solution.** At 100–300 submissions/year (~15 MB/yr of structured
    data), SQL Server and a dedicated server are over-provisioned. SharePoint lists and
    standard Power Automate connectors handle this volume comfortably within existing
-   NHS M365 licensing (no premium connectors required once SQL Server is removed).
+   NHS M365 licensing. *(One exception, decided July 2026: the Companies House CRN
+   lookup is proxied by a single HTTP-trigger flow — a premium connector — covered by
+   the author's existing Power Automate Premium licence. See
+   `docs/deployment/setup/07-browser-agent-playbook.md` Task 8. If that licence lapses,
+   the app degrades gracefully to manual CRN verification; no other flow is premium.)*
 4. **Reduces the single-maintainer risk.** Flows and lists can be co-owned and
    maintained by any Power-user; a custom Express/SQL stack cannot.
 5. **Unblocks a technical dead end.** The existing SharePoint integration code uses

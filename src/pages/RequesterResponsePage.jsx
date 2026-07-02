@@ -34,6 +34,7 @@ import {
 } from '../components/common';
 import { formatDate } from '../utils/helpers';
 import PBPApprovalPDF from '../components/pdf/PBPApprovalPDF';
+import storage from '../services/StorageProvider';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 // ===== Exchange Thread Component =====
@@ -891,16 +892,18 @@ const RequesterResponsePage = ({
         };
       }
 
-      // Save to localStorage
-      localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
+      // Persist through the storage abstraction (dev → localStorage; prod → Graph)
+      await storage.updateSubmission(submissionId, updatedSubmission);
 
-      // Update submissions list
-      const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
-      const index = submissions.findIndex(s => s.submissionId === submissionId);
-      if (index !== -1) {
-        submissions[index].currentStatus = isContractStage ? 'contract_negotiating' : 'awaiting_pbp';
-        submissions[index].lastResponseAt = timestamp;
-        localStorage.setItem('all_submissions', JSON.stringify(submissions));
+      // Dev-only summary list; in production the SharePoint list is the source of truth
+      if (import.meta.env.DEV) {
+        const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+        const index = submissions.findIndex(s => s.submissionId === submissionId);
+        if (index !== -1) {
+          submissions[index].currentStatus = isContractStage ? 'contract_negotiating' : 'awaiting_pbp';
+          submissions[index].lastResponseAt = timestamp;
+          localStorage.setItem('all_submissions', JSON.stringify(submissions));
+        }
       }
 
       setSubmission(updatedSubmission);

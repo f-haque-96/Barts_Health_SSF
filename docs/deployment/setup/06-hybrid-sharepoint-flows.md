@@ -108,21 +108,33 @@ PBP `pbp-panel@nhs.net` · Procurement `procurement@nhs.net` · OPW `opw-panel@n
 · AP `ap-control@nhs.net` · Contract Drafter `peter.persaud@nhs.net` *(named-person
 risk — request a shared mailbox)*.
 
-Every email contains: Submission ID, supplier name, requester name, a deep link
-`https://<app-url>/<stage>-review/<SubmissionID>` — and **no bank details or personal
-data beyond names**.
+Every email contains: Submission ID, supplier name, requester name, a deep link to the
+stage's review page — and **no bank details or personal data beyond names**. Link paths
+must match the React routes in `src/App.jsx` exactly:
+`/pbp-review/`, `/procurement-review/`, `/opw-review/`, `/ap-review/`,
+**`/contract-drafter/`** (note: the contract page does *not* follow the
+`<stage>-review` pattern), and `/respond/` for requester-facing emails.
 
 ### F1 — New submission → PBP
 - **Trigger:** SSF-Submissions — *When an item is created*.
 - **Actions:** send email to PBP mailbox ("New supplier request {Title} — {CompanyName}");
-  add SSF-AuditTrail item (`SUBMISSION_CREATED`).
+  add SSF-AuditTrail item (`SUBMISSION_CREATED`); **Update item** on the triggering item:
+  `LastStatus = pending_review`, `StatusChangedAt = utcNow()`. This initialises the F2
+  loop guard — without it, F2's empty-LastStatus check suppresses the first transition.
 
 ### F2 — Status router (single flow, Switch on Status)
-- **Trigger:** *When an item is modified*, with trigger condition (loop guard):
+- **Trigger:** *When an item is created or modified* (the SharePoint connector has no
+  modified-only trigger), with trigger condition (loop guard):
 
 ```
-@not(equals(triggerOutputs()?['body/Status'], triggerOutputs()?['body/LastStatus']))
+@and(not(empty(triggerOutputs()?['body/LastStatus'])), not(equals(triggerOutputs()?['body/Status/Value'], triggerOutputs()?['body/LastStatus'])))
 ```
+
+> ⚠️ `Status` is a **Choice** column, so `triggerOutputs()?['body/Status']` returns an
+> object — comparing it to the `LastStatus` text column is *always* unequal, which
+> defeats the guard and produces an infinite email loop. The `/Value` suffix is
+> mandatory. The `empty(LastStatus)` check stops F2 double-firing on item creation
+> (F1 owns the creation event and initialises LastStatus).
 
 - **First action:** update item `LastStatus = Status` (prevents re-trigger loops), then **Switch** on `Status`:
 

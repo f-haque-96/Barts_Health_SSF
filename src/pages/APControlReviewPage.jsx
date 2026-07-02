@@ -13,6 +13,7 @@ import { formatFieldValue, formatSupplierType, formatServiceTypes, formatEmploye
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
 import { closeAlembaOnCompletion, sendRejectionNotification } from '../services/notificationService';
 import { STATUS, STAGE } from '../utils/workflowStatus';
+import storage from '../services/StorageProvider';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const ReviewItem = ({ label, value, highlight, raw = false, badge }) => {
@@ -357,8 +358,8 @@ const APControlReviewPage = ({
     setIsSubmitting(true);
 
     try {
-      // Load fresh from localStorage to get any updates
-      const currentSubmission = JSON.parse(localStorage.getItem(`submission_${submissionId}`)) || submission;
+      // Load fresh from storage to get any updates
+      const currentSubmission = (await storage.getSubmission(submissionId)) || submission;
 
       const completedTimestamp = new Date().toISOString();
 
@@ -392,20 +393,22 @@ const APControlReviewPage = ({
         apStatus: 'verified', // Legacy status field
       };
 
-      // Save back to localStorage
-      localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
+      // Persist through the storage abstraction (dev → localStorage; prod → Graph)
+      await storage.updateSubmission(submissionId, updatedSubmission);
 
-      // Update submissions list
-      const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
-      const index = submissions.findIndex(s => s.submissionId === submissionId);
-      if (index !== -1) {
-        submissions[index].apStatus = 'verified';
-        submissions[index].status = STATUS.COMPLETED;
-        submissions[index].currentStage = STAGE.COMPLETED;
-        submissions[index].finalStatus = 'complete';
-        submissions[index].vendorNumber = supplierNumber;
-        submissions[index].completedAt = completedTimestamp;
-        localStorage.setItem('all_submissions', JSON.stringify(submissions));
+      // Dev-only summary list; in production the SharePoint list is the source of truth
+      if (import.meta.env.DEV) {
+        const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+        const index = submissions.findIndex(s => s.submissionId === submissionId);
+        if (index !== -1) {
+          submissions[index].apStatus = 'verified';
+          submissions[index].status = STATUS.COMPLETED;
+          submissions[index].currentStage = STAGE.COMPLETED;
+          submissions[index].finalStatus = 'complete';
+          submissions[index].vendorNumber = supplierNumber;
+          submissions[index].completedAt = completedTimestamp;
+          localStorage.setItem('all_submissions', JSON.stringify(submissions));
+        }
       }
 
       setSubmission(updatedSubmission);
@@ -448,8 +451,8 @@ const APControlReviewPage = ({
     setIsSubmitting(true);
 
     try {
-      // Load fresh from localStorage
-      const currentSubmission = JSON.parse(localStorage.getItem(`submission_${submissionId}`)) || submission;
+      // Load fresh from storage
+      const currentSubmission = (await storage.getSubmission(submissionId)) || submission;
 
       // Build AP rejection data
       const apControlReviewData = {
@@ -469,16 +472,18 @@ const APControlReviewPage = ({
         currentStage: STAGE.REJECTED,
       };
 
-      // Save to localStorage
-      localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
+      // Persist through the storage abstraction (dev → localStorage; prod → Graph)
+      await storage.updateSubmission(submissionId, updatedSubmission);
 
-      // Update submissions list
-      const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
-      const index = submissions.findIndex(s => s.submissionId === submissionId);
-      if (index !== -1) {
-        submissions[index].status = 'rejected';
-        submissions[index].rejectedBy = 'AP Control';
-        localStorage.setItem('all_submissions', JSON.stringify(submissions));
+      // Dev-only summary list; in production the SharePoint list is the source of truth
+      if (import.meta.env.DEV) {
+        const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+        const index = submissions.findIndex(s => s.submissionId === submissionId);
+        if (index !== -1) {
+          submissions[index].status = 'rejected';
+          submissions[index].rejectedBy = 'AP Control';
+          localStorage.setItem('all_submissions', JSON.stringify(submissions));
+        }
       }
 
       // Send rejection notification

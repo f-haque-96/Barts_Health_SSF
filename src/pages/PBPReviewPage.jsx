@@ -15,6 +15,7 @@ import { formatDate } from '../utils/helpers';
 import { formatYesNo, formatFieldValue, capitalizeWords } from '../utils/formatters';
 import PBPApprovalPDF from '../components/pdf/PBPApprovalPDF';
 import { sendRejectionNotification, sendApprovalNotification, checkAndFlagDuplicates, sendConflictOfInterestAlert } from '../services/notificationService';
+import storage from '../services/StorageProvider';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 // ===== Exchange Thread Component =====
@@ -635,8 +636,9 @@ const PBPReviewPage = ({
         }),
       };
 
-      // Save back to localStorage
-      localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
+      // Persist the decision through the storage abstraction
+      // (dev → localStorage; prod → Graph/SharePoint provider)
+      await storage.updateSubmission(submissionId, updatedSubmission);
 
       // Handle rejection notification and audit trail
       if (action === 'reject') {
@@ -673,9 +675,12 @@ const PBPReviewPage = ({
           notificationSent: true
         };
 
-        const auditTrail = JSON.parse(localStorage.getItem('auditTrail') || '[]');
-        auditTrail.push(auditEntry);
-        localStorage.setItem('auditTrail', JSON.stringify(auditTrail));
+        // Dev-only local audit copy; in production flow F2 writes SSF-AuditTrail
+        if (import.meta.env.DEV) {
+          const auditTrail = JSON.parse(localStorage.getItem('auditTrail') || '[]');
+          auditTrail.push(auditEntry);
+          localStorage.setItem('auditTrail', JSON.stringify(auditTrail));
+        }
       }
 
       // Handle approval notification
@@ -714,13 +719,16 @@ const PBPReviewPage = ({
         sendConflictOfInterestAlert(submission);
       }
 
-      // Update submissions list
-      const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
-      const index = submissions.findIndex(s => s.submissionId === submissionId);
-      if (index !== -1) {
-        submissions[index].status = newStatus;
-        submissions[index].currentStatus = isFinalDecision ? 'complete' : 'awaiting_requester';
-        localStorage.setItem('all_submissions', JSON.stringify(submissions));
+      // Dev-only summary list for the rejection banner and dev work queues;
+      // in production the SharePoint list is the source of truth
+      if (import.meta.env.DEV) {
+        const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+        const index = submissions.findIndex(s => s.submissionId === submissionId);
+        if (index !== -1) {
+          submissions[index].status = newStatus;
+          submissions[index].currentStatus = isFinalDecision ? 'complete' : 'awaiting_requester';
+          localStorage.setItem('all_submissions', JSON.stringify(submissions));
+        }
       }
 
       setSubmission(updatedSubmission);

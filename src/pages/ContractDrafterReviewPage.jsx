@@ -24,6 +24,7 @@ import {
   notifyContractApproved,
 } from '../services/notificationService';
 import { STATUS, STAGE } from '../utils/workflowStatus';
+import storage from '../services/StorageProvider';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 // ===== Main Contract Drafter Review Page =====
@@ -46,17 +47,15 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
   useEffect(() => {
     const loadSubmission = async () => {
       try {
-        // In production, fetch from API
-        // Load individual submission from localStorage (standard pattern)
-        const submissionData = localStorage.getItem(`submission_${submissionId}`);
+        // Load through the storage abstraction (dev → localStorage; prod → Graph)
+        const found = await storage.getSubmission(submissionId);
 
-        if (!submissionData) {
+        if (!found) {
           alert('Submission not found');
           navigate('/submissions');
           return;
         }
 
-        const found = JSON.parse(submissionData);
         setSubmission(found);
 
         setLoading(false);
@@ -100,20 +99,22 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
         },
       };
 
-      // Update localStorage (standard pattern)
-      localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
+      // Persist through the storage abstraction (dev → localStorage; prod → Graph)
+      await storage.updateSubmission(submissionId, updatedSubmission);
 
-      // Update submissions list
-      const stored = JSON.parse(localStorage.getItem('all_submissions') || '[]');
-      const index = stored.findIndex(s => s.submissionId === submissionId);
-      if (index !== -1) {
-        stored[index] = {
-          ...stored[index],
-          contractDrafter: updatedSubmission.contractDrafter,
-          status: updatedSubmission.status,
-          currentStage: updatedSubmission.currentStage
-        };
-        localStorage.setItem('all_submissions', JSON.stringify(stored));
+      // Dev-only summary list; in production the SharePoint list is the source of truth
+      if (import.meta.env.DEV) {
+        const stored = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+        const index = stored.findIndex(s => s.submissionId === submissionId);
+        if (index !== -1) {
+          stored[index] = {
+            ...stored[index],
+            contractDrafter: updatedSubmission.contractDrafter,
+            status: updatedSubmission.status,
+            currentStage: updatedSubmission.currentStage
+          };
+          localStorage.setItem('all_submissions', JSON.stringify(stored));
+        }
       }
 
       // Send notification
@@ -200,20 +201,22 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
         },
       };
 
-      // Update localStorage (standard pattern)
-      localStorage.setItem(`submission_${submissionId}`, JSON.stringify(updatedSubmission));
+      // Persist through the storage abstraction (dev → localStorage; prod → Graph)
+      await storage.updateSubmission(submissionId, updatedSubmission);
 
-      // Update submissions list
-      const stored = JSON.parse(localStorage.getItem('all_submissions') || '[]');
-      const index = stored.findIndex(s => s.submissionId === submissionId);
-      if (index !== -1) {
-        stored[index] = {
-          ...stored[index],
-          contractDrafter: updatedSubmission.contractDrafter,
-          status: updatedSubmission.status,
-          currentStage: updatedSubmission.currentStage
-        };
-        localStorage.setItem('all_submissions', JSON.stringify(stored));
+      // Dev-only summary list; in production the SharePoint list is the source of truth
+      if (import.meta.env.DEV) {
+        const stored = JSON.parse(localStorage.getItem('all_submissions') || '[]');
+        const index = stored.findIndex(s => s.submissionId === submissionId);
+        if (index !== -1) {
+          stored[index] = {
+            ...stored[index],
+            contractDrafter: updatedSubmission.contractDrafter,
+            status: updatedSubmission.status,
+            currentStage: updatedSubmission.currentStage
+          };
+          localStorage.setItem('all_submissions', JSON.stringify(stored));
+        }
       }
 
       // Send notifications
