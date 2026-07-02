@@ -52,15 +52,14 @@ See [PRODUCTION_FIXES_2026-02-04.md](../docs/archive/PRODUCTION_FIXES_2026-02-04
 
 Before deployment, ensure:
 
-- [ ] All environment variables are properly configured
-- [ ] Azure AD security groups are created
-- [ ] SQL Server TDE encryption is enabled
-- [ ] HTTPS is enforced in production
-- [ ] Session secrets are rotated
-- [ ] Audit logs are monitored
-- [ ] SharePoint permissions are correctly set
+- [ ] Build configuration (env vars) is properly set — no secrets in the SPA bundle
+- [ ] SharePoint groups (SSF-*) are created and populated
+- [ ] HTTPS is enforced in production (Azure Static Web Apps default)
+- [ ] Audit logs are monitored (SSF-AuditTrail list + M365 audit log)
+- [ ] SharePoint permissions are correctly set (SensitiveDocuments restricted)
 
-See [PRODUCTION_DEPLOYMENT_CHECKLIST.md](../docs/deployment/PRODUCTION_DEPLOYMENT_CHECKLIST.md) for complete checklist.
+Current deployment checklist: [DEPLOYMENT_READINESS_REVIEW.md](../docs/deployment/DEPLOYMENT_READINESS_REVIEW.md).
+(The SQL/Express-era checklist is archived under `docs/archive/express-era/`.)
 
 ---
 

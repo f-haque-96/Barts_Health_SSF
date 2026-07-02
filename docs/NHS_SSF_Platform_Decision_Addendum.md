@@ -104,7 +104,8 @@ longer needed.
 
 - `supplier-form-api/` (Express server, SQL schema, migrations) is **frozen** — kept in
   the repository for reference but no longer on the deployment path.
-- `docs/deployment/setup/02-sql-server.md` and the server-hosting sections of the
-  Solution Overview (§7) are superseded by this addendum.
+- The Express/SQL-era deployment guides (SQL Server setup, server hosting, the old
+  deployment checklists) are superseded by this addendum and archived under
+  `docs/archive/express-era/`.
 - The Solution Overview remains accurate for scope (§2), users (§4), data (§5), and
   workflow; its architecture sections (§3, §7) are superseded.

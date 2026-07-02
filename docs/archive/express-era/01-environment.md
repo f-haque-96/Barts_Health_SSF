@@ -388,8 +388,8 @@ Before proceeding to deployment, verify:
 Once this checklist is complete, you're ready to:
 
 1. **Proceed with database setup** (if not done yet) → [02-sql-server.md](02-sql-server.md)
-2. **Proceed with SharePoint setup** (if not done yet) → [03-sharepoint.md](03-sharepoint.md)
-3. **Deploy to production** → [docs/DEPLOYMENT.md](../DEPLOYMENT.md)
+2. **Proceed with SharePoint setup** (if not done yet) → [03-sharepoint.md](../../deployment/setup/03-sharepoint.md)
+3. **Deploy to production** → [docs/DEPLOYMENT.md](DEPLOYMENT.md)
 
 ---
 
