@@ -981,6 +981,19 @@ const Section2PreScreening = () => {
                         resubmit. If you have questions, contact the Procurement Helpdesk.
                       </p>
                     </NoticeBox>
+                  ) : prescreeningProgress.procurementApproved ? (
+                    <NoticeBox type="success" style={{ marginTop: '12px' }}>
+                      <strong>Questionnaire Approved by PBP</strong>
+                      <p style={{ margin: '8px 0 0 0' }}>
+                        Your questionnaire has been approved
+                        {prescreeningProgress.approverName ? ` by ${prescreeningProgress.approverName}` : ''}
+                        {prescreeningProgress.approvalDate ? ` on ${new Date(prescreeningProgress.approvalDate).toLocaleDateString('en-GB')}` : ''}.
+                      </p>
+                      <p style={{ margin: '8px 0 0 0', fontWeight: '500' }}>
+                        To continue: select "Yes - I have procurement approval" above and upload your
+                        approval certificate.
+                      </p>
+                    </NoticeBox>
                   ) : (
                     <NoticeBox type="warning" style={{ marginTop: '12px' }}>
                       <strong>Awaiting PBP Approval</strong>

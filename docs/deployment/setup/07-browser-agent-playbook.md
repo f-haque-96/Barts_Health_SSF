@@ -38,6 +38,12 @@ it in every prompt).
 > 12. **FormDataJSON**, **PBPReviewJSON**, **ProcurementReviewJSON**, **OPWReviewJSON**,
 >     **ContractReviewJSON**, **APReviewJSON** — Multiple lines of text, PLAIN text
 >     (not rich text), 6 lines for editing is fine.
+> 13. **SubmissionType** — Choice: `full`, `questionnaire`. Default `full`. No fill-in.
+>     (Section 2 pre-screening questionnaires arrive as their own items with
+>     QUEST- reference numbers.)
+> 14. **AwaitingParty** — Choice: `none`, `requester`, `pbp`. Default `none`.
+>     No fill-in. (Set by the app during info-required conversations; flow F6
+>     watches it so PBP get an email when the requester responds.)
 >
 > Then in List settings: turn versioning ON, turn attachments OFF, and add an index
 > on the CompanyName column. Confirm each column name matches exactly — they are
@@ -248,6 +254,33 @@ abused, regenerate it on the trigger and update the app config.
 
 **Test:** paste the URL into a browser with `&crn=00000006` appended — you should get
 company JSON back. Try a nonsense CRN and confirm you get a 404.
+
+---
+
+## Task 9 — Flow F6: notify PBP when a requester responds
+
+Without this flow, an info-required conversation stalls silently: the requester's
+reply does not change Status, so F2 never fires and PBP only find out via the
+Monday digest.
+
+> In Power Automate, create an Automated cloud flow named **SSF F6 - Requester
+> responded** with trigger SharePoint "When an item is created or modified" on
+> SSF-Submissions, and this Trigger Condition (one line):
+> `@and(equals(triggerOutputs()?['body/Status/Value'], 'info_required'), equals(triggerOutputs()?['body/AwaitingParty/Value'], 'pbp'))`
+>
+> Action 1 (loop guard, MUST be first): SharePoint "Update item" on the triggering
+> item setting ONLY AwaitingParty = `none`.
+> Action 2: Send an email (V2) to pbp-panel@nhs.net — subject
+> "Requester has responded - [Title]", body containing Title, CompanyName,
+> RequesterName and the link `https://APP-URL-TBC/pbp-review/[Title]`.
+> Action 3: SharePoint "Create item" on SSF-AuditTrail: Title = Title,
+> ActionType = `REQUESTER_RESPONDED`, PerformedBy = RequesterEmail.
+>
+> Save and leave ON.
+
+The app sets AwaitingParty = `requester` when PBP request information and
+`pbp` when the requester submits a response (Graph provider, delivery-plan
+step 4).
 
 ---
 

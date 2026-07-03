@@ -66,10 +66,13 @@ export const createNotificationRecord = (notification) => {
     ...notification,
   };
 
-  // Store in localStorage for demo (in production, this goes to SharePoint)
-  const notifications = JSON.parse(localStorage.getItem('notificationQueue') || '[]');
-  notifications.push(record);
-  localStorage.setItem('notificationQueue', JSON.stringify(notifications));
+  // Demo-only queue. In production, emails are sent by the Power Automate
+  // flows (F1/F2) triggered by SharePoint list changes - not by this service.
+  if (import.meta.env.DEV) {
+    const notifications = JSON.parse(localStorage.getItem('notificationQueue') || '[]');
+    notifications.push(record);
+    localStorage.setItem('notificationQueue', JSON.stringify(notifications));
+  }
 
   return record;
 };
@@ -202,10 +205,12 @@ export const closeAlembaTicket = ({
     },
   };
 
-  // Store for Power Automate to process (calls Alemba API)
-  const alembaQueue = JSON.parse(localStorage.getItem('alembaActionQueue') || '[]');
-  alembaQueue.push(alembaAction);
-  localStorage.setItem('alembaActionQueue', JSON.stringify(alembaQueue));
+  // Demo-only queue; the production Alemba integration is a Power Automate flow
+  if (import.meta.env.DEV) {
+    const alembaQueue = JSON.parse(localStorage.getItem('alembaActionQueue') || '[]');
+    alembaQueue.push(alembaAction);
+    localStorage.setItem('alembaActionQueue', JSON.stringify(alembaQueue));
+  }
 
   return alembaAction;
 };

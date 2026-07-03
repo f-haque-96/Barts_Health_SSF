@@ -50,7 +50,9 @@ conditions below exactly.
 | OutcomeRoute | Choice | `oracle_ap`, `payroll_esr`, blank |
 | AlembaReference / VendorNumber | Text | |
 | FormDataJSON | Multi-line text (plain) | Full form payload **excluding bank details** |
-| PBPReviewJSON / ProcurementReviewJSON / OPWReviewJSON / ContractReviewJSON / APReviewJSON | Multi-line text (plain) | Per-stage decision payloads |
+| PBPReviewJSON / ProcurementReviewJSON / OPWReviewJSON / ContractReviewJSON / APReviewJSON | Multi-line text (plain) | Per-stage decision payloads **excluding attachment content** (see step-4 rules below) |
+| SubmissionType | Choice | `full`, `questionnaire` (default `full`) — Section 2 pre-screening questionnaires are separate items with `QUEST-` reference numbers; F1 uses this to word the PBP email |
+| AwaitingParty | Choice | `none`, `requester`, `pbp` (default `none`) — set by the app during info-required conversations; watched by F6 |
 
 **Bank details rule (mandatory):** sort code, account number, IBAN and SWIFT are
 **never stored as columns or inside FormDataJSON**.
@@ -177,12 +179,55 @@ must match the React routes in `src/App.jsx` exactly:
   `StatusChangedAt lt addDays(utcNow(), -5)` → group by CurrentStage → one summary
   email per team mailbox + copy to SSF-Admin.
 
+### F6 — Requester responded (closes the info_required dead spot)
+- **Why:** a requester's reply to an information request does not change Status,
+  so F2 never fires — without F6, PBP would only learn of the response from the
+  Monday digest (verified at runtime, July 2026).
+- **Trigger:** *When an item is created or modified*, condition
+  `Status = info_required AND AwaitingParty = pbp`.
+- **Actions:** update item `AwaitingParty = none` (loop guard, FIRST action) →
+  email PBP mailbox with the `/pbp-review/` link → audit entry (`REQUESTER_RESPONDED`).
+- **App side (step 4):** the Graph provider sets `AwaitingParty = requester` on a
+  PBP info request and `pbp` on a requester response (the app already tracks this
+  as `pbpReview.currentStatus` `awaiting_requester`/`awaiting_pbp`).
+
 ### F5 — Audit completeness (optional, after F1–F4 are stable)
 F2 already writes audit entries on every status change; F5 adds a nightly
 reconciliation that flags Submissions items whose Modified date has no matching
 audit entry that day. Skip initially if effort is constrained.
 
 ---
+
+## 4b. Step-4 (Graph provider) requirements — learned from runtime verification
+
+Rules the Graph/SharePoint storage provider MUST implement when it replaces the
+dev localStorage provider. Each traces to a verified behaviour of the current app:
+
+1. **Strip bank details from FormDataJSON** (rule in §2.1). The form deliberately
+   collects typed bank details in Section 6 for AP cross-checking — decide with AP
+   Control whether they verify from the letterhead alone (Option A, values discarded
+   at persistence) or the typed values go to the Option B restricted list.
+2. **Strip attachment content from exchange payloads.** Info-required and contract
+   negotiation messages carry base64 attachments in the dev store. In production the
+   provider must upload each attachment to `SupplierDocuments/<SubmissionID>/exchanges/`
+   and store only name + link in the ReviewJSON — never base64 (list item size and
+   DPIA localStorage claims both depend on this).
+3. **Stamp RequesterEmail from the signed-in account (UPN), not the typed Section 1
+   email.** Requester access filtering and F2's requester emails key off this column;
+   a typo or alias mismatch in the typed field would lock a requester out of their
+   own submission.
+4. **Set AwaitingParty** (`requester` on PBP info request, `pbp` on requester
+   response) so F6 fires — the app already tracks this internally as
+   `pbpReview.currentStatus`.
+5. **Supplier (external) participation is email-only in production.** The `/respond/`
+   portal's supplier role works in dev, but external suppliers cannot sign in to the
+   Trust tenant — contract negotiation with the supplier happens via the drafter's
+   mailbox (as the Contract Review page already states). Portal access for suppliers
+   would require Azure AD guest accounts — out of scope for v1.
+6. **Questionnaire approval certificate delivery is manual for v1:** PBP downloads
+   the approval PDF from the PBP review page and emails it to the requester, who
+   uploads it at Q2.8. (The Section 2 card now shows an approved notice, but the
+   certificate still travels by email.)
 
 ## 5. Gotchas
 
@@ -207,7 +252,7 @@ audit entry that day. Skip initially if effort is constrained.
 - [ ] Decide bank-details Option A/B with AP Control (recommend A)
 - [ ] Create the six SharePoint groups; populate members (§3)
 - [ ] Set library permissions (SensitiveDocuments → Contract/AP/Admin only)
-- [ ] Build F1, F2 (with LastStatus guard), F3, F4; add co-owners
+- [ ] Build F1, F2 (with LastStatus guard), F3, F4, F6 (AwaitingParty guard); add co-owners
 - [ ] Test matrix — one run per branch:
   - [ ] standard: pending_review → approved → pending_ap_control → completed
   - [ ] OPW sole trader employed: … → procurement_approved_opw → completed_payroll

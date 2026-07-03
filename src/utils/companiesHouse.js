@@ -38,9 +38,11 @@ export const getCompanyDetails = async (companyNumber) => {
       // so the browser never sends a preflight OPTIONS call (which Power Automate
       // HTTP triggers do not answer). The flow returns the raw Companies House
       // profile JSON, or HTTP 404 if the company is not found.
-      response = await fetch(`${FLOW_URL}&crn=${encodeURIComponent(cleanedNumber)}`, {
-        method: 'GET',
-      });
+      // Append crn safely whether or not the pasted flow URL already has a
+      // query string (Power Automate trigger URLs normally do)
+      const flowUrl = new URL(FLOW_URL);
+      flowUrl.searchParams.set('crn', cleanedNumber);
+      response = await fetch(flowUrl.toString(), { method: 'GET' });
     } else if (import.meta.env.DEV) {
       // Dev-only fallback: the frozen Express proxy, if running locally
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
