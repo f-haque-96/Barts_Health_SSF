@@ -69,6 +69,15 @@ const MainForm = () => {
             localStorage.getItem(`submission_${mostRecent.submissionId}`) || '{}'
           );
 
+          // Supplier name lives in different places depending on submission type
+          // (full form -> companyName; questionnaire -> [type]Questionnaire.supplierName)
+          const rejectedSupplierName = fullSubmission.formData?.supplierName ||
+            fullSubmission.formData?.companyName ||
+            fullSubmission.formData?.clinicalQuestionnaire?.supplierName ||
+            fullSubmission.formData?.nonClinicalQuestionnaire?.supplierName ||
+            fullSubmission.questionnaireData?.supplierName ||
+            'Unknown Supplier';
+
           // Extract rejection info from the submission
           let rejectionInfo = null;
           if (fullSubmission.pbpReview?.decision === 'rejected') {
@@ -78,7 +87,7 @@ const MainForm = () => {
               rejectedByRole: 'PBP',
               rejectionReason: fullSubmission.pbpReview.finalComments || 'No reason provided',
               rejectionDate: fullSubmission.pbpReview.reviewedAt || mostRecent.submissionDate,
-              supplierName: fullSubmission.formData?.supplierName || 'Unknown Supplier',
+              supplierName: rejectedSupplierName,
             };
           } else if (fullSubmission.procurementReview?.decision === 'rejected') {
             rejectionInfo = {
@@ -90,7 +99,7 @@ const MainForm = () => {
                 fullSubmission.procurementReview.comments || 'No reason provided',
               rejectionDate:
                 fullSubmission.procurementReview.reviewedAt || mostRecent.submissionDate,
-              supplierName: fullSubmission.formData?.supplierName || 'Unknown Supplier',
+              supplierName: rejectedSupplierName,
             };
           } else if (fullSubmission.opwReview?.decision === 'rejected') {
             rejectionInfo = {
@@ -100,7 +109,7 @@ const MainForm = () => {
               rejectionReason:
                 fullSubmission.opwReview.rejectionReason || 'No reason provided',
               rejectionDate: fullSubmission.opwReview.date || mostRecent.submissionDate,
-              supplierName: fullSubmission.formData?.supplierName || 'Unknown Supplier',
+              supplierName: rejectedSupplierName,
             };
           } else if (fullSubmission.apReview?.decision === 'rejected') {
             rejectionInfo = {
@@ -110,7 +119,7 @@ const MainForm = () => {
               rejectionReason:
                 fullSubmission.apReview.rejectionReason || 'No reason provided',
               rejectionDate: fullSubmission.apReview.reviewedAt || mostRecent.submissionDate,
-              supplierName: fullSubmission.formData?.supplierName || 'Unknown Supplier',
+              supplierName: rejectedSupplierName,
             };
           }
 

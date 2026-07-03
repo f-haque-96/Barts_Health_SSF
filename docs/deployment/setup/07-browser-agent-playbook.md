@@ -312,6 +312,48 @@ step 4).
 
 ---
 
+## Task 10 — VAT proxy flow: HMRC "Check a UK VAT number" (PREMIUM connector)
+
+Same pattern as Task 8: the flow holds the HMRC credentials; the app only knows the
+flow URL (`VITE_VAT_FLOW_URL`). The HMRC client secret must NEVER go into the app,
+the repo, or an email. Contract verified against the HMRC sandbox (July 2026):
+lookups take a **9 or 12 digit** VRN (no GB prefix — the app strips it).
+
+> In Power Automate, create an Instant cloud flow named
+> **SSF VAT - HMRC check proxy** with the trigger
+> **"When an HTTP request is received"**: Method = GET, Who can trigger = Anyone.
+>
+> Action 1: **HTTP** — Method: POST,
+> URI: `https://test-api.service.hmrc.gov.uk/oauth/token`,
+> Headers: `Content-Type` = `application/x-www-form-urlencoded`,
+> Body: `grant_type=client_credentials&client_id=[HMRC CLIENT ID]&client_secret=[HMRC CLIENT SECRET]`
+>
+> Action 2: **HTTP 2** — Method: GET,
+> URI: `https://test-api.service.hmrc.gov.uk/organisations/vat/check-vat-number/lookup/@{triggerOutputs()['queries']['vrn']}`,
+> Headers: `Authorization` = `Bearer @{body('HTTP')?['access_token']}` and
+> `Accept` = `application/vnd.hmrc.2.0+json`
+>
+> Action 3: **Response** —
+> Status code: `@{outputs('HTTP_2')['statusCode']}`,
+> Headers: `Access-Control-Allow-Origin` = `*` and `Content-Type` = `application/json`,
+> Body: `@{body('HTTP_2')}`.
+> Open Configure run after on this Response action and tick BOTH "is successful"
+> AND "has failed" (a 404 not-found fails the HTTP 2 action but must still reach
+> the app).
+>
+> Save, then copy the generated **HTTP GET URL** from the trigger.
+
+**You do afterwards:** paste the URL into the app configuration as
+`VITE_VAT_FLOW_URL`. **Test** in a browser with `&vrn=553557881` appended — the
+sandbox returns "Credite Sberger Donal Inc."; a nonsense VRN returns 404.
+
+**Before production go-live:** (1) regenerate the client secret on the HMRC
+developer hub (sandbox secrets that have been shared around should not carry over),
+(2) request production credentials for the application there, and (3) change both
+URIs from `test-api.service.hmrc.gov.uk` to `api.service.hmrc.gov.uk`.
+
+---
+
 ## After all tasks: add co-owners
 
 > In Power Automate, open each of the five SSF flows, and under Edit owners add

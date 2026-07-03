@@ -4,10 +4,10 @@
  * Banking details, insurance, VAT - Most conditional fields
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Input, Textarea, RadioGroup, QuestionLabel } from '../common';
+import { Input, Textarea, RadioGroup, QuestionLabel, NoticeBox, CheckIcon, WarningIcon, InfoIcon } from '../common';
 import { FormNavigation } from '../layout';
 import { getSection6Schema } from '../../utils/validation';
 import {
@@ -17,6 +17,7 @@ import {
   formatSwiftBic,
   financialValidators,
 } from '../../utils/helpers';
+import { checkVATNumber, cleanVATNumber, VAT_ERROR_TYPES } from '../../utils/vatCheck';
 import useFormStore from '../../stores/formStore';
 import useFormNavigation from '../../hooks/useFormNavigation';
 
@@ -71,6 +72,51 @@ const Section6FinancialInfo = () => {
   const watchCis = watch('cisRegistered');
   const watchPublicLiability = watch('publicLiability');
   const watchVat = watch('vatRegistered');
+  const watchVatNumber = watch('vatNumber');
+
+  // ===== VAT number verification (HMRC via flow proxy) =====
+  // status: 'idle' | 'checking' | 'verified' | 'not_found' | 'unavailable'
+  const [vatStatus, setVatStatus] = useState(formData.vatVerification ? 'verified' : 'idle');
+  const [vatResult, setVatResult] = useState(formData.vatVerification || null);
+  const [vatMessage, setVatMessage] = useState('');
+
+  useEffect(() => {
+    if (watchVat !== 'yes') return undefined;
+    const cleaned = cleanVATNumber(watchVatNumber);
+    if (!/^\d{9}(\d{3})?$/.test(cleaned)) {
+      setVatStatus('idle');
+      setVatResult(null);
+      return undefined;
+    }
+    // Skip re-checking the same number we already verified
+    if (vatResult?.vatNumber === cleaned && vatStatus === 'verified') return undefined;
+
+    const timer = setTimeout(async () => {
+      setVatStatus('checking');
+      const result = await checkVATNumber(cleaned);
+      if (result.success) {
+        setVatStatus('verified');
+        setVatResult(result.data);
+        setVatMessage('');
+        // Persist for Section 7, review pages and the PDF
+        updateFormData('vatVerification', result.data);
+      } else if (result.error === VAT_ERROR_TYPES.NOT_FOUND) {
+        setVatStatus('not_found');
+        setVatResult(null);
+        setVatMessage(result.message);
+        updateFormData('vatVerification', null);
+      } else {
+        // NOT_CONFIGURED / NETWORK_ERROR / API_ERROR -> verify manually, don't block
+        setVatStatus('unavailable');
+        setVatResult(null);
+        setVatMessage(result.message);
+        updateFormData('vatVerification', null);
+      }
+    }, 600); // debounce
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchVat, watchVatNumber]);
 
   // Handler for onBlur validation
   const handleFieldBlur = (fieldName, validatorFn) => (e) => {
@@ -535,25 +581,64 @@ const Section6FinancialInfo = () => {
         </div>
 
         {watchVat === 'yes' && (
-          <Input
-            label={<QuestionLabel section="6" question="16">VAT Registration Number</QuestionLabel>}
-            name="vatNumber"
-            {...register('vatNumber')}
-            onChange={(e) => {
-              const formatted = e.target.value.replace(/[^0-9GB]/gi, '').toUpperCase();
-              setValue('vatNumber', formatted);
-              register('vatNumber').onChange(e);
-              handleFieldChange('vatNumber', formatted);
-              if (validationErrors.vatNumber) {
-                setValidationErrors((prev) => ({ ...prev, vatNumber: null }));
-              }
-            }}
-            onBlur={handleFieldBlur('vatNumber', financialValidators.vatNumber)}
-            error={validationErrors.vatNumber || errors.vatNumber?.message}
-            required
-            placeholder="e.g., GB123456789"
-            maxLength={14}
-          />
+          <>
+            <Input
+              label={<QuestionLabel section="6" question="16">VAT Registration Number</QuestionLabel>}
+              name="vatNumber"
+              {...register('vatNumber')}
+              onChange={(e) => {
+                const formatted = e.target.value.replace(/[^0-9GB]/gi, '').toUpperCase();
+                setValue('vatNumber', formatted);
+                register('vatNumber').onChange(e);
+                handleFieldChange('vatNumber', formatted);
+                if (validationErrors.vatNumber) {
+                  setValidationErrors((prev) => ({ ...prev, vatNumber: null }));
+                }
+              }}
+              onBlur={handleFieldBlur('vatNumber', financialValidators.vatNumber)}
+              error={validationErrors.vatNumber || errors.vatNumber?.message}
+              required
+              placeholder="e.g., GB123456789"
+              maxLength={14}
+            />
+
+            {/* HMRC verification status */}
+            {vatStatus === 'checking' && (
+              <p style={{ marginTop: 'var(--space-8)', fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
+                Checking VAT number with HMRC…
+              </p>
+            )}
+            {vatStatus === 'verified' && vatResult && (
+              <NoticeBox type="success" style={{ marginTop: 'var(--space-8)' }}>
+                <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <CheckIcon size={14} color="#22c55e" /> VAT number verified (HMRC):
+                </strong>{' '}
+                {vatResult.name}
+                {vatResult.address && (
+                  <>
+                    <br />
+                    <small>{vatResult.address}</small>
+                  </>
+                )}
+              </NoticeBox>
+            )}
+            {vatStatus === 'not_found' && (
+              <NoticeBox type="warning" style={{ marginTop: 'var(--space-8)' }}>
+                <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <WarningIcon size={14} color="#f59e0b" /> Not found:
+                </strong>{' '}
+                {vatMessage}
+              </NoticeBox>
+            )}
+            {vatStatus === 'unavailable' && (
+              <NoticeBox type="info" style={{ marginTop: 'var(--space-8)' }}>
+                <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <InfoIcon size={14} color="#3b82f6" /> Verification unavailable:
+                </strong>{' '}
+                {vatMessage}
+              </NoticeBox>
+            )}
+          </>
         )}
 
         <FormNavigation

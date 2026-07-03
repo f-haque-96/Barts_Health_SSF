@@ -56,7 +56,7 @@ verification when the flow is unreachable** (`companiesHouse.js` /
 
 | Feature | Route | Dependency to start early |
 |---|---|---|
-| **VAT number validation** | HMRC "Check a UK VAT number" API via a new flow proxy (same shape as Task 8); wire into Section 6 `vatNumber` with verified/unavailable/not-found states | HMRC developer hub application for API credentials |
+| **VAT number validation** | ✅ **App side implemented July 2026** (`src/utils/vatCheck.js`, Section 6 verified/not-found/unavailable states; HMRC sandbox contract verified). Remaining: build the flow (playbook Task 10) and, for go-live, HMRC production credentials + regenerated secret | HMRC production credential approval |
 | **Confirmation of Payee (CoP)** | ⚠️ **Not a public/government API.** CoP is operated via Pay.UK and only accessible through banks or commercial providers — this is a *procurement/contract* dependency (Trust bank or a commercial verification service), not a code task. AP Control's manual letterhead verification remains the control until then | Early conversation with the Trust's bank / a commercial provider |
 | Other checks (CIS, charity register, etc.) | Charity Commission has a public API (flow proxy pattern); CIS verification is HMRC-gated similar to VAT | Per-API registration |
 
