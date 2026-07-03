@@ -65,14 +65,18 @@ conditions below exactly.
 > alone — Option A), or write them to the restricted store in Option B. Decide with
 > AP Control before building the provider.
 
-Two options:
+**DECIDED (July 2026): Option B.** There have been real cases where the typed bank
+details differed from the letterhead — the on-screen cross-check catches
+discrepancies, so the typed values must survive into production storage:
 
-- **Option A (recommended):** bank details exist only inside the supplier letterhead
-  PDF in **SensitiveDocuments** (AP Control verify from the document, as they do today).
-  Zero structured copies; simplest DPIA story.
-- **Option B:** a separate `SSF-BankDetails` list with unique permissions (AP Control +
-  Admin only), one item per submission. Only choose this if AP Control insists on
-  structured data; it doubles the permission surface.
+- **Option A (not chosen):** bank details only inside the letterhead PDF in
+  SensitiveDocuments; simplest DPIA story but loses the cross-check.
+- **Option B (chosen):** a separate **`SSF-BankDetails`** list, one item per
+  submission, with **unique permissions: SSF-APControl + SSF-Admin only**.
+  Columns: Title (= Submission ID), NameOnAccount, SortCode, AccountNumber,
+  IBAN, SWIFTCode, BankRouting (all single-line text). Versioning ON, sharing
+  links off. The AP review page reads this list to display typed values next to
+  the letterhead. The DPIA must describe this list and its restricted access.
 
 **List settings:** versioning ON; item-level "Read items that were created by the user"
 is **not** used (reviewers need cross-item access) — access is via SharePoint groups
@@ -152,7 +156,7 @@ must match the React routes in `src/App.jsx` exactly:
 
 | Status | Notify | Email intent |
 |---|---|---|
-| `approved` | Procurement mailbox | PBP approved — classify supplier |
+| `approved` | **Condition on SubmissionType:** `full` → Procurement mailbox; `questionnaire` → Requester, **attaching the approval certificate** from `SupplierDocuments/<QUEST-id>/` | Full: PBP approved — classify supplier. Questionnaire: your pre-screening is approved — upload the attached certificate at Q2.8 to continue |
 | `procurement_approved_opw` | OPW mailbox | OPW/IR35 determination required |
 | `pending_ap_control` | AP mailbox | Verify bank details & create vendor |
 | `pending_contract` | Contract Drafter | Agreement required (template in OPWReviewJSON) |
@@ -203,10 +207,11 @@ audit entry that day. Skip initially if effort is constrained.
 Rules the Graph/SharePoint storage provider MUST implement when it replaces the
 dev localStorage provider. Each traces to a verified behaviour of the current app:
 
-1. **Strip bank details from FormDataJSON** (rule in §2.1). The form deliberately
-   collects typed bank details in Section 6 for AP cross-checking — decide with AP
-   Control whether they verify from the letterhead alone (Option A, values discarded
-   at persistence) or the typed values go to the Option B restricted list.
+1. **Strip bank details from FormDataJSON and write them to SSF-BankDetails**
+   (Option B — decided July 2026, see §2.1). The typed Section 6 values exist so AP
+   Control can cross-check against the letterhead; past cases have caught real
+   discrepancies. The provider writes one SSF-BankDetails item per submission and
+   never puts these fields in FormDataJSON or any other column.
 2. **Strip attachment content from exchange payloads.** Info-required and contract
    negotiation messages carry base64 attachments in the dev store. In production the
    provider must upload each attachment to `SupplierDocuments/<SubmissionID>/exchanges/`
@@ -224,10 +229,16 @@ dev localStorage provider. Each traces to a verified behaviour of the current ap
    Trust tenant — contract negotiation with the supplier happens via the drafter's
    mailbox (as the Contract Review page already states). Portal access for suppliers
    would require Azure AD guest accounts — out of scope for v1.
-6. **Questionnaire approval certificate delivery is manual for v1:** PBP downloads
-   the approval PDF from the PBP review page and emails it to the requester, who
-   uploads it at Q2.8. (The Section 2 card now shows an approved notice, but the
-   certificate still travels by email.)
+6. **Questionnaire approval certificate is automated (decided July 2026):** when PBP
+   approve a questionnaire, the provider uploads the generated approval PDF
+   (PBPApprovalPDF) to `SupplierDocuments/<QUEST-id>/`; F2's questionnaire branch
+   emails it to the requester automatically. The PBP review page keeps its stamped
+   decision + certificate download button as the fallback copy if the requester
+   loses the email. A **rejected** questionnaire locks that supplier setup (the app
+   enforces this at Q2.8/Q2.9) and fresh attempts at the same supplier name are
+   fuzzy-flagged (70% threshold) in Section 4 and at PBP approval time — rejected
+   QUEST items must therefore keep CompanyName populated (from the questionnaire's
+   supplierName) so the flagging net can match them.
 
 ## 5. Gotchas
 

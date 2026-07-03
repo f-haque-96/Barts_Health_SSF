@@ -46,12 +46,13 @@ const useFormStore = create(
       // ===== Prescreening Progress (for progressive disclosure) =====
       prescreeningProgress: {
         serviceCategoryAnswered: false,
-        procurementEngaged: null, // null | 'yes' | 'no'
+        procurementEngaged: null, // null | 'yes' | 'yes_email' | 'no'
         procurementApproved: false, // PBP has approved
         questionnaireSubmitted: false,
         questionnaireId: null,
         approverName: null,
         approvalDate: null,
+        questionnaireRejected: false, // PBP rejected - supplier setup cannot proceed
       },
 
       // ===== Rejection Data =====
@@ -461,7 +462,7 @@ const useFormStore = create(
               // Helper function to check if file exists
               const fileExists = (fileObj) => !!(fileObj?.name || fileObj?.base64 || fileObj?.data);
 
-              if (formData.procurementEngaged === 'yes' && !fileExists(uploadedFiles.procurementApproval)) {
+              if (formData.procurementEngaged?.startsWith('yes') && !fileExists(uploadedFiles.procurementApproval)) {
                 missing.push('Procurement Approval Document');
               }
               if (formData.letterheadAvailable === 'yes' && !fileExists(uploadedFiles.letterhead)) {
@@ -763,7 +764,7 @@ const useFormStore = create(
           }
 
           // Procurement Approval - Required if engaged with procurement
-          if (section2?.procurementEngaged === 'yes' || formData?.procurementEngaged === 'yes' || formData?.hasProcurementApproval === 'yes') {
+          if (section2?.procurementEngaged?.startsWith('yes') || formData?.procurementEngaged?.startsWith('yes') || formData?.hasProcurementApproval === 'yes') {
             if (!fileExists(currentUploads?.procurementApproval)) {
               missing.push('Procurement Approval Document (Upload Required)');
             }

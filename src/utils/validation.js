@@ -95,7 +95,7 @@ export const section2Schema = z.object({
   serviceCategory: z.enum(['clinical', 'non-clinical'], {
     error: 'Please select an option',
   }),
-  procurementEngaged: z.enum(['yes', 'no'], {
+  procurementEngaged: z.enum(['yes', 'yes_email', 'no'], {
     error: 'Please select an option',
   }),
   prescreeningAcknowledgement: z.literal(true, {

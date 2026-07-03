@@ -81,17 +81,18 @@ const Section2PreScreening = () => {
     }
   }, [procurementEngaged, prescreeningProgress.procurementEngaged, updatePrescreeningProgress]);
 
-  // Check if procurement approval document is uploaded
+  // Check if procurement approval evidence is uploaded (certificate or email trail)
   useEffect(() => {
-    if (procurementEngaged === 'yes' && uploadedFiles.procurementApproval && !prescreeningProgress.procurementApproved) {
+    if (procurementEngaged?.startsWith('yes') && uploadedFiles.procurementApproval && !prescreeningProgress.procurementApproved) {
       updatePrescreeningProgress({ procurementApproved: true });
     }
   }, [procurementEngaged, uploadedFiles.procurementApproval, prescreeningProgress.procurementApproved, updatePrescreeningProgress]);
 
-  // Check if questionnaire has been approved by PBP
+  // Check whether PBP has decided on the questionnaire (approved or rejected)
   useEffect(() => {
-    if (prescreeningProgress.questionnaireId && !prescreeningProgress.procurementApproved) {
-      // Check localStorage for questionnaire approval status
+    if (prescreeningProgress.questionnaireId &&
+        !prescreeningProgress.procurementApproved &&
+        !prescreeningProgress.questionnaireRejected) {
       const questionnaireKey = `submission_${prescreeningProgress.questionnaireId}`;
       const questionnaireData = localStorage.getItem(questionnaireKey);
 
@@ -105,13 +106,16 @@ const Section2PreScreening = () => {
               approverName: submission.approver || 'PBP',
               approvalDate: submission.approvalDate,
             });
+          } else if (submission.status === 'rejected') {
+            // Rejected: this supplier setup is locked and cannot proceed
+            updatePrescreeningProgress({ questionnaireRejected: true });
           }
         } catch (error) {
           console.error('Error checking questionnaire approval:', error);
         }
       }
     }
-  }, [prescreeningProgress.questionnaireId, prescreeningProgress.procurementApproved, updatePrescreeningProgress]);
+  }, [prescreeningProgress.questionnaireId, prescreeningProgress.procurementApproved, prescreeningProgress.questionnaireRejected, updatePrescreeningProgress]);
 
   // Determine which questions should be active/locked (strict one-by-one)
   // ORDER: Q2.1 Substantive Position (BLOCKING), Q2.2 Supplier Connection, Q2.3 Personal Service,
@@ -302,6 +306,7 @@ const Section2PreScreening = () => {
     // If "no" is selected, user must complete questionnaire, wait for PBP approval, then come back and select "yes" with certificate
     q9_acknowledgement: {
       locked: isBlockedBySubstantivePosition ||
+              prescreeningProgress.questionnaireRejected ||
               !supplierConnection ||
               connectionDetailsMissing ||
               !soleTraderStatus ||
@@ -309,9 +314,11 @@ const Section2PreScreening = () => {
               isBlockedByLetterhead ||
               !procurementEngaged ||
               procurementEngaged === 'no' ||
-              (procurementEngaged === 'yes' && !uploadedFiles.procurementApproval),
+              (procurementEngaged?.startsWith('yes') && !uploadedFiles.procurementApproval),
       reason: isBlockedBySubstantivePosition
         ? 'Cannot proceed - substantive position holders must use NHS payroll'
+        : prescreeningProgress.questionnaireRejected
+        ? 'Your questionnaire was rejected by PBP - this supplier setup cannot proceed. See the rejection details above.'
         : !supplierConnection
         ? 'Please answer the supplier connection question first'
         : connectionDetailsMissing
@@ -324,7 +331,7 @@ const Section2PreScreening = () => {
         ? 'You must select "Yes" and upload a letterhead to proceed'
         : procurementEngaged === 'no'
         ? 'Please complete the questionnaire and wait for PBP approval. Once approved, select "Yes" and upload your approval certificate.'
-        : procurementEngaged === 'yes' && !uploadedFiles.procurementApproval
+        : procurementEngaged?.startsWith('yes') && !uploadedFiles.procurementApproval
         ? 'Please upload the procurement approval document'
         : 'Please complete all previous questions'
     }
@@ -355,6 +362,12 @@ const Section2PreScreening = () => {
       return;
     }
 
+    // CRITICAL: A PBP-rejected questionnaire locks this supplier setup entirely
+    if (prescreeningProgress.questionnaireRejected) {
+      alert('Your questionnaire was rejected by PBP. This supplier setup cannot proceed.');
+      return;
+    }
+
     // Validate connection details if supplier connection is 'yes'
     if (data.supplierConnection === 'yes') {
       const connectionDetails = formData.connectionDetails?.trim();
@@ -380,8 +393,10 @@ const Section2PreScreening = () => {
     // Validate required files
     const requiredFiles = [];
 
-    if (data.procurementEngaged === 'yes' && !uploadedFiles.procurementApproval) {
-      requiredFiles.push('Procurement Approval Document');
+    if (data.procurementEngaged?.startsWith('yes') && !uploadedFiles.procurementApproval) {
+      requiredFiles.push(data.procurementEngaged === 'yes_email'
+        ? 'PBP Approval Email Trail (PDF)'
+        : 'Procurement Approval Document');
     }
     if (data.letterheadAvailable === 'yes' && !uploadedFiles.letterhead) {
       requiredFiles.push('Letterhead Document');
@@ -872,7 +887,8 @@ const Section2PreScreening = () => {
                 label={<QuestionLabel section="2" question="8">Have you engaged with the Procurement team?</QuestionLabel>}
                 name="procurementEngaged"
                 options={[
-                  { value: 'yes', label: 'Yes - I have procurement approval' },
+                  { value: 'yes', label: 'Yes - I have an approval certificate' },
+                  { value: 'yes_email', label: 'Yes - I have PBP approval by email' },
                   { value: 'no', label: 'No - I need to complete the questionnaire' },
                 ]}
                 value={field.value}
@@ -884,10 +900,12 @@ const Section2PreScreening = () => {
             )}
           />
 
-          {/* If Yes - show procurement approval upload */}
-          {procurementEngaged === 'yes' && !questionStatus.q8_procurement.locked && (
+          {/* If Yes (certificate or email approval) - show the evidence upload */}
+          {procurementEngaged?.startsWith('yes') && !questionStatus.q8_procurement.locked && (
             <FileUpload
-              label="Upload Procurement Approval Document"
+              label={procurementEngaged === 'yes_email'
+                ? 'Upload the PBP approval email trail (saved as PDF)'
+                : 'Upload Procurement Approval Document'}
               name="procurementApproval"
               acceptedTypes={['application/pdf']}
               acceptedExtensions={['.pdf']}
@@ -979,6 +997,19 @@ const Section2PreScreening = () => {
                       <p style={{ margin: 0, fontSize: '0.9rem', color: '#6b7280' }}>
                         Please review the feedback above and address the issues identified before attempting to
                         resubmit. If you have questions, contact the Procurement Helpdesk.
+                      </p>
+                    </NoticeBox>
+                  ) : prescreeningProgress.questionnaireRejected ? (
+                    <NoticeBox type="error" style={{ marginTop: '12px' }}>
+                      <strong>Questionnaire Rejected by PBP</strong>
+                      <p style={{ margin: '8px 0 0 0' }}>
+                        Your pre-screening questionnaire was not approved. This supplier
+                        setup is locked and cannot proceed to the next stage.
+                      </p>
+                      <p style={{ margin: '8px 0 0 0', fontSize: '0.9rem' }}>
+                        This supplier has been flagged - attempts to set up the same
+                        supplier again will be detected. If you believe this decision
+                        is incorrect, contact the Procurement Helpdesk.
                       </p>
                     </NoticeBox>
                   ) : prescreeningProgress.procurementApproved ? (

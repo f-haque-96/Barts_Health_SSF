@@ -71,6 +71,25 @@ lowercase with underscores; FormDataJSON is plain text not rich text.
 
 ---
 
+## Task 2b — Create the SSF-BankDetails list (Option B, decided July 2026)
+
+Typed bank details from Section 6 live here — and ONLY here — so AP Control can
+cross-check them against the letterhead (past discrepancies have caught errors).
+
+> On the SharePoint site at [PASTE SITE URL], create a new blank list called
+> **SSF-BankDetails**. The Title column will hold the Submission ID. Add columns,
+> all Single line of text: **NameOnAccount**, **SortCode**, **AccountNumber**,
+> **IBAN**, **SWIFTCode**, **BankRouting**.
+>
+> Turn versioning ON and attachments OFF.
+
+**You do afterwards (needs Task 3's groups to exist):** open the list → Settings →
+Permissions for this list → Stop inheriting permissions → remove everything except
+**SSF-APControl** (Contribute) and **SSF-Admin** (Full control). Nobody else — not
+even the other reviewer groups — should appear.
+
+---
+
 ## Task 3 — Create the six SharePoint groups and set permissions
 
 > On the SharePoint site at [PASTE SITE URL], go to Site settings → Site permissions
@@ -146,7 +165,7 @@ Members list is in §3 of `06-hybrid-sharepoint-flows.md`.
 >
 > | Status equals | Send to | Subject | link page |
 > |---|---|---|---|
-> | approved | procurement@nhs.net | PBP approved — classification needed | procurement-review |
+> | approved | see NOTE below — Condition on SubmissionType | PBP approved | procurement-review |
 > | procurement_approved_opw | opw-panel@nhs.net | OPW / IR35 determination required | opw-review |
 > | pending_ap_control | ap-control@nhs.net | Verify bank details and create vendor | ap-review |
 > | pending_contract | peter.persaud@nhs.net | Agreement required | contract-drafter |
@@ -160,6 +179,15 @@ Members list is in §3 of `06-hybrid-sharepoint-flows.md`.
 > NOTE on link pages: these must match the React routes exactly. The contract page is
 > `/contract-drafter/` (NOT `contract-review`), and requester-facing emails use
 > `/respond/[Title]` so the requester can view the decision and reply.
+>
+> NOTE on the `approved` case: inside it, add a **Condition** on SubmissionType.
+> If `full` → email procurement@nhs.net ("PBP approved — classification needed",
+> link procurement-review). If `questionnaire` → email the RequesterEmail instead:
+> "Your pre-screening questionnaire is approved — upload the attached certificate
+> at question 2.8 to continue your supplier form", attaching the approval
+> certificate file from `SupplierDocuments/[Title]/` (Get file content). The
+> `rejected` case needs no split — it already emails the requester, which is
+> correct for both types.
 >
 > Final action (after the Switch, runs always): SharePoint "Create item" on
 > SSF-AuditTrail: Title = Title, ActionType = `STATUS_CHANGED`,

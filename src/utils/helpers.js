@@ -597,7 +597,13 @@ export const checkRejectedSuppliers = (supplierName, currentUserEmail = null) =>
       const fullSubmission = JSON.parse(
         localStorage.getItem(`submission_${submission.submissionId}`) || '{}'
       );
-      const rejectedSupplierName = fullSubmission.formData?.supplierName;
+      // Supplier name lives in different places depending on submission type:
+      // full form -> companyName; questionnaire -> [type]Questionnaire.supplierName
+      const rejectedSupplierName = fullSubmission.formData?.supplierName ||
+        fullSubmission.formData?.companyName ||
+        fullSubmission.formData?.clinicalQuestionnaire?.supplierName ||
+        fullSubmission.formData?.nonClinicalQuestionnaire?.supplierName ||
+        fullSubmission.questionnaireData?.supplierName;
 
       if (rejectedSupplierName) {
         rejectedSuppliers.push({
