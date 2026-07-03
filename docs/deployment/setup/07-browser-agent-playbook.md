@@ -9,6 +9,34 @@ Stay at the screen — it may need you to approve permission dialogs.
 **Site:** your SharePoint site `NHS-Supplier-Forms` (have the URL ready and include
 it in every prompt).
 
+## Getting set up with Claude in Chrome
+
+1. Install the **Claude for Chrome** extension (claude.ai/chrome) and sign in.
+   *NHS-managed browsers sometimes block extension installs — if so, ask IT to allow
+   it, or simply follow each task below yourself by hand; they are written to work
+   either way.*
+2. Open your SharePoint site (or Power Automate for Tasks 4–10) in the tab and sign
+   in yourself first — never give the agent your password.
+3. Paste the **kickoff prompt** below once per session, then paste ONE task block at
+   a time. Run each task's "**You check afterwards**" step yourself before moving on.
+
+**Kickoff prompt (paste first, fill in the site URL):**
+
+> You are helping me build SharePoint lists and Power Automate flows for an NHS
+> supplier onboarding workflow. I will paste one task at a time. Rules:
+> (1) Work only in this tab, on the site/environment I have opened.
+> (2) Follow each task EXACTLY — column names, choice values, flow expressions and
+> trigger conditions are case-sensitive identifiers used by application code, so
+> copy them character-for-character; never rename, reformat, "improve" or add
+> anything that isn't in the task.
+> (3) If a screen, menu or option doesn't match what the task describes, STOP and
+> describe what you see instead of guessing.
+> (4) When a task is finished, list exactly what you created or changed so I can
+> verify it before we continue.
+> (5) Never enter credentials or secrets yourself — pause and ask me to type them.
+> My SharePoint site URL is: [PASTE SITE URL]. Confirm you're ready and I'll paste
+> the first task.
+
 ---
 
 ## Task 1 — Create the SSF-Submissions list

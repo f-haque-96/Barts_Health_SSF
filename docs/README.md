@@ -33,6 +33,7 @@ The Express/SQL backend is retired — decision record:
 
 | Document | Description |
 |----------|-------------|
+| [user-guides/TEAM_SOPS.md](user-guides/TEAM_SOPS.md) | One-page SOP per team (PBP, Procurement, OPW, Contract, AP Control) |
 | [user-guides/USER_GUIDE.md](user-guides/USER_GUIDE.md) | Complete user guide for all reviewer roles |
 | [user-guides/OPW_PANEL_GUIDE.md](user-guides/OPW_PANEL_GUIDE.md) | OPW panel / IR35 determination guide |
 | [user-guides/ALEMBA.md](user-guides/ALEMBA.md) | Alemba service desk integration guide |
