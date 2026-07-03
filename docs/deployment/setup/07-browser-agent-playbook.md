@@ -6,8 +6,20 @@ to execute the build order in `06-hybrid-sharepoint-flows.md`.
 agent ONE task at a time, in order. Review what it did before moving to the next task.
 Stay at the screen — it may need you to approve permission dialogs.
 
-**Site:** your SharePoint site `NHS-Supplier-Forms` (have the URL ready and include
-it in every prompt).
+**Site:** a **NEW dedicated private Team site** named `NHS-Supplier-Forms` (have the
+URL ready and include it in every prompt).
+
+> **Site decision (July 2026):** earlier SSF scaffolding (SupplierSubmissions,
+> AuditTrail List, QuestionnaireResponses, SupplierDocuments/SensitiveDocuments)
+> exists on the shared legacy hub `/sites/R1H_FIN_Legacy_Procurement`. **Do not
+> build there**: site-level access is broad (unacceptable for SensitiveDocuments),
+> the hub is a legacy/migration target, and its lists follow the retired Express-era
+> schema. Build everything fresh on the new private site; leave the hub artifacts
+> untouched as reference. If real ID documents or letterheads already exist in the
+> hub's SensitiveDocuments, move them to the new site's library and delete the hub
+> copies. Create the site via SharePoint start page → Create site → Team site →
+> Private; if self-service creation is disabled, raise a service-desk request for a
+> private Team site named NHS-Supplier-Forms with the SSF owner as site owner.
 
 ## Getting set up with Claude in Chrome
 
