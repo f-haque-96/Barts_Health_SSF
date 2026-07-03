@@ -121,17 +121,7 @@ const APControlReviewPage = ({
 
   // Function to get full submission with ALL authorisations for PDF
   const getFullSubmissionForPDF = () => {
-    // Try different localStorage key formats
-    let storedSubmission = localStorage.getItem(`submission_${submissionId}`);
-
-    if (!storedSubmission) {
-      storedSubmission = localStorage.getItem(`submission-${submissionId}`);
-    }
-
-    if (!storedSubmission) {
-      storedSubmission = localStorage.getItem(submissionId);
-    }
-
+    const storedSubmission = localStorage.getItem(`submission_${submissionId}`);
     const currentSubmission = storedSubmission ? JSON.parse(storedSubmission) : submission;
 
     // Ensure formData structure exists with proper fallbacks

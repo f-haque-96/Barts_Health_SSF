@@ -32,17 +32,6 @@ const useFormStore = create(
       // Users must re-upload documents if they refresh the page (for security)
       uploadedFiles: {},
 
-      // ===== Reviewer Mode =====
-      reviewerRole: null, // 'procurement' | 'ir35' | 'ap'
-      reviewComments: {},
-      authorisationState: {
-        assessment: null, // 'standard' | 'opw_ir35'
-        notes: '',
-        signatureName: '',
-        signatureDate: '',
-        opwContract: null,
-      },
-
       // ===== CRN Cache =====
       crnCache: {},
 
@@ -299,40 +288,6 @@ const useFormStore = create(
         return cached;
       },
 
-      // ----- Reviewer Mode Actions -----
-      setReviewerRole: (role) => {
-        set({ reviewerRole: role });
-      },
-
-      addReviewComment: (sectionKey, comment) => {
-        set((state) => ({
-          reviewComments: {
-            ...state.reviewComments,
-            [sectionKey]: [
-              ...(state.reviewComments[sectionKey] || []),
-              {
-                ...comment,
-                timestamp: new Date().toISOString(),
-                author: state.reviewerRole,
-              },
-            ],
-          },
-        }));
-      },
-
-      getReviewComments: (sectionKey) => {
-        return get().reviewComments[sectionKey] || [];
-      },
-
-      updateAuthorisationState: (updates) => {
-        set((state) => ({
-          authorisationState: {
-            ...state.authorisationState,
-            ...updates,
-          },
-        }));
-      },
-
       // ----- Rejection Actions -----
       setRejectionData: (rejection) => {
         set({ rejectionData: rejection });
@@ -355,7 +310,6 @@ const useFormStore = create(
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
           if (key && (
-            key.startsWith('submission-') ||
             key.startsWith('submission_') ||
             key.includes('questionnaire') ||
             key.includes('upload')
@@ -373,14 +327,6 @@ const useFormStore = create(
           formData: {},
           touchedFields: {},
           uploadedFiles: {},
-          reviewComments: {},
-          authorisationState: {
-            assessment: null,
-            notes: '',
-            signatureName: '',
-            signatureDate: '',
-            opwContract: null,
-          },
           prescreeningProgress: {
             serviceCategoryAnswered: false,
             procurementEngaged: null,
@@ -430,108 +376,15 @@ const useFormStore = create(
       },
 
       canSubmitForm: () => {
-        const { formData } = get();
-
-        // Section 1: Requester Info - all required
-        if (!formData.firstName || !formData.lastName || !formData.jobTitle ||
-            !formData.department || !formData.nhsEmail || !formData.phoneNumber) {
-          return false;
+        // Single source of truth: derived from getMissingFields so the Submit
+        // button can never disagree with the missing-fields list shown to the
+        // user (previously two parallel validators that could drift apart).
+        const { getMissingFields } = get();
+        for (let section = 1; section <= 6; section++) {
+          if (getMissingFields(section).length > 0) return false;
         }
-
-        // Section 2: Pre-screening
-        if (!formData.serviceCategory || !formData.procurementEngaged ||
-            !formData.letterheadAvailable || !formData.soleTraderStatus ||
-            !formData.usageFrequency || !formData.supplierConnection) {
-          return false;
-        }
-
-        // Justification field required (minimum 10 characters)
-        if (!formData.justification || formData.justification.trim().length < 10) {
-          return false;
-        }
-
-        // Section 3: Classification
-        if (!formData.companiesHouseRegistered) return false;
-        if (!formData.supplierType) return false;
-
-        // CRN only required if:
-        // - Companies House Registered = YES
-        // - AND supplier type is limited_company
-        if (formData.companiesHouseRegistered === 'yes' && formData.supplierType === 'limited_company') {
-          if (!formData.crn) return false;
-        }
-
-        // Charity needs charity fields
-        if (formData.supplierType === 'charity') {
-          if (!formData.charityNumber) return false;
-          // CRN for charity only if registered with Companies House
-          if (formData.companiesHouseRegistered === 'yes' && !formData.crnCharity) return false;
-        }
-
-        // Sole Trader needs ID type
-        if (formData.supplierType === 'sole_trader' && !formData.idType) return false;
-
-        // Organisation Type only required if supplier type is public_sector
-        if (formData.supplierType === 'public_sector') {
-          if (!formData.organisationType) return false;
-        }
-
-        // Always required regardless of type
-        if (!formData.annualValue || !formData.employeeCount) {
-          return false;
-        }
-
-        // Section 4: Supplier Details - all required
-        if (!formData.companyName || !formData.registeredAddress || !formData.city ||
-            !formData.postcode || !formData.contactName || !formData.contactEmail ||
-            !formData.contactPhone) {
-          return false;
-        }
-
-        // Section 5: Service Description - all required
-        if (!formData.serviceType || formData.serviceType.length === 0 ||
-            !formData.serviceDescription) {
-          return false;
-        }
-
-        // Section 6: Financial Info
-        if (!formData.overseasSupplier) return false;
-
-        if (formData.overseasSupplier === 'yes') {
-          if (!formData.iban || !formData.swiftCode || !formData.bankRouting) return false;
-        }
-
-        // UK supplier bank details validation (CRITICAL: Must have sort code and account number)
-        if (formData.overseasSupplier === 'no') {
-          if (!formData.nameOnAccount || !formData.sortCode || !formData.accountNumber) return false;
-        }
-
-        if (!formData.accountsAddressSame) return false;
-
-        if (formData.accountsAddressSame === 'no') {
-          if (!formData.accountsAddress || !formData.accountsCity ||
-              !formData.accountsPostcode || !formData.accountsPhone ||
-              !formData.accountsEmail) {
-            return false;
-          }
-        }
-
-        if (!formData.ghxDunsKnown) return false;
-        if (formData.ghxDunsKnown === 'yes' && !formData.ghxDunsNumber) return false;
-
-        if (!formData.cisRegistered) return false;
-        if (formData.cisRegistered === 'yes' && !formData.utrNumber) return false;
-
-        if (!formData.publicLiability) return false;
-        if (formData.publicLiability === 'yes') {
-          if (!formData.plCoverage || !formData.plExpiry) return false;
-        }
-
-        if (!formData.vatRegistered) return false;
-        if (formData.vatRegistered === 'yes' && !formData.vatNumber) return false;
-
-        // All validations passed
-        return true;
+        // Section 7 covers the conditional document uploads
+        return getMissingFields(7).length === 0;
       },
 
       // Get list of missing mandatory fields for a section
@@ -1028,8 +881,6 @@ const useFormStore = create(
           visitedSections: state.visitedSections,
           formData: safeFormData, // SECURITY: Bank details excluded from persistence
           uploadedFiles: serializedUploads,
-          reviewComments: state.reviewComments,
-          authorisationState: state.authorisationState,
           prescreeningProgress: state.prescreeningProgress,
           crnCache: boundedCrnCache,
           lastSaved: state.lastSaved,

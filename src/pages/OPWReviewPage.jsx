@@ -74,9 +74,6 @@ const OPWReviewPage = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [signatureName, setSignatureName] = useState('');
   const [signatureDate, setSignatureDate] = useState(new Date().toISOString().split('T')[0]);
-  const [contractFile, setContractFile] = useState(null);
-  const [contractUploadedBy, _setContractUploadedBy] = useState('');
-  const [_isSavingContract, setIsSavingContract] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [actionSelected, setActionSelected] = useState(false); // Track if user clicked proceed to sign
 
@@ -572,67 +569,6 @@ const OPWReviewPage = ({
       alert('Failed to update submission. Please try again.');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const _handleContractUpload = async (fileData) => {
-    // FileUpload component passes an object with {name, size, type, file, base64}
-    if (fileData) {
-      setContractFile(fileData);
-    }
-  };
-
-  const _handleSaveContract = async () => {
-    if (!contractFile) {
-      alert('Please upload a contract document');
-      return;
-    }
-
-    if (!contractUploadedBy.trim()) {
-      alert('Please enter the name of the person uploading the contract');
-      return;
-    }
-
-    setIsSavingContract(true);
-
-    try {
-      // Load fresh from storage to get any updates
-      const currentSubmission = (await storage.getSubmission(submissionId)) || submission;
-
-      // Update submission with contract upload
-      const updatedSubmission = {
-        ...currentSubmission, // Use fresh data from storage
-        // Add contract drafter info
-        contractDrafter: {
-          contract: contractFile,
-          uploadedBy: contractUploadedBy,
-          signature: contractUploadedBy,
-          date: new Date().toISOString().split('T')[0],
-          submittedAt: new Date().toISOString(),
-        },
-      };
-
-      // Persist through the storage abstraction (dev → localStorage; prod → Graph)
-      await storage.updateSubmission(submissionId, updatedSubmission);
-
-      // Dev-only summary list; in production the SharePoint list is the source of truth
-      if (import.meta.env.DEV) {
-        const submissions = JSON.parse(localStorage.getItem('all_submissions') || '[]');
-        const index = submissions.findIndex(s => s.submissionId === submissionId);
-        if (index !== -1) {
-          submissions[index].contractUploaded = true;
-          localStorage.setItem('all_submissions', JSON.stringify(submissions));
-        }
-      }
-
-      setSubmission(updatedSubmission);
-
-      alert('Contract uploaded successfully! This will now be sent to AP Control for final review.');
-    } catch (error) {
-      console.error('Error uploading contract:', error);
-      alert('Failed to upload contract. Please try again.');
-    } finally {
-      setIsSavingContract(false);
     }
   };
 

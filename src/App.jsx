@@ -29,11 +29,10 @@ import HelpPage from './pages/HelpPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import useFormStore from './stores/formStore';
 import useUnsavedChanges from './hooks/useUnsavedChanges';
-import { getQueryParam } from './utils/helpers';
 
 // Main Form Component (Public - any authenticated user can submit)
 const MainForm = () => {
-  const { currentSection, setReviewerRole, formData, resetForm, setRejectionData, rejectionData: storedRejectionData } = useFormStore();
+  const { currentSection, formData, resetForm, setRejectionData, rejectionData: storedRejectionData } = useFormStore();
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
   // UX-01: Warn users before leaving with unsaved changes
@@ -124,14 +123,6 @@ const MainForm = () => {
       console.error('Error checking for rejections:', error);
     }
   }, [formData.nhsEmail, storedRejectionData, setRejectionData]);
-
-  // Check for reviewer role in URL
-  useEffect(() => {
-    const role = getQueryParam('role');
-    if (role && ['procurement', 'ir35', 'ap'].includes(role)) {
-      setReviewerRole(role);
-    }
-  }, [setReviewerRole]);
 
   // Handle Submit Another Supplier button click
   const handleSubmitAnother = () => {

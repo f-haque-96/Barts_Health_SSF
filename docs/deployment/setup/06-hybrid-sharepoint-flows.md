@@ -53,7 +53,17 @@ conditions below exactly.
 | PBPReviewJSON / ProcurementReviewJSON / OPWReviewJSON / ContractReviewJSON / APReviewJSON | Multi-line text (plain) | Per-stage decision payloads |
 
 **Bank details rule (mandatory):** sort code, account number, IBAN and SWIFT are
-**never stored as columns or inside FormDataJSON**. Two options:
+**never stored as columns or inside FormDataJSON**.
+
+> Note (July 2026): the form *deliberately* collects typed bank details in Section 6
+> **in addition to** the letterhead upload — AP Control uses the typed values to
+> cross-check against the letterhead document. This does not change the storage rule
+> above; it changes what step 4 (the Graph provider) must do with those fields:
+> either strip them before writing FormDataJSON (AP then verifies from the letterhead
+> alone — Option A), or write them to the restricted store in Option B. Decide with
+> AP Control before building the provider.
+
+Two options:
 
 - **Option A (recommended):** bank details exist only inside the supplier letterhead
   PDF in **SensitiveDocuments** (AP Control verify from the document, as they do today).

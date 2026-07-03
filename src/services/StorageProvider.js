@@ -22,21 +22,12 @@ class LocalStorageProvider {
   }
 
   async getSubmission(id) {
-    // Try multiple key formats for backwards compatibility
-    const keys = [
-      `submission_${id}`,
-      `submission-${id}`,
-      id
-    ];
-
-    for (const key of keys) {
-      const data = localStorage.getItem(key);
-      if (data) {
-        try {
-          return JSON.parse(data);
-        } catch (e) {
-          console.error(`Error parsing submission ${key}:`, e);
-        }
+    const data = localStorage.getItem(`submission_${id}`);
+    if (data) {
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        console.error(`Error parsing submission ${id}:`, e);
       }
     }
     return null;
@@ -61,7 +52,7 @@ class LocalStorageProvider {
     const submissions = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key?.startsWith('submission_') || key?.startsWith('submission-')) {
+      if (key?.startsWith('submission_')) {
         try {
           const data = JSON.parse(localStorage.getItem(key));
           if (this.matchesStage(data, stage)) {
