@@ -39,6 +39,33 @@ it in every prompt).
 
 ---
 
+## Task 0 — Inventory the EXISTING site first (do this before anything else)
+
+The site already contains structure built earlier (document libraries, questionnaire
+response lists, audit lists, …). **Do not create duplicates and do not delete
+anything yet.** The app and flows need lists with EXACT names, columns and choice
+values — near-matches silently break the workflow. Run this inventory, then compare
+the output against Tasks 1, 2 and 2b to decide per item: matches exactly → keep;
+close but wrong names/values → we align it; not in the design → leave untouched for
+now (decide later whether it stays as legacy reference).
+
+> Go to Site contents on the SharePoint site at [PASTE SITE URL] and produce a
+> complete inventory WITHOUT changing anything:
+> For every LIST: its exact name, and for each column the exact internal name,
+> type, and (for Choice columns) every choice value exactly as spelled.
+> For every DOCUMENT LIBRARY: its exact name, its folder structure one level deep,
+> and whether it has unique permissions (Settings → Permissions: does it say
+> "unique permissions" or "inherits"?).
+> Also list the site's groups (Site settings → People and groups) with their
+> names and permission levels.
+> Present all of this as a structured report. Do not create, rename, delete or
+> edit anything in this task.
+
+**You do afterwards:** paste the report back to Claude Code (in VS Code) to get a
+keep / align / rebuild decision per item before starting Task 1.
+
+---
+
 ## Task 1 — Create the SSF-Submissions list
 
 > On the SharePoint site at [PASTE SITE URL], create a new blank list called
