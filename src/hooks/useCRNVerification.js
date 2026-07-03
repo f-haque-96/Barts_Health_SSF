@@ -187,14 +187,18 @@ const useCRNVerification = () => {
           return { valid: false, error: CRN_ERROR_TYPES.NOT_FOUND, message: apiResult.message };
         }
 
-        // No proxy configured (e.g. CRN flow URL not set) — same "verify manually
-        // and continue" UX as a CORS-blocked lookup
-        if (apiResult.error === CRN_ERROR_TYPES.NOT_CONFIGURED) {
+        // Verification unavailable (no proxy configured, network failure, or
+        // server error) — show the "verify manually and continue" info box.
+        // These must NOT fall through to the generic branch: Section 3 renders
+        // that as "CRN not found", wrongly telling users a valid CRN is wrong.
+        if (apiResult.error === CRN_ERROR_TYPES.NOT_CONFIGURED ||
+            apiResult.error === CRN_ERROR_TYPES.NETWORK_ERROR ||
+            apiResult.error === CRN_ERROR_TYPES.API_ERROR) {
           setStatus('cors_blocked');
           setError(apiResult.message);
-          setErrorType(CRN_ERROR_TYPES.NOT_CONFIGURED);
+          setErrorType(apiResult.error);
           setCompanyData(null);
-          return { valid: false, error: CRN_ERROR_TYPES.NOT_CONFIGURED, message: apiResult.message };
+          return { valid: false, error: apiResult.error, message: apiResult.message };
         }
 
         // Generic invalid status for other errors
