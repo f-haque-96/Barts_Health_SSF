@@ -6,20 +6,19 @@ to execute the build order in `06-hybrid-sharepoint-flows.md`.
 agent ONE task at a time, in order. Review what it did before moving to the next task.
 Stay at the screen — it may need you to approve permission dialogs.
 
-**Site:** a **NEW dedicated private Team site** named `NHS-Supplier-Forms` (have the
-URL ready and include it in every prompt).
+**Site:** the dedicated private Team site **"Supplier Setup Form"** (ticket 7999685,
+created July 2026). Have its URL ready and paste it into every prompt where you see
+`[PASTE SITE URL]`. The site is **fresh and empty** — every list, library and group
+below gets created from scratch, in task order.
 
 > **Site decision (July 2026):** earlier SSF scaffolding (SupplierSubmissions,
 > AuditTrail List, QuestionnaireResponses, SupplierDocuments/SensitiveDocuments)
 > exists on the shared legacy hub `/sites/R1H_FIN_Legacy_Procurement`. **Do not
 > build there**: site-level access is broad (unacceptable for SensitiveDocuments),
 > the hub is a legacy/migration target, and its lists follow the retired Express-era
-> schema. Build everything fresh on the new private site; leave the hub artifacts
-> untouched as reference. If real ID documents or letterheads already exist in the
-> hub's SensitiveDocuments, move them to the new site's library and delete the hub
-> copies. Create the site via SharePoint start page → Create site → Team site →
-> Private; if self-service creation is disabled, raise a service-desk request for a
-> private Team site named NHS-Supplier-Forms with the SSF owner as site owner.
+> schema. Leave the hub artifacts untouched as reference. If real ID documents or
+> letterheads already exist in the hub's SensitiveDocuments, move them to the new
+> site's library and delete the hub copies.
 
 ## Getting set up with Claude in Chrome
 
@@ -51,30 +50,12 @@ URL ready and include it in every prompt).
 
 ---
 
-## Task 0 — Inventory the EXISTING site first (do this before anything else)
+## Task 0 — Inventory the existing site (SKIP — not needed on a fresh site)
 
-The site already contains structure built earlier (document libraries, questionnaire
-response lists, audit lists, …). **Do not create duplicates and do not delete
-anything yet.** The app and flows need lists with EXACT names, columns and choice
-values — near-matches silently break the workflow. Run this inventory, then compare
-the output against Tasks 1, 2 and 2b to decide per item: matches exactly → keep;
-close but wrong names/values → we align it; not in the design → leave untouched for
-now (decide later whether it stays as legacy reference).
-
-> Go to Site contents on the SharePoint site at [PASTE SITE URL] and produce a
-> complete inventory WITHOUT changing anything:
-> For every LIST: its exact name, and for each column the exact internal name,
-> type, and (for Choice columns) every choice value exactly as spelled.
-> For every DOCUMENT LIBRARY: its exact name, its folder structure one level deep,
-> and whether it has unique permissions (Settings → Permissions: does it say
-> "unique permissions" or "inherits"?).
-> Also list the site's groups (Site settings → People and groups) with their
-> names and permission levels.
-> Present all of this as a structured report. Do not create, rename, delete or
-> edit anything in this task.
-
-**You do afterwards:** paste the report back to Claude Code (in VS Code) to get a
-keep / align / rebuild decision per item before starting Task 1.
+*Retired July 2026: this task existed to survey the legacy hub's old scaffolding.
+The build now happens on the brand-new empty "Supplier Setup Form" site, so there is
+nothing to inventory. Start at Task 1. Task order: 1 → 2 → 2b → 2c → 3 on
+SharePoint, then 4 → 5 → 6 → 7 → 8 → 9 → 10 in Power Automate.*
 
 ---
 
@@ -154,6 +135,34 @@ cross-check them against the letterhead (past discrepancies have caught errors).
 Permissions for this list → Stop inheriting permissions → remove everything except
 **SSF-APControl** (Contribute) and **SSF-Admin** (Full control). Nobody else — not
 even the other reviewer groups — should appear.
+
+---
+
+## Task 2c — Create the two document libraries
+
+The fresh site has no libraries yet; Task 3 sets permissions on them, so this must
+run first. **Do not pre-create any folders** — the app and flows create one folder
+per submission (`SupplierDocuments/SUP-…/`, `SensitiveDocuments/SUP-…/`) at upload
+time. (The per-document-type folder scheme in the old `03-sharepoint.md` guide is
+retired — do not follow it.)
+
+> On the SharePoint site at [PASTE SITE URL], create two new document libraries:
+>
+> 1. **SupplierDocuments** — description: `Business documents, one folder per
+>    submission - certificates, contracts, insurance, exchange attachments`.
+> 2. **SensitiveDocuments** — description: `RESTRICTED - ID documents and bank
+>    letterheads, one folder per submission. Never create sharing links.`
+>
+> On **SensitiveDocuments** only, add one column: **DocumentType** — Single line of
+> text. (A flow filters on this column to auto-delete ID documents when a request
+> closes; the app fills it in when uploading.)
+>
+> In each library's settings turn versioning ON. Create no folders and change no
+> permissions in this task — permissions are Task 3.
+
+**You check afterwards:** both libraries appear in Site contents with those exact
+names (no space in `SupplierDocuments`/`SensitiveDocuments`); DocumentType exists on
+SensitiveDocuments; no folders inside either.
 
 ---
 

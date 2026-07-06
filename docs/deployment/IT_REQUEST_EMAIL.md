@@ -2,13 +2,14 @@
 
 | Request | Reference | Submitted | Status |
 |---|---|---|---|
-| **SharePoint site** — "Supplier Setup Form" (standalone Team Site, private, permanent, PID declared, no external sharing; full name format `Supplier Setup Form - CW - PROC - GSS`) | **Ticket 7999685** (Microsoft Office 365 Site or Team) | 03/07/2026 17:04 | Managerial — Pending Approval |
+| **SharePoint site** — "Supplier Setup Form" (standalone Team Site, private, permanent, PID declared, no external sharing; full name format `Supplier Setup Form - CW - PROC - GSS`) | **Ticket 7999685** (Microsoft Office 365 Site or Team) | 03/07/2026 17:04 | ✅ **Created 06/07/2026** — fresh/empty; build via playbook Tasks 1→2→2b→2c→3, then flows |
 | **Azure AD App Registration** (+ admin consent + Sites.Selected site grant) — email below | — | 03/07/2026 | Awaiting response |
 | **Shared mailboxes** (PBP, OPW, AP Control, contract drafter role) | — | 03/07/2026 | Awaiting response |
 
-When the site is approved, paste its real URL into the playbook kickoff prompt and
-start at Task 1. When the App Registration lands, send IT the new site's URL for the
-Sites.Selected grant (item 4 in the email below).
+The site is live — paste its real URL into the playbook kickoff prompt and start at
+Task 1. When the App Registration lands, send IT the new site's URL for the
+Sites.Selected grant (item 4 in the email below — **note the placeholder URL in
+item 4 must be replaced with the real new-site URL when chasing IT**).
 
 ---
 

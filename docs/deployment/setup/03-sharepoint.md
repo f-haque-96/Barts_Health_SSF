@@ -1,5 +1,14 @@
 # Step 2: SharePoint Document Libraries Setup
 
+> ⚠️ **SUPERSEDED (July 2026) — do not follow this guide.**
+> The libraries are now created by **Task 2c in
+> [07-browser-agent-playbook.md](07-browser-agent-playbook.md)** on the new
+> private "Supplier Setup Form" Team site. The current design uses **one folder
+> per submission** created automatically by the app — NOT the per-document-type
+> folders (VAT_Certificates, Passports, …) described below — and the
+> NHS-SupplierForm-* group names below were replaced by the SSF-* SharePoint
+> groups (playbook Task 3). Kept only as historical reference.
+
 ## Beginner's Guide - Read Everything Carefully
 
 **Estimated Time:** 20-30 minutes

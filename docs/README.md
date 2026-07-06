@@ -12,8 +12,8 @@ The Express/SQL backend is retired — decision record:
 | [deployment/setup/06-hybrid-sharepoint-flows.md](deployment/setup/06-hybrid-sharepoint-flows.md) | SharePoint list design + Power Automate flow catalogue |
 | [deployment/setup/07-browser-agent-playbook.md](deployment/setup/07-browser-agent-playbook.md) | Step-by-step build tasks (lists, groups, flows F1–F4 + CRN proxy) |
 | [deployment/DEPLOYMENT_READINESS_REVIEW.md](deployment/DEPLOYMENT_READINESS_REVIEW.md) | Readiness review: findings, fixes applied, open items |
-| [deployment/IT_REQUEST_EMAIL.md](deployment/IT_REQUEST_EMAIL.md) | Ready-to-send IT request (App Registration + mailboxes) |
-| [deployment/setup/03-sharepoint.md](deployment/setup/03-sharepoint.md) | Document library setup (SupplierDocuments / SensitiveDocuments) |
+| [deployment/IT_REQUEST_EMAIL.md](deployment/IT_REQUEST_EMAIL.md) | IT request tracking (site ✅ created, App Registration + mailboxes pending) |
+| [deployment/setup/03-sharepoint.md](deployment/setup/03-sharepoint.md) | ⚠️ Superseded — libraries are now created by playbook Task 2c |
 
 ## Governance
 
