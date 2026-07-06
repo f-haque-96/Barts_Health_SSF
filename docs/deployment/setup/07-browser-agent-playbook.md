@@ -7,9 +7,10 @@ agent ONE task at a time, in order. Review what it did before moving to the next
 Stay at the screen — it may need you to approve permission dialogs.
 
 **Site:** the dedicated private Team site **"Supplier Setup Form"** (ticket 7999685,
-created July 2026). Have its URL ready and paste it into every prompt where you see
-`[PASTE SITE URL]`. The site is **fresh and empty** — every list, library and group
-below gets created from scratch, in task order.
+created July 2026): `https://nhs.sharepoint.com/sites/R1H_SupplierSetupForm-CW-PROC-GSS`
+The URL is already filled into every task below. The site started **fresh and
+empty** — every list, library and group below gets created from scratch, in task
+order.
 
 > **Site decision (July 2026):** earlier SSF scaffolding (SupplierSubmissions,
 > AuditTrail List, QuestionnaireResponses, SupplierDocuments/SensitiveDocuments)
@@ -45,7 +46,7 @@ below gets created from scratch, in task order.
 > (4) When a task is finished, list exactly what you created or changed so I can
 > verify it before we continue.
 > (5) Never enter credentials or secrets yourself — pause and ask me to type them.
-> My SharePoint site URL is: [PASTE SITE URL]. Confirm you're ready and I'll paste
+> My SharePoint site URL is: https://nhs.sharepoint.com/sites/R1H_SupplierSetupForm-CW-PROC-GSS. Confirm you're ready and I'll paste
 > the first task.
 
 ---
@@ -61,7 +62,7 @@ SharePoint, then 4 → 5 → 6 → 7 → 8 → 9 → 10 in Power Automate.*
 
 ## Task 1 — Create the SSF-Submissions list
 
-> On the SharePoint site at [PASTE SITE URL], create a new blank list called
+> On the SharePoint site at https://nhs.sharepoint.com/sites/R1H_SupplierSetupForm-CW-PROC-GSS, create a new blank list called
 > **SSF-Submissions**. Then add these columns exactly (the default Title column stays
 > and will hold the Submission ID):
 >
@@ -104,7 +105,7 @@ lowercase with underscores; FormDataJSON is plain text not rich text.
 
 ## Task 2 — Create the SSF-AuditTrail list
 
-> On the SharePoint site at [PASTE SITE URL], create a new blank list called
+> On the SharePoint site at https://nhs.sharepoint.com/sites/R1H_SupplierSetupForm-CW-PROC-GSS, create a new blank list called
 > **SSF-AuditTrail**. The Title column will hold the Submission ID. Add columns:
 >
 > 1. **ActionType** — Single line of text.
@@ -124,7 +125,7 @@ lowercase with underscores; FormDataJSON is plain text not rich text.
 Typed bank details from Section 6 live here — and ONLY here — so AP Control can
 cross-check them against the letterhead (past discrepancies have caught errors).
 
-> On the SharePoint site at [PASTE SITE URL], create a new blank list called
+> On the SharePoint site at https://nhs.sharepoint.com/sites/R1H_SupplierSetupForm-CW-PROC-GSS, create a new blank list called
 > **SSF-BankDetails**. The Title column will hold the Submission ID. Add columns,
 > all Single line of text: **NameOnAccount**, **SortCode**, **AccountNumber**,
 > **IBAN**, **SWIFTCode**, **BankRouting**.
@@ -146,7 +147,7 @@ per submission (`SupplierDocuments/SUP-…/`, `SensitiveDocuments/SUP-…/`) at 
 time. (The per-document-type folder scheme in the old `03-sharepoint.md` guide is
 retired — do not follow it.)
 
-> On the SharePoint site at [PASTE SITE URL], create two new document libraries:
+> On the SharePoint site at https://nhs.sharepoint.com/sites/R1H_SupplierSetupForm-CW-PROC-GSS, create two new document libraries:
 >
 > 1. **SupplierDocuments** — description: `Business documents, one folder per
 >    submission - certificates, contracts, insurance, exchange attachments`.
@@ -168,7 +169,7 @@ SensitiveDocuments; no folders inside either.
 
 ## Task 3 — Create the six SharePoint groups and set permissions
 
-> On the SharePoint site at [PASTE SITE URL], go to Site settings → Site permissions
+> On the SharePoint site at https://nhs.sharepoint.com/sites/R1H_SupplierSetupForm-CW-PROC-GSS, go to Site settings → Site permissions
 > → Advanced permissions settings, and create six SharePoint groups:
 > **SSF-PBP**, **SSF-Procurement**, **SSF-OPW**, **SSF-Contract**, **SSF-APControl**,
 > **SSF-Admin**. For each group: owner = SSF-Admin (create SSF-Admin first),
@@ -198,7 +199,7 @@ Members list is in §3 of `06-hybrid-sharepoint-flows.md`.
 > In Power Automate (make.powerautomate.com), create a new Automated cloud flow
 > named **SSF F1 - New submission to PBP**.
 >
-> Trigger: SharePoint "When an item is created", site [PASTE SITE URL], list
+> Trigger: SharePoint "When an item is created", site https://nhs.sharepoint.com/sites/R1H_SupplierSetupForm-CW-PROC-GSS, list
 > SSF-Submissions.
 >
 > Action 1: Outlook "Send an email (V2)" to **pbp-panel@nhs.net**.
@@ -223,7 +224,7 @@ Members list is in §3 of `06-hybrid-sharepoint-flows.md`.
 
 > In Power Automate, create an Automated cloud flow named **SSF F2 - Status router**.
 >
-> Trigger: SharePoint "When an item is created or modified", site [PASTE SITE URL],
+> Trigger: SharePoint "When an item is created or modified", site https://nhs.sharepoint.com/sites/R1H_SupplierSetupForm-CW-PROC-GSS,
 > list SSF-Submissions. Open the trigger's Settings and add this Trigger Condition
 > exactly, on one line (the `/Value` suffix and the empty() check are both mandatory —
 > Status is a Choice column and F1 owns the creation event):

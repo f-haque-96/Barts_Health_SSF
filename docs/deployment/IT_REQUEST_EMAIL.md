@@ -6,10 +6,12 @@
 | **Azure AD App Registration** (+ admin consent + Sites.Selected site grant) — email below | — | 03/07/2026 | Awaiting response |
 | **Shared mailboxes** (PBP, OPW, AP Control, contract drafter role) | — | 03/07/2026 | Awaiting response |
 
-The site is live — paste its real URL into the playbook kickoff prompt and start at
-Task 1. When the App Registration lands, send IT the new site's URL for the
-Sites.Selected grant (item 4 in the email below — **note the placeholder URL in
-item 4 must be replaced with the real new-site URL when chasing IT**).
+The site is live at
+`https://nhs.sharepoint.com/sites/R1H_SupplierSetupForm-CW-PROC-GSS` — the URL is
+filled into the playbook tasks and into item 4 below. Start at playbook Task 1.
+**If the App Registration email was already sent with the old placeholder URL,
+reply to that thread with the real URL above** so IT grants Sites.Selected on the
+right site.
 
 ---
 
@@ -43,7 +45,7 @@ so staff can sign in with their normal NHS accounts. Full details:
 
 **4. Site permission grant (needed because of Sites.Selected)**
 - Please grant this app **write** access to one specific SharePoint site:
-  `https://bartshealth.sharepoint.com/sites/NHS-Supplier-Forms`
+  `https://nhs.sharepoint.com/sites/R1H_SupplierSetupForm-CW-PROC-GSS`
   (done by a SharePoint/Global admin via Graph API or PnP —
   `Grant-PnPAzureADAppSitePermission -Permissions Write`)
 
