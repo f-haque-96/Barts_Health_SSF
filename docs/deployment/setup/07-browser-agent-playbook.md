@@ -431,6 +431,43 @@ URIs from `test-api.service.hmrc.gov.uk` to `api.service.hmrc.gov.uk`.
 
 ---
 
+## Task 11 — Claim columns + Flow F7: review-assignment email
+
+Supports the PBP claim feature (added July 2026 — PBP has 4–5 members): the first
+PBP member to open a pending item gets it assigned (the app stamps the claim), other
+members see a "Being reviewed by…" banner, and this flow emails the claimer a
+confirmation with the direct link so the item sits in their personal inbox as their
+to-do.
+
+> On the SharePoint site at
+> https://nhs.sharepoint.com/sites/R1H_SupplierSetupForm-CW-PROC-GSS, add four
+> columns to the existing **SSF-Submissions** list (do not touch any other column):
+>
+> 1. **ClaimedBy** — Single line of text. (Will hold the claimer's email.)
+> 2. **ClaimedByName** — Single line of text.
+> 3. **ClaimedAt** — Date and time (include time).
+> 4. **ClaimNotified** — Single line of text. (Loop guard for the flow below.)
+>
+> Then in Power Automate, create an Automated cloud flow named
+> **SSF F7 - Review assigned** with trigger SharePoint "When an item is created or
+> modified" on SSF-Submissions, and this Trigger Condition (one line):
+> `@and(not(empty(triggerOutputs()?['body/ClaimedBy'])), not(equals(triggerOutputs()?['body/ClaimedBy'], triggerOutputs()?['body/ClaimNotified'])))`
+>
+> Action 1 (loop guard, MUST be first): SharePoint "Update item" on the triggering
+> item setting ONLY ClaimNotified = the ClaimedBy value from the trigger.
+> Action 2: Send an email (V2) with To = ClaimedBy (dynamic content), subject
+> `Assigned to you: [Title] — [CompanyName]`, body: "You opened this item first, so
+> it is assigned to you. Review it here:" followed by the link
+> `https://APP-URL-TBC/pbp-review/[Title]` (dynamic Title). Nothing else in the body.
+>
+> Save and leave ON.
+
+**Note:** the app only writes ClaimedBy/ClaimedAt in production (via the Graph
+provider) — in dev/demo mode claims stay in the browser, so this flow will not fire
+until the app is connected to SharePoint. Build it now anyway so it's ready.
+
+---
+
 ## After all tasks: add co-owners
 
 > In Power Automate, open each of the five SSF flows, and under Edit owners add

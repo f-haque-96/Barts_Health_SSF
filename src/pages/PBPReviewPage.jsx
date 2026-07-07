@@ -17,6 +17,8 @@ import PBPApprovalPDF from '../components/pdf/PBPApprovalPDF';
 import { sendRejectionNotification, sendApprovalNotification, checkAndFlagDuplicates, sendConflictOfInterestAlert } from '../services/notificationService';
 import storage from '../services/StorageProvider';
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import { useAuth, ROLES } from '../context/AuthContext';
+import { STAGE, STAGE_QUEUE_STATUSES } from '../utils/workflowStatus';
 
 // ===== Exchange Thread Component =====
 // Displays the conversation history between PBP and Requester
@@ -349,7 +351,7 @@ const NonClinicalQuestionnaireReview = ({ data }) => {
 const PBPReviewPage = ({
   submission: propSubmission,
   setSubmission: propSetSubmission,
-  user: _user,
+  user: propUser,
   readOnly: _readOnly = false
 }) => {
   const { submissionId } = useParams();
@@ -373,6 +375,43 @@ const PBPReviewPage = ({
 
   // Exchange thread state
   const [exchangeAttachments, setExchangeAttachments] = useState({});
+
+  // ===== Review claim (multi-person PBP team coordination) =====
+  // Identity comes from the signed-in session (dev: devAuth user; production: Azure AD).
+  const { user: authUser, hasRole, isAdmin } = useAuth();
+  const currentUser = propUser || authUser;
+  // Claimable = item is actionable in the PBP queue (pending_review / info_required)
+  const isClaimable = STAGE_QUEUE_STATUSES[STAGE.PBP]?.includes(submission?.status?.toLowerCase());
+  const reviewClaim = submission?.pbpReview?.claim || null;
+  const claimIsMine = !!reviewClaim && !!currentUser?.email &&
+    reviewClaim.email?.toLowerCase() === currentUser.email.toLowerCase();
+
+  // Auto-claim on open: first PBP member to open an unclaimed pending item gets it.
+  // Soft claim — a coordination signal, not a lock; admins viewing don't take assignment.
+  useEffect(() => {
+    if (!submission || !currentUser || !isClaimable) return;
+    if (submission.pbpReview?.claim) return;
+    if (!hasRole(ROLES.PBP) || isAdmin()) return;
+
+    const claim = {
+      name: currentUser.name,
+      email: currentUser.email,
+      at: new Date().toISOString()
+    };
+    const updatedReview = { ...submission.pbpReview, claim };
+    const id = submission.submissionId || submission.id || submissionId;
+    storage.updateSubmission(id, { pbpReview: updatedReview })
+      .then(() => setSubmission(prev => (prev ? { ...prev, pbpReview: updatedReview } : prev)))
+      .catch(err => console.error('Failed to record review claim:', err));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submission, currentUser, isClaimable]);
+
+  // Pre-fill the signature field from the signed-in identity (still editable)
+  useEffect(() => {
+    if (currentUser?.name) {
+      setReviewerName(prev => prev || currentUser.name);
+    }
+  }, [currentUser]);
 
   // Check if we're awaiting requester response (last exchange was from PBP)
   const exchanges = submission?.pbpReview?.exchanges || [];
@@ -861,6 +900,29 @@ const PBPReviewPage = ({
             </span>
           )}
         </div>
+      )}
+
+      {/* Review claim banner — prevents duplicate assessment across the PBP team */}
+      {isClaimable && reviewClaim && (
+        claimIsMine ? (
+          <NoticeBox type="info" style={{ marginBottom: 'var(--space-24)' }}>
+            <p style={{ margin: 0 }}>
+              <strong>Assigned to you</strong> — this item was assigned to you when you
+              opened it ({formatDate(reviewClaim.at)}). Other PBP members opening this
+              page will see it is being handled.
+            </p>
+          </NoticeBox>
+        ) : (
+          <NoticeBox type="warning" style={{ marginBottom: 'var(--space-24)' }}>
+            <p style={{ margin: 0 }}>
+              <strong>Being reviewed by {reviewClaim.name}</strong> since{' '}
+              {formatDate(reviewClaim.at)}. To avoid duplicate assessment and duplicate
+              contact with the requester, check with them before acting. If you are
+              deliberately taking this over (e.g. absence cover), you can continue —
+              your decision will be recorded under your own name.
+            </p>
+          </NoticeBox>
+        )
       )}
 
       {/* Exchange Thread - Only show if there are actual back-and-forth exchanges (not just a direct approval/rejection) */}

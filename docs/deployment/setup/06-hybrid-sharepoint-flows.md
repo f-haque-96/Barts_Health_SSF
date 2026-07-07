@@ -241,10 +241,14 @@ dev localStorage provider. Each traces to a verified behaviour of the current ap
    supplierName) so the flagging net can match them.
 7. **Concurrency guard for multi-person teams (added July 2026 — PBP has 4–5
    members):** two protections against duplicate assessment of the same item:
-   (a) **Claim banner** — when a reviewer opens a pending item, stamp
-   `claimedBy`/`claimedAt` into the stage's ReviewJSON; other reviewers opening the
-   same item see "Being reviewed by {name} since {time}" (soft claim — anyone can
-   still take over, it's a coordination signal not a lock). (b) **Stale-write
+   (a) **Claim banner** — implemented in the app July 2026 (PBPReviewPage): the
+   first PBP member to open an unclaimed pending item gets `pbpReview.claim`
+   ({name, email, at}) stamped from the signed-in identity; they see an "Assigned
+   to you" notice, others see "Being reviewed by {name} since {time}" (soft claim —
+   anyone can still take over, it's a coordination signal not a lock; admins
+   viewing don't auto-claim). The Graph provider must ALSO mirror the claim to the
+   ClaimedBy / ClaimedByName / ClaimedAt columns so flow **F7** (playbook Task 11)
+   emails the claimer a confirmation with the deep link. (b) **Stale-write
    guard** — decision writes use SharePoint optimistic concurrency (Graph `PATCH`
    with `If-Match: <etag>` captured at page load); a 412 response means someone
    else decided first — show "This item was already decided by {name}; refresh to

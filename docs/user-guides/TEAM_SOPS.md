@@ -29,6 +29,16 @@ application — nothing aspirational.
 **You are the first gate.** Two kinds of items arrive in your queue — check the type
 before reviewing:
 
+**Who takes an item (avoiding duplicate work):** the first panel member to open a
+pending item gets it **assigned automatically** — you'll see "Assigned to you" on
+the page and receive a confirmation email with the direct link (your personal
+to-do copy). Anyone else opening the same item sees "**Being reviewed by {name}
+since {time}**" — if you see that banner, don't start reviewing or contacting the
+requester; check with the named colleague first. It's a signal, not a lock: for
+absence cover you can take over, and the final decision is always recorded under
+the name of whoever actually signs it. Belt-and-braces habit in the shared
+mailbox: when you pick something up, tag the email with your name category.
+
 ### 1. Pre-screening questionnaires (reference `QUEST-…`)
 Sent by requesters who have **not** yet engaged Procurement. You review the
 questionnaire answers (supplier name, goods/services, category, value, rationale).
