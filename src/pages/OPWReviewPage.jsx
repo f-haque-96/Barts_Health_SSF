@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PDFDownloadLink } from '@react-pdf/renderer';
-import { Button, NoticeBox, ApprovalStamp, Textarea, RadioGroup, SignatureSection, FileUpload, Input, CheckIcon, XIcon, WarningIcon, DocumentIcon, UploadIcon, CircleXIcon, VerificationBadge } from '../components/common';
+import { Button, NoticeBox, ApprovalStamp, Textarea, RadioGroup, SignatureSection, FileUpload, Input, CheckIcon, XIcon, WarningIcon, DocumentIcon, UploadIcon, CircleXIcon, VerificationBadge, AlembaCallLink } from '../components/common';
 import { formatDate } from '../utils/helpers';
 import { formatFieldValue, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes } from '../utils/formatters';
 import { STATUS, STAGE } from '../utils/workflowStatus';
@@ -652,6 +652,9 @@ const OPWReviewPage = ({
           </h1>
           <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
             <div>Submission ID: <strong>{submission.submissionId}</strong></div>
+            {submission.alembaReference && (
+              <div>Alemba Call: <AlembaCallLink reference={submission.alembaReference} /></div>
+            )}
             <div>Submitted: {formatDate(submission.submissionDate)}</div>
             <div>Submitted by: {submission.submittedBy}</div>
             {isPreview && (

@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PDFDownloadLink } from '@react-pdf/renderer';
-import { Button, NoticeBox, ApprovalStamp, Textarea, SignatureSection, Input, CheckIcon, XIcon, CircleXIcon, InfoIcon, WarningIcon, ClockIcon, VerificationBadge } from '../components/common';
+import { Button, NoticeBox, ApprovalStamp, Textarea, SignatureSection, Input, CheckIcon, XIcon, CircleXIcon, InfoIcon, WarningIcon, ClockIcon, VerificationBadge, AlembaCallLink } from '../components/common';
 import { formatDate, formatCurrency } from '../utils/helpers';
 import { formatFieldValue, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes, formatEmployeeCount } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
@@ -183,9 +183,16 @@ const ProcurementReviewPage = ({
       return;
     }
 
-    if (action === 'approved' && !alembaReference.trim()) {
-      alert('Please provide the Alemba Call Reference Number');
-      return;
+    if (action === 'approved') {
+      const alembaRef = alembaReference.trim();
+      if (!alembaRef) {
+        alert('Please provide the Alemba Call Reference Number');
+        return;
+      }
+      if (!/^\d{4,10}$/.test(alembaRef)) {
+        alert('The Alemba call reference should be the numeric call number only, e.g. 3153684');
+        return;
+      }
     }
 
     if (!signatureName.trim()) {
@@ -939,8 +946,10 @@ const ProcurementReviewPage = ({
                         <InfoIcon size={18} color="#3b82f6" />
                       </span>
                       <span style={{ color: '#1e40af' }}>
-                        Enter the Alemba call reference number for this supplier setup request.
-                        This will become the primary reference for tracking this supplier.
+                        Enter the numeric Alemba call number for this request (numbers only,
+                        e.g. 3153684 — you&apos;ll find it on the call Alemba raised from the
+                        notification email). This becomes the primary reference for tracking
+                        this supplier.
                       </span>
                     </div>
                     <input
@@ -957,6 +966,12 @@ const ProcurementReviewPage = ({
                         fontSize: '1rem'
                       }}
                     />
+                    {/^\d{4,10}$/.test(alembaReference.trim()) && (
+                      <div style={{ marginTop: '8px', fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
+                        Will be recorded as Alemba call{' '}
+                        <AlembaCallLink reference={alembaReference.trim()} />
+                      </div>
+                    )}
                   </div>
                 )}
 

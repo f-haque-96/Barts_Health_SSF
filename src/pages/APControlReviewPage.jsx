@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PDFDownloadLink } from '@react-pdf/renderer';
-import { Button, NoticeBox, ApprovalStamp, Checkbox, Textarea, SignatureSection, Input, CheckIcon, XIcon, WarningIcon, ClockIcon, DocumentIcon, DownloadIcon, LockIcon, CircleXIcon, VerificationBadge } from '../components/common';
+import { Button, NoticeBox, ApprovalStamp, Checkbox, Textarea, SignatureSection, Input, CheckIcon, XIcon, WarningIcon, ClockIcon, DocumentIcon, DownloadIcon, LockIcon, CircleXIcon, VerificationBadge, AlembaCallLink } from '../components/common';
 import { formatDate, formatCurrency } from '../utils/helpers';
 import { formatFieldValue, formatSupplierType, formatServiceTypes, formatEmployeeCount } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
@@ -600,6 +600,9 @@ const APControlReviewPage = ({
           </h1>
           <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
             <div>Submission ID: <strong>{submission.submissionId}</strong></div>
+            {submission.alembaReference && (
+              <div>Alemba Call: <AlembaCallLink reference={submission.alembaReference} /></div>
+            )}
             <div>Submitted: {formatDate(submission.submissionDate)}</div>
             <div>Submitted by: {submission.submittedBy}</div>
             {isPreview && (

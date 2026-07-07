@@ -21,6 +21,7 @@ export { default as HelpButton } from './HelpButton';
 export { default as ProtectedRoute } from './ProtectedRoute';
 export { default as SecureReviewPage } from './SecureReviewPage';
 export { default as VerificationBadge } from './VerificationBadge';
+export { default as AlembaCallLink } from './AlembaCallLink';
 export { default as RejectionBanner } from './RejectionBanner';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export { default as LoadingSkeleton, FormSkeleton, TableSkeleton, CardSkeleton } from './LoadingSkeleton';
