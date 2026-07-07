@@ -468,6 +468,56 @@ until the app is connected to SharePoint. Build it now anyway so it's ready.
 
 ---
 
+## Task 12 — Split PBP routing by service category (decided July 2026)
+
+Clinical and non-clinical questionnaires are reviewed by different PBP people, so
+the two flows that email PBP (F1 new-submission and F6 requester-responded) each
+get a Condition on ServiceCategory. All addresses stay as the test address until
+go-live — see the mailbox swap table below.
+
+> In Power Automate, open **SSF F1 - New submission to PBP** and edit it:
+> Add a **Condition** action immediately after the trigger, before the existing
+> "Send an email (V2)" action. Condition: the **ServiceCategory Value** dynamic
+> content from the trigger **is equal to** `clinical` (lowercase, exact).
+> Move the existing "Send an email (V2)" action into the **If yes** branch.
+> In the **If no** branch, add a new "Send an email (V2)" with the identical
+> To, Subject and Body (same dynamic content).
+> Leave the existing "Create item" (audit) and "Update item" (LastStatus) actions
+> AFTER the Condition block, outside both branches, unchanged.
+> Save.
+>
+> Then open **SSF F6 - Requester responded** and make the same change: add the
+> same ServiceCategory-equals-clinical Condition before its email, move the
+> existing email into If yes, duplicate it into If no, leave the loop-guard
+> Update item as the FIRST action and the audit Create item outside the
+> Condition. Save both flows and leave them ON.
+
+**You check afterwards:** in both flows the audit/update actions sit outside the
+Condition (they must run for every category), and in F6 the AwaitingParty
+loop-guard Update item is still the first action.
+
+---
+
+## Go-live mailbox swap table
+
+During testing every fixed recipient is **fahimul.haque1@nhs.net**. At go-live,
+swap them per this table (one pass through each flow; dynamic recipients like
+RequesterEmail and ClaimedBy never change):
+
+| Flow | Branch / case | Final recipient |
+|---|---|---|
+| F1 | Condition If yes (clinical) | PBP clinical shared mailbox *(requested, TBC)* |
+| F1 | Condition If no (non-clinical) | PBP non-clinical shared mailbox *(requested, TBC)* |
+| F2 | approved + SubmissionType=full | Procurement shared mailbox |
+| F2 | procurement_approved_opw | OPW shared mailbox |
+| F2 | pending_ap_control, contract_uploaded | AP Control shared mailbox |
+| F2 | pending_contract | Contract drafter mailbox *(requested, TBC — interim: named drafter)* |
+| F4 | digest email | Procurement shared mailbox, CC SSF admins |
+| F6 | If yes / If no | PBP clinical / non-clinical mailboxes (as F1) |
+| F7 | assignment email | no change — dynamic ClaimedBy |
+
+---
+
 ## After all tasks: add co-owners
 
 > In Power Automate, open each of the five SSF flows, and under Edit owners add

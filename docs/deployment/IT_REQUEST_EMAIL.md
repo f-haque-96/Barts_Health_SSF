@@ -4,7 +4,7 @@
 |---|---|---|---|
 | **SharePoint site** — "Supplier Setup Form" (standalone Team Site, private, permanent, PID declared, no external sharing; full name format `Supplier Setup Form - CW - PROC - GSS`) | **Ticket 7999685** (Microsoft Office 365 Site or Team) | 03/07/2026 17:04 | ✅ **Created 06/07/2026** — fresh/empty; build via playbook Tasks 1→2→2b→2c→3, then flows |
 | **Azure AD App Registration** (+ admin consent + Sites.Selected site grant) — email below | — | 03/07/2026 | Awaiting response |
-| **Shared mailboxes** (PBP, OPW, AP Control, contract drafter role) | — | 03/07/2026 | Awaiting response — until created, ALL flow emails go to fahimul.haque1@nhs.net |
+| **Shared mailboxes** | — | 03/07/2026 | Partially done (July 2026): OPW, AP Control, Procurement exist. **Still missing: contract drafter, PBP clinical, PBP non-clinical** (PBP split by service category decided 07/07/2026 — request TWO PBP mailboxes, not one). Until swapped in (see playbook go-live table), ALL flow emails go to fahimul.haque1@nhs.net |
 | **HMRC production credentials** (VAT check API — needed for go-live only; sandbox unaffected) | HMRC Developer Hub, app "Barts Health Supplier setup Form" | — | ❌ **Declined 07/07/2026** — no UK registration evidence. Resubmit with: Barts Health NHS Trust is a statutory body (no Companies House no.), ODS code R1H, CQC provider registration, Trust VAT number (ask finance). Consider moving the app under a finance/Trust HMRC account. Regenerate the client secret at the same time. |
 
 The site is live at
