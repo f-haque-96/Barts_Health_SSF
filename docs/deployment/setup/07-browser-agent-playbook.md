@@ -508,13 +508,18 @@ RequesterEmail and ClaimedBy never change):
 |---|---|---|
 | F1 | Condition If yes (clinical) | PBP clinical shared mailbox *(requested, TBC)* |
 | F1 | Condition If no (non-clinical) | PBP non-clinical shared mailbox *(requested, TBC)* |
-| F2 | approved + SubmissionType=full | Procurement shared mailbox |
-| F2 | procurement_approved_opw | OPW shared mailbox |
-| F2 | pending_ap_control, contract_uploaded | AP Control shared mailbox |
+| F2 | approved + SubmissionType=full | `barts.procurement@nhs.net` |
+| F2 | procurement_approved_opw | `bartshealth.opwpanelbarts@nhs.net` |
+| F2 | pending_ap_control, contract_uploaded | `apcontrol.bartshealth@nhs.net` |
 | F2 | pending_contract | Contract drafter mailbox *(requested, TBC — interim: named drafter)* |
-| F4 | digest email | Procurement shared mailbox, CC SSF admins |
+| F4 | digest email | `barts.procurement@nhs.net`, CC SSF admins |
 | F6 | If yes / If no | PBP clinical / non-clinical mailboxes (as F1) |
 | F7 | assignment email | no change — dynamic ClaimedBy |
+
+Note: `barts.procurement@nhs.net` is the Alemba-linked procurement helpdesk —
+emails to it may raise service-desk tickets. Decide before go-live whether the
+Monday F4 digest should raise a weekly ticket (may be useful for tracking, may be
+noise); if noise, request a plain shared mailbox for the digest instead.
 
 ---
 
