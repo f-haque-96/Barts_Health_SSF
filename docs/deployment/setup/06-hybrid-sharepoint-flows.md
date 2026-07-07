@@ -239,6 +239,17 @@ dev localStorage provider. Each traces to a verified behaviour of the current ap
    fuzzy-flagged (70% threshold) in Section 4 and at PBP approval time — rejected
    QUEST items must therefore keep CompanyName populated (from the questionnaire's
    supplierName) so the flagging net can match them.
+7. **Concurrency guard for multi-person teams (added July 2026 — PBP has 4–5
+   members):** two protections against duplicate assessment of the same item:
+   (a) **Claim banner** — when a reviewer opens a pending item, stamp
+   `claimedBy`/`claimedAt` into the stage's ReviewJSON; other reviewers opening the
+   same item see "Being reviewed by {name} since {time}" (soft claim — anyone can
+   still take over, it's a coordination signal not a lock). (b) **Stale-write
+   guard** — decision writes use SharePoint optimistic concurrency (Graph `PATCH`
+   with `If-Match: <etag>` captured at page load); a 412 response means someone
+   else decided first — show "This item was already decided by {name}; refresh to
+   see the outcome" and discard the second decision. First decision wins; the
+   audit trail records only one outcome per stage.
 
 ## 5. Gotchas
 
