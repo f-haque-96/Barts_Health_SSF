@@ -634,7 +634,7 @@ const PBPReviewPage = ({
         type: action === 'info_required' ? 'info_request' : 'decision',
         from: 'pbp',
         fromName: reviewerName,
-        fromEmail: 'pbp@nhs.net', // In production, get from auth
+        fromEmail: currentUser?.email || 'pbp@nhs.net',
         message: comments,
         attachments: Object.keys(exchangeAttachments).length > 0 ? exchangeAttachments : null,
         timestamp: timestamp,

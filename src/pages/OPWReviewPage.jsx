@@ -11,6 +11,7 @@ import { Button, NoticeBox, ApprovalStamp, Textarea, RadioGroup, SignatureSectio
 import { formatDate } from '../utils/helpers';
 import { formatFieldValue, formatSupplierType, formatServiceCategory, formatUsageFrequency, formatServiceTypes } from '../utils/formatters';
 import { STATUS, STAGE } from '../utils/workflowStatus';
+import { CONTRACT_DRAFTER_EMAIL } from '../utils/constants';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
 import { notifyDepartment, sendRejectionNotification, sendContractRequestEmail, notifyEmployedDetermination, notifyInsideIR35WithSDS, notifyAPControlDirect } from '../services/notificationService';
 import { contractNegotiationService } from '../services/contractNegotiationService';
@@ -402,7 +403,7 @@ const OPWReviewPage = ({
                 status: 'pending_review',
                 ir35Status: 'self_employed',
                 requiredTemplate: 'Sole Trader Agreement latest version 22.docx',
-                assignedTo: 'peter.persaud@nhs.net',
+                assignedTo: CONTRACT_DRAFTER_EMAIL,
               },
             };
 
@@ -486,7 +487,7 @@ const OPWReviewPage = ({
                 status: 'pending_review',
                 ir35Status: 'outside',
                 requiredTemplate: 'BartsConsultancyAgreement.1.2.docx',
-                assignedTo: 'peter.persaud@nhs.net',
+                assignedTo: CONTRACT_DRAFTER_EMAIL,
               },
             };
 
@@ -1109,8 +1110,21 @@ const OPWReviewPage = ({
         )}
       </div>
 
+      {/* Stage guard: determinations only when the item has been classified
+          OPW/IR35 by Procurement and is awaiting the panel */}
+      {!opwReview && submission.status !== STATUS.PROCUREMENT_APPROVED_OPW && (
+        <NoticeBox type="warning" style={{ marginTop: 'var(--space-32)' }}>
+          <strong>Not awaiting OPW determination.</strong>
+          <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+            This submission&apos;s current status is &quot;{submission.status}&quot;, so no
+            OPW/IR35 determination can be recorded. It becomes actionable here once
+            Procurement classify it as an OPW/IR35 engagement.
+          </p>
+        </NoticeBox>
+      )}
+
       {/* ========== PHASE 2: NEW OPW DETERMINATION PANEL ========== */}
-      {!opwReview && (
+      {!opwReview && submission.status === STATUS.PROCUREMENT_APPROVED_OPW && (
         <div style={{
           marginTop: 'var(--space-32)',
           padding: 'var(--space-24)',

@@ -84,9 +84,7 @@ export const FILE_UPLOAD_CONFIG = {
   acceptedTypes: ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png'],
 };
 
-export const API_ENDPOINTS = {
-  VALIDATE_CRN: '/validate-crn',
-  SUBMIT_FORM: '/submit-supplier-form',
-  SAVE_DRAFT: '/api/save-for-later',
-  SHARE_WITH_SUPPLIER: '/api/share-with-supplier',
-};
+// GO-LIVE: interim named contract drafter (single-person risk — a role
+// mailbox has been requested from IT; swap it in here when it exists).
+// See docs/deployment/GO_LIVE_CHECKLIST.md.
+export const CONTRACT_DRAFTER_EMAIL = 'peter.persaud@nhs.net';

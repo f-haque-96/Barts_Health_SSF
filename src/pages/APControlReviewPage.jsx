@@ -1580,8 +1580,21 @@ const APControlReviewPage = ({
         </div>
       </div>
 
+      {/* Stage guard: verification only when the item is actually in the AP
+          queue — items still at PBP/Procurement/OPW are view-only here */}
+      {!apControlReview && submission.status !== STATUS.PENDING_AP_CONTROL && submission.status !== STATUS.CONTRACT_UPLOADED && submission.status !== STATUS.COMPLETED_PAYROLL && submission.status !== STATUS.INSIDE_IR35_SDS_ISSUED && submission.currentStage !== STAGE.SDS_ISSUED && submission.currentStage !== STAGE.COMPLETED_PAYROLL && (
+        <NoticeBox type="warning" style={{ marginTop: 'var(--space-32)' }}>
+          <strong>Not awaiting AP Control verification.</strong>
+          <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+            This submission&apos;s current status is &quot;{submission.status}&quot;, so AP
+            verification cannot be recorded yet. It becomes actionable here once the
+            earlier review stages send it to AP Control.
+          </p>
+        </NoticeBox>
+      )}
+
       {/* AP Verification Checklist - Hide for terminal states (Employed/Inside IR35 go to payroll, not AP) */}
-      {!apControlReview && submission.status !== STATUS.COMPLETED_PAYROLL && submission.status !== STATUS.INSIDE_IR35_SDS_ISSUED && submission.currentStage !== STAGE.SDS_ISSUED && submission.currentStage !== STAGE.COMPLETED_PAYROLL && (
+      {!apControlReview && (submission.status === STATUS.PENDING_AP_CONTROL || submission.status === STATUS.CONTRACT_UPLOADED) && (
         <div style={{
           marginTop: 'var(--space-32)',
           padding: 'var(--space-24)',

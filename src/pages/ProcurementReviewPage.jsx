@@ -810,8 +810,21 @@ const ProcurementReviewPage = ({
         </ReviewCard>
       )}
 
+      {/* Stage guard: decisions only while the item is actually awaiting
+          Procurement — an item at another stage is view-only here */}
+      {!procurementReview && submission.status !== STATUS.PBP_APPROVED && (
+        <NoticeBox type="warning" style={{ marginTop: 'var(--space-32)' }}>
+          <strong>Not awaiting Procurement review.</strong>
+          <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+            This submission&apos;s current status is &quot;{submission.status}&quot;, so no
+            Procurement decision can be recorded. It becomes actionable here once PBP
+            approve it.
+          </p>
+        </NoticeBox>
+      )}
+
       {/* Procurement Decision Panel */}
-      {!procurementReview && (
+      {!procurementReview && submission.status === STATUS.PBP_APPROVED && (
         <div style={{
           marginTop: 'var(--space-32)',
           padding: 'var(--space-24)',

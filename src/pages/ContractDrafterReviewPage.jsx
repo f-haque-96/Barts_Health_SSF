@@ -255,10 +255,16 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
   const sentAt = submission.contractDrafter?.sentAt;
   const templateUsed = submission.contractDrafter?.templateUsed;
 
+  // Stage guard: drafting actions only while the item is actually awaiting a
+  // contract (OPW must have routed it here). Items at other stages are
+  // view-only; an already-approved contract (state C) stays visible.
+  const atContractStage = submission.status === STATUS.PENDING_CONTRACT;
+
   // Determine current state
-  const isStateA = !sentAt; // Not sent
-  const isStateB = sentAt && !contractStatus; // Sent, awaiting upload
+  const isStateA = !sentAt && atContractStage; // Not sent
+  const isStateB = sentAt && !contractStatus && atContractStage; // Sent, awaiting upload
   const isStateC = contractStatus === 'approved'; // Approved
+  const isOutOfStage = !isStateA && !isStateB && !isStateC;
 
   return (
     <div style={{
@@ -364,6 +370,18 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
             </div>
           )}
         </div>
+      )}
+
+      {/* Out of stage: no drafting actions available */}
+      {isOutOfStage && (
+        <NoticeBox type="warning">
+          <strong>Not awaiting contract drafting.</strong>
+          <p style={{ marginTop: 'var(--space-8)', marginBottom: 0 }}>
+            This submission&apos;s current status is &quot;{submission.status}&quot;, so no
+            agreement can be sent or approved from this page. It becomes actionable here
+            once the OPW Panel determine that a contract is required.
+          </p>
+        </NoticeBox>
       )}
 
       {/* STATE A: Not Sent - Show template selection and send button */}
