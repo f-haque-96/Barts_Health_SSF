@@ -339,7 +339,13 @@ Get a free API key first at https://developer.company-information.service.gov.uk
 > Action 1: **HTTP** —
 > Method: GET,
 > URI: `https://api.company-information.service.gov.uk/company/@{triggerOutputs()['queries']['crn']}`,
-> Authentication: Basic, Username: [PASTE COMPANIES HOUSE API KEY], Password: leave blank.
+> Authentication (under advanced options): **None**. Instead add a Header:
+> key `Authorization`, value = this expression (fx button):
+> `concat('Basic ', base64('[PASTE COMPANIES HOUSE API KEY]:'))`
+> — keep the trailing colon inside the quotes; it encodes the required empty
+> password. (Do NOT use the built-in Basic authentication: Companies House wants
+> a blank password and Power Automate refuses to save one — the flow then fails
+> validation at runtime and every call returns 502 NoResponse. Fixed 8 Jul 2026.)
 >
 > Action 2: **Response** —
 > Status code: `@{outputs('HTTP')['statusCode']}`,
@@ -347,7 +353,10 @@ Get a free API key first at https://developer.company-information.service.gov.uk
 > Body: `@{body('HTTP')}`.
 > Then open this Response action's **Configure run after** settings and tick BOTH
 > "is successful" AND "has failed" (the HTTP action fails on a 404 company-not-found,
-> and the response must still be returned to the app).
+> and the response must still be returned to the app). Use the CHECKBOXES only —
+> then verify in code view that runAfter reads exactly `["Succeeded","Failed"]`;
+> a hand-written `"FAILED"` is silently ignored and the Response gets Skipped,
+> which surfaces as 502 NoResponse to the caller (hit 8 Jul 2026).
 >
 > Save, then copy the generated **HTTP GET URL** from the trigger.
 
