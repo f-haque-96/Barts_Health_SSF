@@ -7,7 +7,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { pdf } from '@react-pdf/renderer';
 import { Checkbox, Button, NoticeBox, QuestionLabel, CheckIcon, WarningIcon, VerificationBadge } from '../common';
 import { FormNavigation } from '../layout';
 import { section7Schema } from '../../utils/validation';
@@ -18,7 +17,6 @@ import useFormNavigation from '../../hooks/useFormNavigation';
 import storage from '../../services/StorageProvider';
 import { STATUS, STAGE } from '../../utils/workflowStatus';
 import UploadedDocuments from '../review/UploadedDocuments';
-import SupplierFormPDF from '../pdf/SupplierFormPDF';
 
 const ReviewItem = ({ label, value, badge, raw = false }) => {
   if (!value && value !== 0) return null;
@@ -314,6 +312,14 @@ const Section7ReviewSubmit = () => {
   // Handle PDF download
   const handleDownloadPDF = async () => {
     try {
+      // Load the PDF layer on demand — @react-pdf/renderer is the single
+      // largest dependency and requesters rarely download the PDF, so it is
+      // kept out of the initial bundle (readiness review D1)
+      const [{ pdf }, { default: SupplierFormPDF }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('../pdf/SupplierFormPDF'),
+      ]);
+
       // Get all form data
       const allData = getAllFormData();
 
