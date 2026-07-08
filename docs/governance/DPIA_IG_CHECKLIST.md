@@ -78,9 +78,15 @@ See `docs/NHS_SSF_Platform_Decision_Addendum.md`.
       decided July 2026)
 - [ ] Encryption at rest/in transit: Microsoft 365 default (BitLocker/TLS)
 - [ ] Audit: SSF-AuditTrail append-only list + SharePoint versioning + M365 audit log
-- [ ] Browser-side: bank details and document content are excluded from localStorage
-      persistence (code control in `src/stores/formStore.js`); drafts contain
-      form text only
+- [ ] Browser-side: bank details and document content are excluded from the
+      **draft** localStorage persistence (code control in
+      `src/stores/formStore.js`); drafts contain form text only.
+      **Disclosed limitation:** attachments added during info-required /
+      contract exchanges and questionnaire uploads pass through the storage
+      layer as base64; in production the Graph provider uploads these to the
+      document libraries and stores only name + link (rule 2 in
+      `06-hybrid-sharepoint-flows.md` §4b) — this rule is a go-live
+      precondition, not yet implemented while the app runs in dev/demo mode
 - [ ] Automated deletion of ID documents on completion/rejection (flow F3) — tested
 
 ## 6. Risks & mitigations

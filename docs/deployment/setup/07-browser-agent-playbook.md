@@ -509,6 +509,10 @@ loop-guard Update item is still the first action.
 
 ## Go-live mailbox swap table
 
+> **Canonical version:** `../GO_LIVE_CHECKLIST.md` now consolidates this table
+> with every other go-live replacement (flow links, env vars, code constants).
+> Keep the two in sync if either changes.
+
 During testing every fixed recipient is **fahimul.haque1@nhs.net**. At go-live,
 swap them per this table (one pass through each flow; dynamic recipients like
 RequesterEmail and ClaimedBy never change):

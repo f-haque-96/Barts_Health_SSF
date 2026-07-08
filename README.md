@@ -71,6 +71,7 @@ Start at **[docs/README.md](./docs/README.md)**. Key documents:
 | [Hybrid SharePoint & flows design](./docs/deployment/setup/06-hybrid-sharepoint-flows.md) | List schema + flow catalogue (F1–F4 + CRN proxy) |
 | [Browser-agent playbook](./docs/deployment/setup/07-browser-agent-playbook.md) | Click-by-click build tasks |
 | [Deployment readiness review](./docs/deployment/DEPLOYMENT_READINESS_REVIEW.md) | Current status, findings, open items |
+| [Go-live checklist](./docs/deployment/GO_LIVE_CHECKLIST.md) | Every value/placeholder to replace before go-live |
 | [DPIA / IG checklist](./docs/governance/DPIA_IG_CHECKLIST.md) | Governance sign-off checklist |
 
 ## Repository layout
