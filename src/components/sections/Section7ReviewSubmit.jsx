@@ -235,10 +235,27 @@ const Section7ReviewSubmit = () => {
       // Submit through the storage abstraction:
       // dev → LocalStorageProvider (browser storage, SUP-YYYY-XXXXXXXX id)
       // prod → ApiStorageProvider / SharePoint provider (server-enforced RBAC)
+      // PBP clearance is a Section 2 gate (questionnaire approval or prior
+      // procurement-engagement evidence at Q2.8) — a requester cannot reach
+      // this point without it. A completed form therefore enters the pipeline
+      // at PROCUREMENT, not PBP (decided July 2026).
       const submission = {
         submissionDate,
-        status: STATUS.PENDING_REVIEW,
-        currentStage: STAGE.PBP,
+        status: STATUS.PBP_APPROVED,
+        currentStage: STAGE.PROCUREMENT,
+        pbpReview: {
+          decision: 'approved',
+          currentStatus: 'complete',
+          source: 'section2_prescreening',
+          method: allData.formData.procurementEngaged || null,
+          questionnaireId:
+            allData.formData.clinicalQuestionnaire?.questionnaireId ||
+            allData.formData.nonClinicalQuestionnaire?.questionnaireId ||
+            null,
+          completedAt: submissionDate,
+          comments:
+            'PBP clearance obtained at Section 2 pre-screening (approved questionnaire or prior procurement engagement evidence).',
+        },
         formData: {
           ...allData.formData,
           // Include final acknowledgement from Section 7 form
@@ -266,7 +283,7 @@ const Section7ReviewSubmit = () => {
           submissionId,
           submissionDate,
           submittedBy: allData.formData.nhsEmail,
-          status: STATUS.PENDING_REVIEW,
+          status: STATUS.PBP_APPROVED,
         });
         localStorage.setItem('all_submissions', JSON.stringify(submissions));
       }
@@ -421,7 +438,9 @@ const Section7ReviewSubmit = () => {
         },
         submittedBy: allData.formData.nhsEmail,
         submissionDate: new Date().toISOString(),
-        status: 'pending_review',
+        // Mirrors real submissions: forms enter the pipeline at Procurement
+        status: 'approved',
+        currentStage: 'procurement',
         isPreview: true,
         // Initialize review objects as null
         pbpReview: null,

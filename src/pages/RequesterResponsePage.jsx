@@ -188,8 +188,16 @@ const StatusBadge = ({ submission, isAwaitingYou }) => {
     const vendorNumber = submission?.vendorNumber;
 
     // Completed - vendor created
-    if (vendorNumber || submission?.finalStatus === 'complete') {
+    if (submission?.status === 'completed' || vendorNumber || submission?.finalStatus === 'complete') {
       return { bg: '#22c55e', text: `Completed - Vendor #${vendorNumber || 'Created'}`, color: 'white' };
+    }
+
+    // Terminal payroll routes — no supplier record
+    if (submission?.status === 'completed_payroll' || currentStage === 'completed_payroll') {
+      return { bg: '#8b5cf6', text: 'Completed - Payroll/ESR Route (No Supplier Record)', color: 'white' };
+    }
+    if (submission?.status === 'inside_ir35_sds_issued' || currentStage === 'sds_issued') {
+      return { bg: '#8b5cf6', text: 'Inside IR35 - SDS Issued (Payroll Route)', color: 'white' };
     }
 
     // Rejected at any stage
@@ -322,9 +330,13 @@ const WorkflowStatus = ({ submission }) => {
     const currentStage = submission?.currentStage || submission?.stage || 'pbp';
     const pbpStatus = submission?.pbpReview?.decision || (status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'pending');
     const procurementStatus = submission?.procurementReview?.decision || submission?.procurementStatus;
-    const opwStatus = submission?.opwReview?.ir35Status || submission?.opwReview?.decision || submission?.opwStatus;
+    // OPW outcome: IR35 status (intermediaries) or employment status (sole traders)
+    const opwStatus = submission?.opwReview?.ir35Status || submission?.opwReview?.employmentStatus || submission?.opwReview?.decision || submission?.opwStatus;
     const apStatus = submission?.apControlReview?.verified ? 'verified' : submission?.apStatus;
-    const isComplete = submission?.finalStatus === 'complete' || submission?.vendorNumber;
+    const isComplete = status === 'completed' || submission?.finalStatus === 'complete' || submission?.vendorNumber;
+    // Payroll/ESR terminal outcomes end the pipeline at OPW — no contract,
+    // AP verification or vendor record follows
+    const isPayrollRoute = status === 'completed_payroll' || status === 'inside_ir35_sds_issued';
 
     return stages.map(stage => {
       let stageStatus = 'pending';
@@ -364,6 +376,10 @@ const WorkflowStatus = ({ submission }) => {
           stageStatus = 'completed';
           statusText = (opwStatus === 'outside' || opwStatus === 'outside_ir35') ? 'Outside IR35' : 'Inside IR35';
           completedDate = submission?.opwReview?.completedAt || submission?.opwReview?.reviewedAt;
+        } else if (opwStatus === 'employed' || opwStatus === 'self_employed') {
+          stageStatus = 'completed';
+          statusText = opwStatus === 'employed' ? 'Employed — Payroll Route' : 'Self-Employed';
+          completedDate = submission?.opwReview?.completedAt || submission?.opwReview?.reviewedAt;
         } else if (currentStage === 'opw') {
           stageStatus = 'active';
           statusText = 'Assessing IR35';
@@ -377,7 +393,7 @@ const WorkflowStatus = ({ submission }) => {
         }
       } else if (stage.id === 'contract') {
         const contractStatus = submission?.contractDrafter?.decision;
-        if (!showOPWAndContract) {
+        if (!showOPWAndContract || isPayrollRoute) {
           stageStatus = 'skipped';
           statusText = 'Not Required';
         } else if (contractStatus === 'approved') {
@@ -393,7 +409,10 @@ const WorkflowStatus = ({ submission }) => {
           stageStatus = 'locked';
         }
       } else if (stage.id === 'ap') {
-        if (apStatus === 'verified' || submission?.apControlReview?.verified) {
+        if (isPayrollRoute) {
+          stageStatus = 'skipped';
+          statusText = 'Not Required';
+        } else if (apStatus === 'verified' || submission?.apControlReview?.verified) {
           stageStatus = 'completed';
           statusText = 'Bank Details Verified';
           completedDate = submission?.apControlReview?.completedAt;
@@ -406,7 +425,13 @@ const WorkflowStatus = ({ submission }) => {
           stageStatus = 'locked';
         }
       } else if (stage.id === 'complete') {
-        if (isComplete || submission?.vendorNumber) {
+        if (isPayrollRoute) {
+          stageStatus = 'completed';
+          statusText = status === 'completed_payroll'
+            ? 'Payroll/ESR — No Vendor Record'
+            : 'SDS Issued — Payroll Route';
+          completedDate = submission?.completedAt;
+        } else if (isComplete || submission?.vendorNumber) {
           stageStatus = 'completed';
           statusText = `Vendor #${submission?.vendorNumber || 'Created'}`;
           completedDate = submission?.completedAt;
@@ -718,7 +743,39 @@ const RequesterResponsePage = ({
     ? (lastExchange?.from === 'contract_drafter' && lastExchange?.type !== 'contract_approved' && lastExchange?.type !== 'contract_rejected')
     : (lastExchange?.from === 'pbp' && lastExchange?.type !== 'decision');
 
-  const isFinalDecision = submission?.status === 'approved' || submission?.status === 'rejected';
+  // Questionnaire (QUEST-) items get PBP-decision messaging; full (SUP-)
+  // submissions get pipeline/outcome messaging. Since July 2026 a completed
+  // full form enters the pipeline with status 'approved' (PBP clearance
+  // happens at Section 2), so 'approved' alone no longer implies a
+  // questionnaire decision.
+  const submissionRef = String(submission?.submissionId || submission?.id || '');
+  const isQuestionnaire = submission?.isQuestionnaire ||
+    submission?.type === 'questionnaire' || submissionRef.startsWith('QUEST-');
+  const isFinalDecision = isQuestionnaire &&
+    (submission?.status === 'approved' || submission?.status === 'rejected');
+  // Full-form terminal outcomes
+  const isRejectedFinal = !isQuestionnaire && submission?.status === 'rejected';
+  const isPayrollOutcome = submission?.status === 'completed_payroll';
+  const isSDSOutcome = submission?.status === 'inside_ir35_sds_issued';
+  const isCompletedVendor = submission?.status === 'completed';
+
+  // Where and why a full submission was rejected (for the outcome notice)
+  const getRejectionInfo = () => {
+    if (submission?.procurementReview?.decision === 'rejected') {
+      return { by: 'Procurement', reason: submission.procurementReview.comments };
+    }
+    if (submission?.opwReview?.decision === 'rejected' || submission?.opwReview?.rejectionReason) {
+      return { by: 'OPW Panel', reason: submission.opwReview.rejectionReason };
+    }
+    if (submission?.apReview?.decision === 'rejected' || submission?.apControlReview?.decision === 'rejected') {
+      const ap = submission.apReview || submission.apControlReview;
+      return { by: 'AP Control', reason: ap.rejectionReason || ap.comments };
+    }
+    if (submission?.pbpReview?.decision === 'rejected') {
+      return { by: 'PBP', reason: submission.pbpReview.finalComments || submission.pbpReview.comments };
+    }
+    return { by: 'the review team', reason: null };
+  };
 
   // Handle document preview
   const handlePreviewDocument = (file) => {
@@ -1080,6 +1137,70 @@ const RequesterResponsePage = ({
         </NoticeBox>
       )}
 
+      {/* Full-form terminal outcome notices */}
+      {isCompletedVendor && (
+        <NoticeBox type="success" style={{ marginBottom: 'var(--space-24)' }}>
+          <h3 style={{ marginTop: 0 }}>Supplier Setup Complete</h3>
+          <p>
+            All checks are complete and the supplier has been created in Oracle
+            {submission?.vendorNumber ? <> — vendor number <strong>{submission.vendorNumber}</strong></> : null}.
+            You can now raise purchase orders against this supplier as normal.
+          </p>
+        </NoticeBox>
+      )}
+
+      {isPayrollOutcome && (
+        <NoticeBox type="info" style={{ marginBottom: 'var(--space-24)' }}>
+          <h3 style={{ marginTop: 0 }}>Outcome: Payroll / ESR Route</h3>
+          <p>
+            The OPW Panel determined this worker is <strong>employed</strong> for tax
+            purposes. They must be paid through NHS payroll (ESR) — <strong>no Oracle
+            supplier record will be created</strong>. Please contact HR/Payroll to set
+            the worker up on ESR. This request is now closed.
+          </p>
+        </NoticeBox>
+      )}
+
+      {isSDSOutcome && (
+        <NoticeBox type="info" style={{ marginBottom: 'var(--space-24)' }}>
+          <h3 style={{ marginTop: 0 }}>Outcome: Inside IR35 — SDS Issued</h3>
+          <p>
+            The OPW Panel determined this engagement is <strong>inside IR35</strong> and a
+            Status Determination Statement (SDS) has been issued. The worker must be
+            engaged via payroll (ESR) or a compliant agency arrangement — <strong>no
+            Oracle supplier record will be created</strong>. This request is now closed.
+          </p>
+        </NoticeBox>
+      )}
+
+      {isRejectedFinal && (
+        <NoticeBox type="error" style={{ marginBottom: 'var(--space-24)' }}>
+          <h3 style={{ marginTop: 0 }}>Supplier Request Rejected</h3>
+          <p>
+            This supplier request was rejected by <strong>{getRejectionInfo().by}</strong> and
+            cannot proceed further.
+          </p>
+          {getRejectionInfo().reason && (
+            <div style={{
+              marginTop: 'var(--space-12)',
+              padding: 'var(--space-12)',
+              backgroundColor: '#fee2e2',
+              borderRadius: 'var(--radius-sm)',
+            }}>
+              <strong>Reason:</strong>
+              <p style={{ margin: 'var(--space-8) 0 0 0', whiteSpace: 'pre-wrap' }}>
+                {getRejectionInfo().reason}
+              </p>
+            </div>
+          )}
+          <p style={{ marginBottom: 0 }}>
+            If you believe this is incorrect or can address the reason above, contact the
+            rejecting team before submitting a new request — resubmissions of rejected
+            suppliers are flagged for additional scrutiny.
+          </p>
+        </NoticeBox>
+      )}
+
       {/* Exchange Thread - Only show if there was actual back-and-forth communication */}
       {exchanges.length > 0 && !(exchanges.length === 1 && exchanges[0].type === 'decision') && (
         <ExchangeThread exchanges={exchanges} onPreviewDocument={handlePreviewDocument} userRole={userRole} />
@@ -1097,7 +1218,7 @@ const RequesterResponsePage = ({
 
       {/* Response Form - Only show if awaiting response and not final decision */}
       {/* Suppliers can only respond during contract stage */}
-      {isAwaitingResponse && !isFinalDecision && !(userRole === 'supplier' && !isContractStage) && (
+      {isAwaitingResponse && !isFinalDecision && !isRejectedFinal && !isPayrollOutcome && !isSDSOutcome && !isCompletedVendor && !(userRole === 'supplier' && !isContractStage) && (
         <div style={{
           padding: 'var(--space-24)',
           backgroundColor: '#fefce8',

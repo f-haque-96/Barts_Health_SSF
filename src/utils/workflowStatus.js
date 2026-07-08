@@ -8,15 +8,21 @@
  * SharePoint "Status" and "CurrentStage" columns, and the values Power
  * Automate trigger conditions match on — do not rename without updating both.
  *
- * Pipeline:
- *   pending_review ─ PBP ─→ approved ─ Procurement ─┬→ pending_ap_control ──────────────┐
- *                                                   └→ procurement_approved_opw ─ OPW ─┬→ completed_payroll (terminal, ESR)
- *                                                                                      ├→ inside_ir35_sds_issued (terminal)
- *                                                                                      ├→ pending_contract ─→ contract_uploaded ─┐
- *                                                                                      └→ pending_ap_control ────────────────────┤
- *                                                                            AP Control ←──────────────────────────────────────┘
- *                                                                                      └→ completed (terminal, Oracle vendor)
- *   Any stage may set: rejected (terminal) or info_required.
+ * Pipeline (July 2026: PBP clearance moved into the form itself):
+ *   Section 2 pre-screening — QUEST- questionnaire items only:
+ *     pending_review ─ PBP ─→ approved | rejected | info_required
+ *   Full SUP- submissions are created with status 'approved' (the requester
+ *   cannot submit without Section 2 PBP clearance) and enter the pipeline
+ *   at PROCUREMENT:
+ *   approved ─ Procurement ─┬→ pending_ap_control ──────────────┐
+ *                           └→ procurement_approved_opw ─ OPW ─┬→ completed_payroll (terminal, ESR)
+ *                                                              ├→ inside_ir35_sds_issued (terminal)
+ *                                                              ├→ pending_contract ─→ contract_uploaded ─┐
+ *                                                              └→ pending_ap_control ────────────────────┤
+ *                                                    AP Control ←──────────────────────────────────────┘
+ *                                                              └→ completed (terminal, Oracle vendor)
+ *   Any stage may set: rejected (terminal). info_required is PBP↔requester
+ *   (questionnaire conversations).
  */
 
 export const STATUS = {
