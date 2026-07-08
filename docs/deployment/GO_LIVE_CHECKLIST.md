@@ -15,7 +15,8 @@ flow links use the `https://APP-URL-TBC/...` placeholder — both get swapped he
 
 | Flow | Where the link appears | Link path (must match React routes exactly) |
 |---|---|---|
-| F1 — New submission | both Condition branches (clinical / non-clinical) | `/pbp-review/[Title]` |
+| F1 — New submission router | questionnaire branches (clinical / non-clinical) | `/pbp-review/[Title]` |
+| F1 | full-submission branch (Task 13) | `/procurement-review/[Title]` |
 | F2 — Status router | approved (full) | `/procurement-review/[Title]` |
 | F2 | procurement_approved_opw | `/opw-review/[Title]` |
 | F2 | pending_ap_control, contract_uploaded | `/ap-review/[Title]` |
@@ -28,8 +29,9 @@ flow links use the `https://APP-URL-TBC/...` placeholder — both get swapped he
 
 | Flow | Branch / case | Final recipient |
 |---|---|---|
-| F1 | If yes (clinical) | PBP clinical shared mailbox *(requested, TBC)* |
-| F1 | If no (non-clinical) | PBP non-clinical shared mailbox *(requested, TBC)* |
+| F1 | questionnaire + clinical | PBP clinical shared mailbox *(requested, TBC)* |
+| F1 | questionnaire + non-clinical | PBP non-clinical shared mailbox *(requested, TBC)* |
+| F1 | full submission (Task 13 branch) | `barts.procurement@nhs.net` |
 | F2 | approved + SubmissionType=full | `barts.procurement@nhs.net` |
 | F2 | procurement_approved_opw | `bartshealth.opwpanelbarts@nhs.net` |
 | F2 | pending_ap_control, contract_uploaded | `apcontrol.bartshealth@nhs.net` |

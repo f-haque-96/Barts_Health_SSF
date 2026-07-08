@@ -51,7 +51,7 @@ conditions below exactly.
 | AlembaReference / VendorNumber | Text | |
 | FormDataJSON | Multi-line text (plain) | Full form payload **excluding bank details** |
 | PBPReviewJSON / ProcurementReviewJSON / OPWReviewJSON / ContractReviewJSON / APReviewJSON | Multi-line text (plain) | Per-stage decision payloads **excluding attachment content** (see step-4 rules below) |
-| SubmissionType | Choice | `full`, `questionnaire` (default `full`) — Section 2 pre-screening questionnaires are separate items with `QUEST-` reference numbers; F1 uses this to word the PBP email |
+| SubmissionType | Choice | `full`, `questionnaire` (default `full`) — Section 2 pre-screening questionnaires are separate items with `QUEST-` reference numbers; F1 routes on this: questionnaire → PBP, full → Procurement (full items are created with Status `approved`) |
 | AwaitingParty | Choice | `none`, `requester`, `pbp` (default `none`) — set by the app during info-required conversations; watched by F6 |
 
 **Bank details rule (mandatory):** sort code, account number, IBAN and SWIFT are
@@ -131,12 +131,25 @@ must match the React routes in `src/App.jsx` exactly:
 **`/contract-drafter/`** (note: the contract page does *not* follow the
 `<stage>-review` pattern), and `/respond/` for requester-facing emails.
 
-### F1 — New submission → PBP
+### F1 — New submission router (UPDATED July 2026: full forms skip PBP)
+- **Why the change:** PBP clearance is a Section 2 gate inside the form
+  (questionnaire approval / prior procurement engagement evidence at Q2.8) —
+  a requester cannot submit without it. Full submissions are therefore
+  created with **Status = `approved`** and enter the pipeline at Procurement.
+  Only `QUEST-` questionnaire items are created as `pending_review` for PBP.
 - **Trigger:** SSF-Submissions — *When an item is created*.
-- **Actions:** send email to PBP mailbox ("New supplier request {Title} — {CompanyName}");
-  add SSF-AuditTrail item (`SUBMISSION_CREATED`); **Update item** on the triggering item:
-  `LastStatus = pending_review`, `StatusChangedAt = utcNow()`. This initialises the F2
-  loop guard — without it, F2's empty-LastStatus check suppresses the first transition.
+- **Actions:** **Condition on SubmissionType**:
+  - `questionnaire` → email PBP mailbox ("New pre-screening questionnaire
+    {Title} — {CompanyName}", link `/pbp-review/{Title}`), split
+    clinical/non-clinical per ServiceCategory (Task 12);
+  - `full` → email **Procurement** mailbox ("New supplier request {Title} —
+    {CompanyName} — classification needed", link `/procurement-review/{Title}`).
+- Then (outside the Condition): add SSF-AuditTrail item (`SUBMISSION_CREATED`,
+  NewStatus = the item's **Status value from the trigger**); **Update item**:
+  `LastStatus = Status value from the trigger` (⚠️ NOT hardcoded
+  `pending_review` — full items are created as `approved`; a hardcoded value
+  would defeat the F2 loop guard and double-email Procurement),
+  `StatusChangedAt = utcNow()`.
 
 ### F2 — Status router (single flow, Switch on Status)
 - **Trigger:** *When an item is created or modified* (the SharePoint connector has no
@@ -156,7 +169,7 @@ must match the React routes in `src/App.jsx` exactly:
 
 | Status | Notify | Email intent |
 |---|---|---|
-| `approved` | **Condition on SubmissionType:** `full` → Procurement mailbox; `questionnaire` → Requester, **attaching the approval certificate** from `SupplierDocuments/<QUEST-id>/` | Full: PBP approved — classify supplier. Questionnaire: your pre-screening is approved — upload the attached certificate at Q2.8 to continue |
+| `approved` | **Condition on SubmissionType:** `questionnaire` → Requester, **attaching the approval certificate** from `SupplierDocuments/<QUEST-id>/`; `full` → Procurement mailbox (defensive only — since July 2026 full items are *created* as `approved`, so F1 owns that notification and this branch should never fire for them) | Questionnaire: your pre-screening is approved — upload the attached certificate at Q2.8 to continue. Full: PBP approved — classify supplier |
 | `procurement_approved_opw` | OPW mailbox | OPW/IR35 determination required |
 | `pending_ap_control` | AP mailbox | Verify bank details & create vendor |
 | `pending_contract` | Contract Drafter | Agreement required (template in OPWReviewJSON) |
@@ -280,7 +293,8 @@ dev localStorage provider. Each traces to a verified behaviour of the current ap
 - [ ] Set library permissions (SensitiveDocuments → Contract/AP/Admin only)
 - [ ] Build F1, F2 (with LastStatus guard), F3, F4, F6 (AwaitingParty guard); add co-owners
 - [ ] Test matrix — one run per branch:
-  - [ ] standard: pending_review → approved → pending_ap_control → completed
+  - [ ] questionnaire: QUEST item pending_review → approved (requester gets certificate email) / rejected
+  - [ ] standard full form: created at approved (F1 emails Procurement, F2 silent) → pending_ap_control → completed
   - [ ] OPW sole trader employed: … → procurement_approved_opw → completed_payroll
   - [ ] OPW self-employed + contract: … → pending_contract → contract_uploaded → completed
   - [ ] intermediary inside IR35: … → inside_ir35_sds_issued

@@ -33,14 +33,19 @@ Decision record: [docs/NHS_SSF_Platform_Decision_Addendum.md](./docs/NHS_SSF_Pla
   conflict-of-interest alerts, sole-trader ID verification
 - **PDF generation, file uploads, rejection handling** with requester notifications
 
-### Approval pipeline
+### Approval pipeline (July 2026: PBP gate is inside the form)
+
+PBP approve/reject the **Section 2 pre-screening questionnaire** (QUEST- items)
+*before* the requester can finish the form — so a completed form submits
+straight to Procurement:
 
 ```
-Requester → PBP → Procurement ─┬─ Standard ────────────────────→ AP Control → Completed (Oracle)
-                                └─ OPW/IR35 → OPW Panel ─┬─ Self-Employed/Outside IR35 ─┬─ Contract → AP → Completed
-                                                          │                              └─ (no contract) → AP → Completed
-                                                          ├─ Employed → Completed (Payroll/ESR)
-                                                          └─ Inside IR35 → SDS Issued (Payroll/ESR)
+Requester (Section 2: PBP questionnaire gate)
+    → submit → Procurement ─┬─ Standard ────────────────────→ AP Control → Completed (Oracle)
+                            └─ OPW/IR35 → OPW Panel ─┬─ Self-Employed/Outside IR35 ─┬─ Contract → AP → Completed
+                                                      │                              └─ (no contract) → AP → Completed
+                                                      ├─ Employed → Completed (Payroll/ESR)
+                                                      └─ Inside IR35 → SDS Issued (Payroll/ESR)
 ```
 
 ⚠️ The Status/CurrentStage values in `workflowStatus.js`, the SharePoint choice

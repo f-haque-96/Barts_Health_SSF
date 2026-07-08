@@ -196,6 +196,13 @@ Members list is in §3 of `06-hybrid-sharepoint-flows.md`.
 
 ## Task 4 — Flow F1: new submission notifies PBP
 
+> ⚠️ **UPDATED by Task 13 (July 2026).** Full submissions now enter the
+> pipeline at Procurement (PBP clearance happens inside the form at Section 2),
+> so F1 must route by SubmissionType and must NOT hardcode
+> `LastStatus = pending_review`. If you already built F1 from this task,
+> apply Task 13. If building fresh, build this task then apply Task 13
+> immediately after.
+
 > In Power Automate (make.powerautomate.com), create a new Automated cloud flow
 > named **SSF F1 - New submission to PBP**.
 >
@@ -504,6 +511,46 @@ go-live — see the mailbox swap table below.
 **You check afterwards:** in both flows the audit/update actions sit outside the
 Condition (they must run for every category), and in F6 the AwaitingParty
 loop-guard Update item is still the first action.
+
+---
+
+## Task 13 — Reroute F1: full submissions go straight to Procurement (July 2026)
+
+The app now creates full SUP- submissions with **Status = `approved`** and
+CurrentStage = `procurement` — PBP clearance already happened inside the form
+(Section 2 questionnaire / prior engagement evidence at Q2.8). Only QUEST-
+questionnaire items are created as `pending_review` for PBP. Two things in F1
+must change or Procurement gets double-emailed and PBP gets emails for forms
+they never review:
+
+> In Power Automate, open **SSF F1 - New submission to PBP** and edit it:
+>
+> 1. Add a **Condition** action immediately after the trigger (before the
+>    existing ServiceCategory Condition from Task 12): the **SubmissionType
+>    Value** dynamic content from the trigger **is equal to** `questionnaire`.
+>    Move the ENTIRE existing ServiceCategory Condition block (with both its
+>    PBP emails) into the **If yes** branch.
+>    In the **If no** branch, add a "Send an email (V2)" to the Procurement
+>    test address (currently fahimul.haque1@nhs.net; go-live:
+>    barts.procurement@nhs.net). Subject:
+>    `New supplier request [Title] — [CompanyName] — classification needed`.
+>    Body: requester name, company name, and the link
+>    `https://APP-URL-TBC/procurement-review/[Title]`. Nothing else.
+> 2. Open the existing "Update item" action (the one that sets LastStatus).
+>    Change LastStatus from the hardcoded `pending_review` to the **Status
+>    Value** dynamic content from the trigger. (Full items are created as
+>    `approved`; hardcoding `pending_review` would make F2 see a phantom
+>    transition and double-email Procurement.)
+> 3. Open the existing "Create item" audit action and set NewStatus to the
+>    **Status Value** dynamic content (same reason).
+> 4. Rename the flow to **SSF F1 - New submission router**. Save, leave ON.
+
+**You check afterwards:** create a dummy item with SubmissionType=`full`,
+Status=`approved` → ONLY the Procurement email arrives and LastStatus ends up
+`approved`. Create one with SubmissionType=`questionnaire`,
+Status=`pending_review` → ONLY the PBP email arrives (clinical or
+non-clinical per ServiceCategory) and LastStatus ends up `pending_review`.
+F2 must stay silent in both cases.
 
 ---
 
