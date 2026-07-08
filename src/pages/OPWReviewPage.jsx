@@ -1074,6 +1074,12 @@ const OPWReviewPage = ({
                   ? 'Standard Supplier'
                   : 'Potential OPW/IR35'}
               </p>
+              {(submission.alembaReference || submission.procurementReview.alembaReference) && (
+                <p style={{ margin: '8px 0' }}>
+                  <strong>Alemba Reference:</strong>{' '}
+                  <AlembaCallLink reference={submission.alembaReference || submission.procurementReview.alembaReference} />
+                </p>
+              )}
               <p style={{ margin: '8px 0' }}>
                 <strong>Decision:</strong>{' '}
                 <span className={`status-badge ${submission.procurementReview.decision}`} style={{

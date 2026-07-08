@@ -1001,6 +1001,12 @@ const APControlReviewPage = ({
                   <strong>Classification:</strong>{' '}
                   {submission.procurementReview.supplierClassification === 'standard' ? 'Standard Supplier' : 'Potential OPW/IR35'}
                 </p>
+                {(submission.alembaReference || submission.procurementReview.alembaReference) && (
+                  <p style={{ marginBottom: 'var(--space-8)' }}>
+                    <strong>Alemba Reference:</strong>{' '}
+                    <AlembaCallLink reference={submission.alembaReference || submission.procurementReview.alembaReference} />
+                  </p>
+                )}
                 <p style={{ marginBottom: 'var(--space-8)' }}>
                   <strong>Decision:</strong>{' '}
                   <span style={{
