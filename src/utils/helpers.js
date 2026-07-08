@@ -584,7 +584,7 @@ export const checkRejectedSuppliers = (supplierName, currentUserEmail = null) =>
 
     // Filter rejected submissions
     const rejectedSubmissions = allSubmissions.filter(
-      (sub) => sub.status === 'rejected' || sub.status?.toLowerCase().includes('rejected')
+      (sub) => sub.status?.toLowerCase() === 'rejected'
     );
 
     if (rejectedSubmissions.length === 0) {

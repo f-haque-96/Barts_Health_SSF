@@ -8,10 +8,11 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import storage from '../services/StorageProvider';
+import { STAGE, STAGE_QUEUE_STATUSES } from '../utils/workflowStatus';
 
 const AuthContext = createContext(null);
 
-// Role definitions matching AD security groups
+// Role definitions matching the SSF-* SharePoint groups
 // eslint-disable-next-line react-refresh/only-export-components
 export const ROLES = {
   REQUESTER: 'requester',
@@ -23,16 +24,19 @@ export const ROLES = {
   ADMIN: 'admin'
 };
 
-// Mapping of roles to AD group names
-// NOTE: These must match the AD security groups created by IT
-// Update these if IT uses different names - inform developer to sync with backend
+// Mapping of roles to group names.
+// These are the SSF-* SharePoint groups created by playbook Task 3 (the AD
+// NHS-SupplierForm-* groups from the retired Express design were cancelled).
+// SharePoint group membership is NOT in the Azure AD token — the production
+// Graph provider must resolve the signed-in user's groups from the site and
+// put them on session.user.groups (design doc 06 §3 / readiness review S1).
 const ROLE_GROUPS = {
-  [ROLES.PBP]: ['NHS-SupplierForm-PBP', 'NHS-SupplierForm-Admin'],
-  [ROLES.PROCUREMENT]: ['NHS-SupplierForm-Procurement', 'NHS-SupplierForm-Admin'],
-  [ROLES.OPW]: ['NHS-SupplierForm-OPW', 'NHS-SupplierForm-Admin'],
-  [ROLES.CONTRACT]: ['NHS-SupplierForm-Contract', 'NHS-SupplierForm-Admin'],
-  [ROLES.AP_CONTROL]: ['NHS-SupplierForm-APControl', 'NHS-SupplierForm-Admin'],
-  [ROLES.ADMIN]: ['NHS-SupplierForm-Admin']
+  [ROLES.PBP]: ['SSF-PBP', 'SSF-Admin'],
+  [ROLES.PROCUREMENT]: ['SSF-Procurement', 'SSF-Admin'],
+  [ROLES.OPW]: ['SSF-OPW', 'SSF-Admin'],
+  [ROLES.CONTRACT]: ['SSF-Contract', 'SSF-Admin'],
+  [ROLES.AP_CONTROL]: ['SSF-APControl', 'SSF-Admin'],
+  [ROLES.ADMIN]: ['SSF-Admin']
 };
 
 // Stage to role mapping for access control
@@ -116,36 +120,30 @@ export const AuthProvider = ({ children }) => {
       return true;
     }
 
-    // Check stage-based access
+    // Check stage-based access — EXACT matches only against the canonical
+    // status model. Substring matching here previously granted cross-stage
+    // access ('approved'.includes('ap') let AP Control open PBP-approved
+    // items) — readiness review finding S2.
     const status = submission.status?.toLowerCase() || '';
     const currentStage = submission.currentStage?.toLowerCase();
 
-    // PBP access
-    if ((status.includes('pending_review') || status.includes('pbp') || status === 'info_required') &&
-        hasRole(ROLES.PBP)) {
-      return true;
-    }
+    const stageAccess = [
+      [STAGE.PBP, ROLES.PBP],
+      [STAGE.PROCUREMENT, ROLES.PROCUREMENT],
+      [STAGE.OPW, ROLES.OPW],
+      [STAGE.CONTRACT, ROLES.CONTRACT],
+      [STAGE.AP, ROLES.AP_CONTROL],
+    ];
 
-    // Procurement access
-    if ((status.includes('approved') || status.includes('procurement') || currentStage === 'procurement') &&
-        hasRole(ROLES.PROCUREMENT)) {
-      return true;
-    }
-
-    // OPW access
-    if ((status.includes('opw') || currentStage === 'opw') && hasRole(ROLES.OPW)) {
-      return true;
-    }
-
-    // Contract access
-    if ((status.includes('contract') || currentStage === 'contract') && hasRole(ROLES.CONTRACT)) {
-      return true;
-    }
-
-    // AP Control access
-    if ((status.includes('ap') || currentStage === 'ap' || currentStage === 'ap_control') &&
-        hasRole(ROLES.AP_CONTROL)) {
-      return true;
+    for (const [stage, role] of stageAccess) {
+      const inQueue = (STAGE_QUEUE_STATUSES[stage] || []).includes(status);
+      // 'ap_control' is a legacy alias for the AP stage still present in
+      // some stored submissions
+      const atStage = currentStage === stage ||
+        (stage === STAGE.AP && currentStage === 'ap_control');
+      if ((inQueue || atStage) && hasRole(role)) {
+        return true;
+      }
     }
 
     return false;

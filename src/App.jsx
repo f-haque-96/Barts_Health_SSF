@@ -6,7 +6,7 @@
  * SECURITY: All review routes are protected with RBAC
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider, ROLES } from './context/AuthContext';
 import { ProtectedRoute, SecureReviewPage, RejectionBanner } from './components/common';
@@ -19,16 +19,26 @@ import Section4SupplierDetails from './components/sections/Section4SupplierDetai
 import Section5ServiceDescription from './components/sections/Section5ServiceDescription';
 import Section6FinancialInfo from './components/sections/Section6FinancialInfo';
 import Section7ReviewSubmit from './components/sections/Section7ReviewSubmit';
-import PBPReviewPage from './pages/PBPReviewPage';
-import ProcurementReviewPage from './pages/ProcurementReviewPage';
-import OPWReviewPage from './pages/OPWReviewPage';
-import APControlReviewPage from './pages/APControlReviewPage';
-import ContractDrafterReviewPage from './pages/ContractDrafterReviewPage';
-import RequesterResponsePage from './pages/RequesterResponsePage';
-import HelpPage from './pages/HelpPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import useFormStore from './stores/formStore';
 import useUnsavedChanges from './hooks/useUnsavedChanges';
+
+// Review pages are lazy-loaded: requesters (the overwhelming majority of
+// users) never need this code or the PDF renderer it pulls in (readiness
+// review D1 — keeps the initial bundle small on hospital networks)
+const PBPReviewPage = lazy(() => import('./pages/PBPReviewPage'));
+const ProcurementReviewPage = lazy(() => import('./pages/ProcurementReviewPage'));
+const OPWReviewPage = lazy(() => import('./pages/OPWReviewPage'));
+const APControlReviewPage = lazy(() => import('./pages/APControlReviewPage'));
+const ContractDrafterReviewPage = lazy(() => import('./pages/ContractDrafterReviewPage'));
+const RequesterResponsePage = lazy(() => import('./pages/RequesterResponsePage'));
+const HelpPage = lazy(() => import('./pages/HelpPage'));
+
+const PageLoading = () => (
+  <div style={{ padding: '80px 24px', textAlign: 'center', color: '#6b7280' }}>
+    Loading…
+  </div>
+);
 
 // Main Form Component (Public - any authenticated user can submit)
 const MainForm = () => {
@@ -55,7 +65,7 @@ const MainForm = () => {
         const rejectedSubmissions = allSubmissions.filter(
           (sub) =>
             sub.submittedBy === userEmail &&
-            (sub.status === 'rejected' || sub.status?.toLowerCase().includes('rejected'))
+            sub.status?.toLowerCase() === 'rejected'
         );
 
         if (rejectedSubmissions.length > 0) {
@@ -204,6 +214,7 @@ const MainForm = () => {
 function App() {
   return (
     <AuthProvider>
+      <Suspense fallback={<PageLoading />}>
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<MainForm />} />
@@ -336,6 +347,7 @@ function App() {
           }
         />
       </Routes>
+      </Suspense>
     </AuthProvider>
   );
 }

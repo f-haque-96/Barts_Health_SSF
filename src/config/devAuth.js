@@ -17,14 +17,15 @@ if (typeof import.meta !== 'undefined' && import.meta.env?.PROD) {
   );
 }
 
-// Available roles (must match ROLE_GROUPS in AuthContext.jsx)
+// Available roles (must match ROLE_GROUPS in AuthContext.jsx — the SSF-*
+// SharePoint groups created by playbook Task 3)
 export const DEV_ROLES = {
-  ADMIN: 'NHS-SupplierForm-Admin',
-  PBP: 'NHS-SupplierForm-PBP',
-  PROCUREMENT: 'NHS-SupplierForm-Procurement',
-  OPW: 'NHS-SupplierForm-OPW',
-  CONTRACT: 'NHS-SupplierForm-Contract',
-  AP_CONTROL: 'NHS-SupplierForm-APControl'
+  ADMIN: 'SSF-Admin',
+  PBP: 'SSF-PBP',
+  PROCUREMENT: 'SSF-Procurement',
+  OPW: 'SSF-OPW',
+  CONTRACT: 'SSF-Contract',
+  AP_CONTROL: 'SSF-APControl'
 };
 
 /**
