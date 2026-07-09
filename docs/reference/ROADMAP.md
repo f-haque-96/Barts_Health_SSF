@@ -25,8 +25,8 @@ Follow [../deployment/setup/07-browser-agent-playbook.md](../deployment/setup/07
 | F2 status router (Task 5) | ✅ built — fires correctly (verified via dummy-item emails 09/07) |
 | F6 requester-responded (Tasks 9 + 12) | ✅ 09/07/2026 — rebuilt after a stuck-save tab; loop guard first, ServiceCategory split |
 | F3 ID-deletion (Task 6) | ✅ audited correct 09/07/2026 |
-| F4 digest (Task 7) | ✅ built — set recurrence to 08:00 UK (currently 09:00) |
-| F7 claim email + columns (Task 11) | ⚠️ built, but loop-guard Update item hardcodes Status/CurrentStage/SubmissionType/AwaitingParty — **must be fixed before F7 runs against real data** (would revert item status + re-trigger F2) |
+| F4 digest (Task 7) | ✅ 09/07/2026 — recurrence corrected to Mon 08:00 UK |
+| F7 claim email + columns (Task 11) | ✅ 09/07/2026 — loop-guard bug fixed (Update item now writes ClaimNotified only; deliberately no Title). Pending: one hand test — fill ClaimedBy on a dummy item, expect assignment email + unchanged Status + no F2 email |
 | CRN proxy flow — premium (Task 8) | ✅ verified live 08–09/07 (200 valid / 404 with CORS) |
 | VAT proxy flow (Task 10) | ⏳ (app side done; HMRC production credentials being re-applied for) |
 | Hand-run test matrix (§6 of the design doc) | 🔄 in progress — F1 single-email retest + F6 round-trip next |
