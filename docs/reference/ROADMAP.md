@@ -19,11 +19,15 @@ Follow [../deployment/setup/07-browser-agent-playbook.md](../deployment/setup/07
 
 | Task | Status |
 |---|---|
-| SSF-Submissions + SSF-AuditTrail lists (Tasks 1–2) | ⏳ |
+| SSF-Submissions + SSF-AuditTrail lists (Tasks 1–2) | ✅ (dummy-item flow tests running against them since 8 Jul) |
 | Six SSF-* groups + library permissions (Task 3) | ⏳ (document libraries created) |
-| Flows F1, F2, F3, F4, F6 (Tasks 4–7, 9) | ⏳ |
-| CRN proxy flow — premium (Task 8) | ⏳ |
-| Hand-run test matrix (§6 of the design doc) | ⏳ |
+| F1 new-submission router (Tasks 4 + 12 + 13) | ✅ 09/07/2026 — SubmissionType routing (full → Procurement), ServiceCategory split, LastStatus from trigger |
+| F2 status router (Task 5) | ✅ built — fires correctly (verified via dummy-item emails 09/07) |
+| F6 requester-responded (Tasks 9 + 12) | ✅ 09/07/2026 — rebuilt after a stuck-save tab; loop guard first, ServiceCategory split |
+| F3 ID-deletion, F4 digest, F7 claim email (Tasks 6, 7, 11) | ⏳ |
+| CRN proxy flow — premium (Task 8) | ✅ verified live 08–09/07 (200 valid / 404 with CORS) |
+| VAT proxy flow (Task 10) | ⏳ (app side done; HMRC production credentials being re-applied for) |
+| Hand-run test matrix (§6 of the design doc) | 🔄 in progress — F1 single-email retest + F6 round-trip next |
 
 ## Phase 3 — IT dependency ⏸️ REQUESTED
 
