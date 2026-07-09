@@ -42,6 +42,12 @@ flow links use the `https://APP-URL-TBC/...` placeholder — both get swapped he
 
 Dynamic recipients (`RequesterEmail`, `ClaimedBy`) never change.
 
+> **Pending (may change this table):** PBP are producing a category delegation
+> matrix (Soft FM / Hard FM / Corporate / clinical specialties). Subject-line
+> category tagging may replace the two PBP mailboxes with one — see design
+> `setup/06-hybrid-sharepoint-flows.md` §7.1 before requesting/swapping PBP
+> mailboxes.
+
 ### 1.3 VAT flow (Task 10) production variant
 
 - [ ] HMRC production credentials approved (application was **declined 07/07/2026**

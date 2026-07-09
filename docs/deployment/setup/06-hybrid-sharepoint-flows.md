@@ -302,3 +302,74 @@ dev localStorage provider. Each traces to a verified behaviour of the current ap
   - [ ] rejection at each of PBP / Procurement / OPW / AP
   - [ ] info_required round-trip
   - [ ] F3 deletes ID files on completed and on rejected
+
+---
+
+## 7. Pending designs (July 2026 — agreed with PBP, awaiting inputs)
+
+### 7.1 PBP category routing (awaiting PBP delegation matrix)
+
+PBP review is delegated by sub-category, not just clinical/non-clinical:
+non-clinical splits into e.g. **Soft FM, Hard FM, Corporate**; clinical splits
+by department/specialty. PBP are producing a **delegation matrix** (category →
+responsible PBP reviewer). Design, to build when the matrix arrives:
+
+1. **App:** add a required "PBP category" select to the Section 2
+   questionnaire (options come straight from the matrix; the non-clinical
+   questionnaire already has a category field — align its options). Store it
+   on the submission (`formData.pbpCategory`) and, in production, in a new
+   SSF-Submissions **PBPCategory** choice column.
+2. **Flows (F1 questionnaire branch + F6):** put the category in the email
+   **subject** — `New pre-screening questionnaire [Title] — [CompanyName] —
+   [PBPCategory]` — so the right PBP member self-selects and duplicate
+   assessment is avoided. This composes with the existing claim feature
+   (claim banner + F7 assignment email = second layer against duplication).
+3. **Mailboxes:** subject-line tagging likely means **one** PBP shared
+   mailbox suffices (members filter/rule on category) instead of separate
+   clinical + non-clinical boxes — decide with PBP when the matrix lands and
+   update the go-live swap table accordingly. Only if PBP insist on hard
+   separation does F1 need a per-category Switch.
+4. Do NOT encode reviewer names/emails in the flow — route to the shared
+   mailbox and let the matrix live in the subject + an easily edited list.
+   People change; flows shouldn't.
+
+### 7.2 Supplier information pack — triage for supplier-known answers
+
+**Problem:** from Section 3 onwards (company details, registration numbers,
+insurance, bank details) the answers really come from the supplier. In the
+old Excel process the requester just emailed the workbook to the supplier.
+Requesters either chase suppliers by email ad hoc (slow back-and-forth) or
+guess. External suppliers cannot sign into the Trust tenant, so a supplier
+portal is out of scope for v1 (see §4b rule 5).
+
+**Recommended v1 approach — "Supplier Information Pack" via Microsoft Forms:**
+
+1. Create one **Microsoft Form** (anonymous responses allowed — works for
+   external suppliers, no licence/auth needed) mirroring the
+   supplier-answerable fields of Sections 3–6: company/trading name,
+   registered address, CRN/VAT/charity no., contact details, insurance,
+   DUNS, CIS, bank details are **deliberately excluded** (bank details must
+   arrive on letterhead per the existing control — the form says so and
+   tells the supplier to attach/send the letterhead to the requester).
+2. First question of the form: **"Reference code (given to you by the Trust
+   requester)"** — the requester's draft/QUEST reference ties the response
+   back.
+3. A small flow (**F8 — Supplier pack received**): trigger "When a new
+   response is submitted" → email the structured answers to the requester
+   (matched by the requester email captured in the form or simply to the
+   requester who is told to include their own email in the reference
+   question) → optionally also write a row to a **SSF-SupplierPacks** list
+   keyed by reference code.
+4. **Requester stays accountable:** they transcribe/verify the pack into the
+   real form (v1). The form UI can later prefill from SSF-SupplierPacks by
+   reference code (v1.5, via the Graph provider) — same pattern as CRN
+   autofill.
+5. This kills the email back-and-forth without creating a second source of
+   truth: the SSF submission remains the record; the pack is an input aid.
+   Fraud controls unchanged — CRN/VAT verification and the AP letterhead
+   cross-check still run on whatever the requester submits.
+
+**Rejected alternatives:** Azure AD guest accounts per supplier (heavy IT
+dependency, per-supplier onboarding — revisit for v2 contract negotiation);
+emailing editable Excel again (no validation, no audit, re-keying errors);
+letting requesters share their signed-in session with suppliers (never).
