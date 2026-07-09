@@ -534,7 +534,8 @@ they never review:
 >    test address (currently fahimul.haque1@nhs.net; go-live:
 >    barts.procurement@nhs.net). Subject:
 >    `New supplier request [Title] — [CompanyName] — classification needed`.
->    Body: requester name, company name, and the link
+>    Body, four lines: `Submission ID: [Title]`, `Company: [CompanyName]`,
+>    `Requester: [RequesterName]`, and the link
 >    `https://APP-URL-TBC/procurement-review/[Title]`. Nothing else.
 > 2. Open the existing "Update item" action (the one that sets LastStatus).
 >    Change LastStatus from the hardcoded `pending_review` to the **Status
