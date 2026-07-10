@@ -28,7 +28,7 @@ Follow [../deployment/setup/07-browser-agent-playbook.md](../deployment/setup/07
 | F4 digest (Task 7) | ✅ 09/07/2026 — recurrence corrected to Mon 08:00 UK |
 | F7 claim email + columns (Task 11) | ✅ 09/07/2026 — loop-guard bug fixed (Update item now writes ClaimNotified only; deliberately no Title). Pending: one hand test — fill ClaimedBy on a dummy item, expect assignment email + unchanged Status + no F2 email |
 | CRN proxy flow — premium (Task 8) | ✅ verified live 08–09/07 (200 valid / 404 with CORS) |
-| VAT proxy flow (Task 10) | ⏳ (app side done; HMRC production credentials being re-applied for) |
+| VAT proxy flow (Task 10) | ✅ 10/07/2026 built against HMRC sandbox (runAfter Succeeded+Failed verified). Pending: URL into local/app config + live test; go-live still needs production HMRC credentials + URI swap (checklist §1.3) |
 | Hand-run test matrix (§6 of the design doc) | 🔄 in progress — F1 single-email retest + F6 round-trip next |
 
 ## Phase 3 — IT dependency ⏸️ REQUESTED
