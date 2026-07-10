@@ -30,6 +30,17 @@ import useFormNavigation from '../../hooks/useFormNavigation';
 import useCRNVerification from '../../hooks/useCRNVerification';
 import clsx from 'clsx';
 
+// Supplier Information Pack — Microsoft Form the requester can send to the
+// supplier so Sections 3–6 answers arrive in one go instead of email
+// back-and-forth. Configured (not hardcoded) so the public repo doesn't
+// advertise the form; unset = the helper notice simply doesn't render.
+const SUPPLIER_PACK_FORM_URL = import.meta.env.VITE_SUPPLIER_PACK_FORM_URL;
+
+const generatePackReference = () =>
+  'PACK-' + Array.from({ length: 6 }, () =>
+    'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]
+  ).join('');
+
 const Section3Classification = () => {
   const { formData, updateFormData, updateMultipleFields, uploadedFiles, setUploadedFile, removeUploadedFile } = useFormStore();
   const { handleNext, handlePrev } = useFormNavigation();
@@ -38,6 +49,41 @@ const Section3Classification = () => {
   const [selectedSupplierType, setSelectedSupplierType] = useState(formData.supplierType || '');
   const [companiesHouseValue, setCompaniesHouseValue] = useState(formData.companiesHouseRegistered || '');
   const [idConsentGiven, setIdConsentGiven] = useState(formData.idConsentGiven || false);
+  const [packCopied, setPackCopied] = useState(false);
+
+  // Assign this draft a supplier-pack reference once (persists with the draft)
+  useEffect(() => {
+    if (SUPPLIER_PACK_FORM_URL && !formData.supplierPackReference) {
+      updateFormData('supplierPackReference', generatePackReference());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleCopyPackEmail = async () => {
+    const requesterEmail = formData.nhsEmail || 'your @nhs.net email';
+    const template =
+`Subject: Supplier details needed — Barts Health NHS Trust supplier setup
+
+Hi,
+
+We are setting you up as a supplier to Barts Health NHS Trust. Please complete our short Supplier Information Pack — it takes about 5 minutes and needs no sign-in:
+
+${SUPPLIER_PACK_FORM_URL}
+
+In the first question, quote this reference code: ${formData.supplierPackReference}
+When asked for the requester's NHS email, enter: ${requesterEmail}
+
+IMPORTANT: do NOT enter bank details on the form. Please send your bank details on company letterhead (plus your insurance certificate, if applicable) directly to me at ${requesterEmail}.
+
+Thank you`;
+    try {
+      await navigator.clipboard.writeText(template);
+      setPackCopied(true);
+      setTimeout(() => setPackCopied(false), 3000);
+    } catch {
+      window.prompt('Copy the supplier email below:', template);
+    }
+  };
 
   // Dynamically create validation schema based on supplier type
   // Using useMemo ensures the schema updates when dependencies change
@@ -238,6 +284,30 @@ const Section3Classification = () => {
       <p className="section-subtitle">
         Please provide information about the supplier's legal structure and classification.
       </p>
+
+      {/* Supplier Information Pack helper — most answers from here to Section 6
+          are the supplier's own details; let them fill our form once instead
+          of chasing them field by field */}
+      {SUPPLIER_PACK_FORM_URL && formData.supplierPackReference && (
+        <NoticeBox type="info" style={{ marginBottom: 'var(--space-24)' }}>
+          <strong>Need these details from the supplier?</strong>
+          <p style={{ margin: 'var(--space-8) 0' }}>
+            Most questions from here to Section 6 are about the supplier&apos;s own
+            details (registration numbers, address, contacts, insurance). Instead of
+            going back and forth by email, send them our Supplier Information Pack —
+            a 5-minute online form. Their answers come straight back to your inbox,
+            and you copy them in here. Your reference code for this request:{' '}
+            <strong>{formData.supplierPackReference}</strong>
+          </p>
+          <Button variant="outline" type="button" onClick={handleCopyPackEmail}>
+            {packCopied ? 'Copied — paste into an email to the supplier' : 'Copy ready-made email for your supplier'}
+          </Button>
+          <p style={{ margin: 'var(--space-8) 0 0 0', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+            Bank details are deliberately excluded from the pack — the supplier must
+            send those on company letterhead directly to you.
+          </p>
+        </NoticeBox>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* Companies House Registration */}

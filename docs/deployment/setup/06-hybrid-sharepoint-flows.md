@@ -339,6 +339,14 @@ Status:
 
 ### 7.2 Supplier information pack — triage for supplier-known answers
 
+> **Status (11 Jul 2026):** MS Form created ("Barts Health — Supplier
+> Information Pack", 18 questions + closing text; anonymous responses). App
+> side DONE: Section 3 shows a helper notice with a persistent per-draft
+> `PACK-XXXXXX` reference and a one-click copy of the supplier email
+> (renders only when `VITE_SUPPLIER_PACK_FORM_URL` is configured — the URL
+> is deliberately NOT committed to this public repo). Remaining: flow F8 +
+> SSF-SupplierPacks list (playbook prompt provided 11 Jul).
+
 **Problem:** from Section 3 onwards (company details, registration numbers,
 insurance, bank details) the answers really come from the supplier. In the
 old Excel process the requester just emailed the workbook to the supplier.
