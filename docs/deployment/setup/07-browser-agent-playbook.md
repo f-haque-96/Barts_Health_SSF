@@ -169,6 +169,16 @@ SensitiveDocuments; no folders inside either.
 
 ## Task 3 — Create the six SharePoint groups and set permissions
 
+> ⚠️ **DO THIS ONE BY HAND (confirmed 11 Jul 2026).** Claude for Chrome
+> refuses security/permission changes as a matter of policy — creating
+> permission groups, breaking inheritance, editing permission levels and
+> sharing settings are all on its prohibited list. The task text below
+> doubles as your manual runbook; work through it yourself in
+> Site settings → Site permissions → Advanced permissions settings.
+> Order: create SSF-Admin first (add yourself immediately), then the other
+> five groups, then the "Add Only" level, then the list/library lockdowns
+> (including Task 2b's SSF-BankDetails).
+
 > On the SharePoint site at https://nhs.sharepoint.com/sites/R1H_SupplierSetupForm-CW-PROC-GSS, go to Site settings → Site permissions
 > → Advanced permissions settings, and create six SharePoint groups:
 > **SSF-PBP**, **SSF-Procurement**, **SSF-OPW**, **SSF-Contract**, **SSF-APControl**,
