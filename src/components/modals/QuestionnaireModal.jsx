@@ -16,6 +16,7 @@ import storage from '../../services/StorageProvider';
 
 const clinicalQuestionnaireSchema = z.object({
   supplierName: z.string().min(2, 'Supplier name is required').max(200, 'Maximum 200 characters'),
+  pbpCategory: z.string().min(1, 'Please select the PBP review category'),
   clinicalServices: z.string().min(10, 'Please provide more detail (minimum 10 characters)').max(500, 'Maximum 500 characters'),
   patientContact: z.enum(['yes', 'no'], { error: 'Please select an option' }),
   patientDataAccess: z.enum(['yes', 'no'], { error: 'Please select an option' }),
@@ -27,6 +28,7 @@ const clinicalQuestionnaireSchema = z.object({
 
 const nonClinicalQuestionnaireSchema = z.object({
   supplierName: z.string().min(2, 'Supplier name is required').max(200, 'Maximum 200 characters'),
+  pbpCategory: z.string().min(1, 'Please select the PBP review category'),
   goodsServices: z.string().min(10, 'Please provide more detail (minimum 10 characters)').max(500, 'Maximum 500 characters'),
   procurementCategory: z.string().min(1, 'Please select a category'),
   annualValue: z.number({ error: 'Please enter a valid amount' }).positive('Please enter a valid amount'),
@@ -35,6 +37,32 @@ const nonClinicalQuestionnaireSchema = z.object({
   alternativesConsidered: z.enum(['yes', 'no'], { error: 'Please select an option' }),
   additionalNotes: z.string().max(500, 'Maximum 500 characters').optional(),
 });
+
+// ===== PBP review categories =====
+// The `value` strings MUST exactly match the Title column of the
+// SSF-PBPMatrix SharePoint list — Power Automate looks the category up there
+// to route/CC the responsible PBP. If the matrix changes (joiners, movers,
+// leavers, new categories), update BOTH the list and this array together.
+const PBP_CATEGORIES = {
+  clinical: [
+    { value: 'Cardiac Service', label: 'Cardiac Service (St Bartholomew’s)', site: 'SBH' },
+    { value: 'Pathology', label: 'Pathology (Mile End)', site: 'MEH' },
+    { value: 'Surgery / Women and Children', label: 'Surgery / Women and Children (Whipps Cross)', site: 'WCH' },
+    { value: 'Clinical - Royal London', label: 'Other clinical — Royal London', site: 'RLH' },
+    { value: 'Clinical - St Bartholomews', label: 'Other clinical — St Bartholomew’s', site: 'SBH' },
+    { value: 'Clinical - Whipps Cross', label: 'Other clinical — Whipps Cross', site: 'WCH' },
+    { value: 'Clinical Services - Trustwide', label: 'Clinical Services — Trustwide / other or multiple sites', site: 'Trustwide' },
+  ],
+  nonClinical: [
+    { value: 'Soft FM / E&F / Corporate', label: 'Soft FM / Estates & Facilities / Corporate', site: 'Trustwide' },
+    { value: 'Hard FM', label: 'Hard FM', site: 'Trustwide' },
+  ],
+};
+
+const getPbpCategorySite = (isClinical, value) => {
+  const list = isClinical ? PBP_CATEGORIES.clinical : PBP_CATEGORIES.nonClinical;
+  return list.find((c) => c.value === value)?.site || 'Trustwide';
+};
 
 // ===== Procurement Categories =====
 const procurementCategories = [
@@ -71,6 +99,7 @@ const QuestionnaireModal = ({ isOpen, onClose, onComplete, type = 'clinical', se
     defaultValues: isClinical
       ? {
           supplierName: '',
+          pbpCategory: '',
           clinicalServices: '',
           patientContact: '',
           patientDataAccess: '',
@@ -81,6 +110,7 @@ const QuestionnaireModal = ({ isOpen, onClose, onComplete, type = 'clinical', se
         }
       : {
           supplierName: '',
+          pbpCategory: '',
           goodsServices: '',
           procurementCategory: '',
           annualValue: '',
@@ -151,10 +181,13 @@ const QuestionnaireModal = ({ isOpen, onClose, onComplete, type = 'clinical', se
       // Generate questionnaire ID
       const questionnaireId = `QUEST-${Date.now()}`;
       const submissionDate = new Date().toISOString();
+      // Site derives from the chosen PBP category (SSF-PBPMatrix routing)
+      const pbpSite = getPbpCategorySite(isClinical, data.pbpCategory);
 
       // Store questionnaire data in form (including uploads)
       updateFormData(`${type}Questionnaire`, {
         ...data,
+        site: pbpSite,
         submittedAt: submissionDate,
         questionnaireId,
         status: 'pending_approval',
@@ -169,6 +202,10 @@ const QuestionnaireModal = ({ isOpen, onClose, onComplete, type = 'clinical', se
         status: 'pending_review',
         type: 'questionnaire',
         questionnaireType: type,
+        // Mirrored to the SharePoint PBPCategory / Site columns in production
+        // so flows F1/F6 can tag subjects and look up the owner in SSF-PBPMatrix
+        pbpCategory: data.pbpCategory,
+        site: pbpSite,
         formData: {
           ...formData,
           [`${type}Questionnaire`]: data,
@@ -373,6 +410,31 @@ const QuestionnaireModal = ({ isOpen, onClose, onComplete, type = 'clinical', se
                 </>
               )}
             />
+          </div>
+
+          {/* PBP review category — drives which PBP the questionnaire routes to
+              (values mirror the SSF-PBPMatrix list; site is derived) */}
+          <div style={{ marginBottom: '24px' }}>
+            <Controller
+              name="pbpCategory"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Which area does this request fall under?"
+                  {...field}
+                  options={(isClinical ? PBP_CATEGORIES.clinical : PBP_CATEGORIES.nonClinical).map(
+                    ({ value, label }) => ({ value, label })
+                  )}
+                  placeholder="Select the review category"
+                  error={errors.pbpCategory?.message}
+                  required
+                />
+              )}
+            />
+            <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '6px', marginBottom: 0 }}>
+              This routes your questionnaire to the right Procurement Business Partner.
+              {isClinical && ' If unsure, or your site is not listed, choose "Clinical Services — Trustwide".'}
+            </p>
           </div>
 
           {/* Clinical Questionnaire Questions */}

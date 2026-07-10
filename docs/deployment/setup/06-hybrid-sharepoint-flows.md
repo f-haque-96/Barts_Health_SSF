@@ -307,31 +307,35 @@ dev localStorage provider. Each traces to a verified behaviour of the current ap
 
 ## 7. Pending designs (July 2026 — agreed with PBP, awaiting inputs)
 
-### 7.1 PBP category routing (awaiting PBP delegation matrix)
+### 7.1 PBP category routing — IN BUILD (matrix received 10 Jul 2026)
 
-PBP review is delegated by sub-category, not just clinical/non-clinical:
-non-clinical splits into e.g. **Soft FM, Hard FM, Corporate**; clinical splits
-by department/specialty. PBP are producing a **delegation matrix** (category →
-responsible PBP reviewer). Design, to build when the matrix arrives:
+PBP review is delegated by sub-category and (clinical only) by site. The
+delegation matrix lives in the **SSF-PBPMatrix** SharePoint list (created
+10 Jul 2026: Title = category, ServiceCategory, Site, OwnerName, OwnerEmail,
+DeputyEmail, Active). **The list — not the flows and not this doc — is the
+single source of truth for who owns what**; the actual names/emails are
+deliberately NOT recorded in this public repo.
 
-1. **App:** add a required "PBP category" select to the Section 2
-   questionnaire (options come straight from the matrix; the non-clinical
-   questionnaire already has a category field — align its options). Store it
-   on the submission (`formData.pbpCategory`) and, in production, in a new
-   SSF-Submissions **PBPCategory** choice column.
-2. **Flows (F1 questionnaire branch + F6):** put the category in the email
-   **subject** — `New pre-screening questionnaire [Title] — [CompanyName] —
-   [PBPCategory]` — so the right PBP member self-selects and duplicate
-   assessment is avoided. This composes with the existing claim feature
-   (claim banner + F7 assignment email = second layer against duplication).
-3. **Mailboxes:** subject-line tagging likely means **one** PBP shared
-   mailbox suffices (members filter/rule on category) instead of separate
-   clinical + non-clinical boxes — decide with PBP when the matrix lands and
-   update the go-live swap table accordingly. Only if PBP insist on hard
-   separation does F1 need a per-category Switch.
-4. Do NOT encode reviewer names/emails in the flow — route to the shared
-   mailbox and let the matrix live in the subject + an easily edited list.
-   People change; flows shouldn't.
+Status:
+1. **App — DONE (10 Jul 2026):** required "Which area does this request fall
+   under?" select in both Section 2 questionnaires (`QuestionnaireModal`).
+   Option values match SSF-PBPMatrix Titles exactly; site derives from the
+   choice; stored as `pbpCategory` + `site` on the QUEST item and shown on
+   the PBP review page. ⚠️ **Sync duty:** the PBP_CATEGORIES array in
+   `QuestionnaireModal.jsx` and the SSF-PBPMatrix list must change together
+   (categories only — owner changes are list-only edits, no code change).
+   SSF-Submissions gained PBPCategory + Site columns (production provider
+   maps the fields).
+2. **Flows:** F1 (questionnaire branch) + F6 subjects gain
+   `— [PBPCategory] ([Site])` (playbook Action 3, 10 Jul). A later
+   enhancement (post mailbox decision): Get-items lookup on SSF-PBPMatrix to
+   CC the owner; optional Teams Flow-bot ping using the same lookup.
+3. **Mailboxes:** subject tagging likely means ONE PBP shared mailbox
+   suffices; decision deferred (non-clinical model itself is under review —
+   Oliver Watling proposes it moves to the catalogue/helpdesk team, needs
+   CPO approval; parked July 2026, revisit as a future update).
+4. Do NOT encode reviewer names/emails in flows — people change; the list
+   changes with them (joiner/mover/leaver = row edits only).
 
 ### 7.2 Supplier information pack — triage for supplier-known answers
 

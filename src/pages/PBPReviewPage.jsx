@@ -1099,6 +1099,13 @@ const PBPReviewPage = ({
             </span>
           </div>
         )}
+        {/* PBP review category — routing per the SSF-PBPMatrix delegation */}
+        {(submission.pbpCategory || questionnaireData?.pbpCategory) && (
+          <ReviewField
+            label="PBP Review Category"
+            value={`${submission.pbpCategory || questionnaireData.pbpCategory}${(submission.site || questionnaireData?.site) ? ` (${submission.site || questionnaireData.site})` : ''}`}
+          />
+        )}
         {questionnaireType === 'clinical' ? (
           <ClinicalQuestionnaireReview data={questionnaireData} />
         ) : (
