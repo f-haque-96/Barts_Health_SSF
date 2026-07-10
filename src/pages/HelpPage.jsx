@@ -190,7 +190,22 @@ const HelpPage = () => {
     {
       question: 'What is the workflow for supplier setup?',
       answer:
-        'The workflow involves several steps: PBP Questionnaire Review → Procurement Review → OPW/IR35 Determination (if needed) → AP Control Banking Verification → Final Approval.',
+        'PBP approval happens during Section 2 (via the pre-screening questionnaire, or your existing procurement engagement evidence). Once you submit the completed form it goes straight to Procurement for classification, then — if needed — OPW/IR35 determination and contract drafting, and finally AP Control banking verification before the supplier is created.',
+    },
+    {
+      question: 'The supplier knows most of these answers — can they fill them in?',
+      answer:
+        'Yes. From Section 3 onwards most questions are about the supplier\'s own details. Use the "Supplier Information Pack" notice at the top of Section 3: it gives you a ready-made email containing a short online form for the supplier (no sign-in needed) and a reference code. Their answers arrive in your inbox and you copy them into the form. Bank details are deliberately excluded — the supplier must send those on company letterhead directly to you.',
+    },
+    {
+      question: 'What is the "Which area does this request fall under?" question in the questionnaire?',
+      answer:
+        'It routes your pre-screening questionnaire to the right Procurement Business Partner — clinical requests by specialty and hospital site, non-clinical by category (e.g. Hard FM, Soft FM/Corporate). If you are unsure, or your site is not listed, choose the Trustwide option and it will be redirected for you.',
+    },
+    {
+      question: 'Why do I have to type the bank details AND upload a letterhead?',
+      answer:
+        'The typed details are checked against the letterhead by AP Control — differences between the two have caught real errors and fraud attempts in the past. Always type the details exactly as they appear on the supplier\'s letterhead.',
     },
     {
       question: 'What happens if my submission is rejected?',
