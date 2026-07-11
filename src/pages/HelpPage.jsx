@@ -205,6 +205,11 @@ const HelpPage = () => {
         'Yes. From Section 3 onwards most questions are about the supplier\'s own details. Use the "Supplier Information Pack" notice at the top of Section 3: it gives you a ready-made email containing a short online form for the supplier (no sign-in needed) and a reference code. Their answers arrive in your inbox ending with an autofill block — click "Paste supplier\'s answers" in Section 3, paste the block, and the form fills itself (including pre-selecting the supplier type and verifying the CRN) for you to review and confirm. The pack includes bank details, but the supplier must ALSO send their bank letterhead directly to you — AP Control verifies the typed details against it before any payment can be set up.',
     },
     {
+      question: 'Can the supplier see the progress page or talk to the contract drafter directly?',
+      answer:
+        'Not directly at the moment. The progress page (the link in your notification emails) requires an NHS sign-in, so only you as the requester can open it. Suppliers take part in two ways: the Supplier Information Pack form (no sign-in needed) for providing their details, and email for everything else — during the contract stage the contract drafter corresponds with the supplier by email, and the outcome is recorded on the submission for you to see. If the supplier asks about progress, check your progress page and relay the status. Direct supplier access to the portal (guest accounts) is planned as a future update.',
+    },
+    {
       question: 'What is the "Which area does this request fall under?" question in the questionnaire?',
       answer:
         'It routes your pre-screening questionnaire to the right Procurement Business Partner — clinical requests by specialty and hospital site, non-clinical by category (e.g. Hard FM, Soft FM/Corporate). If you are unsure, or your site is not listed, choose the Trustwide option and it will be redirected for you.',
