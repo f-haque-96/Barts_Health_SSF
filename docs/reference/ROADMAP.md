@@ -20,7 +20,7 @@ Follow [../deployment/setup/07-browser-agent-playbook.md](../deployment/setup/07
 | Task | Status |
 |---|---|
 | SSF-Submissions + SSF-AuditTrail lists (Tasks 1–2) | ✅ (dummy-item flow tests running against them since 8 Jul) |
-| Six SSF-* groups + library permissions (Task 3) | ⏳ (document libraries created) |
+| Six SSF-* groups + library permissions (Tasks 3 + 2b) | ✅ 11/07/2026 done BY HAND (browser agent refuses permission changes) and verified: Add Only level; AuditTrail append-only; SensitiveDocuments = Contract/APControl/Admin; SSF-BankDetails = APControl/Admin. Members population ongoing |
 | F1 new-submission router (Tasks 4 + 12 + 13) | ✅ 09/07/2026 — SubmissionType routing (full → Procurement), ServiceCategory split, LastStatus from trigger |
 | F2 status router (Task 5) | ✅ built — fires correctly (verified via dummy-item emails 09/07) |
 | F6 requester-responded (Tasks 9 + 12) | ✅ 09/07/2026 — rebuilt after a stuck-save tab; loop guard first, ServiceCategory split |
