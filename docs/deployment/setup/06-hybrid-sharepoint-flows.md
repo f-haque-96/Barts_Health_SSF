@@ -347,16 +347,22 @@ Status:
 > is deliberately NOT committed to this public repo). **F8 + the
 > SSF-SupplierPacks list are BUILT and ON (11 Jul).**
 >
-> **Prefill (same day):** a "Fetch my supplier's answers" button calls a
-> lookup flow (`VITE_PACK_FETCH_FLOW_URL`, HTTP trigger — same proxy
-> pattern as CRN/VAT) that returns the SSF-SupplierPacks row matching
-> `?ref=<PACK-…>&email=<requester>`; the app prefills ~15 fields across
-> Sections 3–6 (yes/no radios, employee band mapping, postcode extracted
-> from the address). Never auto-filled by design: supplier type, ID
-> documents, bank details, insurance free-text (surfaced as a note).
-> Prefill never bypasses validation or the CRN/VAT verification.
-> The dual key (reference + requester email) means a leaked flow URL alone
-> returns nothing useful.
+> **Prefill (11 Jul, revised same day):** the original lookup-flow design
+> (HTTP trigger reading SSF-SupplierPacks) is **blocked by tenant DLP**
+> (business connector `sharepointonline` may not combine with non-business
+> `HttpRequestReceived`) — correctly so; do NOT circumvent. Production
+> answer: **paste-to-fill** — the F8 email ends with a machine-readable
+> `=== SSF AUTOFILL ===` block; the requester pastes it into Section 3 and
+> ~24 fields fill across Sections 3–6 (yes/no radios, employee band,
+> city/postcode, charity number, UTR, PL cover + expiry date conversion,
+> and — decided 11 Jul — bank details, which travel in the email ONLY and
+> are never stored in SSF-SupplierPacks; the AP letterhead cross-check is
+> unchanged). Never auto-filled: supplier type (shown as a hint) and ID
+> documents. Prefill never bypasses validation or CRN/VAT verification;
+> in-memory bank values are still excluded from draft persistence (DPIA).
+> The dormant "Fetch" button (`VITE_PACK_FETCH_FLOW_URL`) remains for the
+> Graph-provider era, when the signed-in user's own permissions make a
+> direct read legitimate.
 
 **Problem:** from Section 3 onwards (company details, registration numbers,
 insurance, bank details) the answers really come from the supplier. In the

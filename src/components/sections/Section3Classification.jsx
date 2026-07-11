@@ -62,10 +62,18 @@ const packEmployeeBand = (v) => {
   return '';
 };
 
-// Map an SSF-SupplierPacks row to form fields across Sections 3–6.
-// Deliberately NEVER mapped: supplier type (drives validation/OPW routing —
-// human choice), ID documents, bank details (letterhead only), insurance
-// details text (free-form — surfaced to the requester instead).
+// dd/mm/yyyy (or dd-mm-yyyy) → yyyy-mm-dd for date inputs
+const packDate = (v) => {
+  const m = String(v || '').match(/(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})/);
+  return m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : '';
+};
+
+// Map a supplier pack (SSF-SupplierPacks row shape) to form fields across
+// Sections 3–6. Deliberately NEVER mapped: supplier type (drives
+// validation/OPW routing — human choice, shown as a hint) and ID documents.
+// Bank details ARE mapped (July 2026 decision): they arrive via the pack
+// email only (not stored in the SupplierPacks list) and the AP letterhead
+// cross-check is unchanged.
 const mapPackToFields = (pack) => {
   const postcodeMatch = String(pack.RegisteredAddress || '')
     .match(/[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}/i);
@@ -73,7 +81,8 @@ const mapPackToFields = (pack) => {
     companyName: pack.CompanyName || '',
     tradingName: pack.TradingName || '',
     registeredAddress: pack.RegisteredAddress || '',
-    postcode: postcodeMatch ? postcodeMatch[0].toUpperCase() : '',
+    city: pack.City || '',
+    postcode: (pack.Postcode || (postcodeMatch ? postcodeMatch[0] : '')).toUpperCase(),
     contactName: pack.ContactName || '',
     contactEmail: pack.ContactEmail || '',
     contactPhone: pack.ContactPhone || '',
@@ -83,11 +92,20 @@ const mapPackToFields = (pack) => {
     vatRegistered: packYesNo(pack.VATRegistered),
     vatNumber: String(pack.VATNumber || '').replace(/\s+/g, ''),
     cisRegistered: packYesNo(pack.CISRegistered),
+    utrNumber: String(pack.UTRNumber || '').replace(/\s+/g, ''),
     publicLiability: packYesNo(pack.PublicLiability),
+    plCoverage: pack.PLCoverage || '',
+    plExpiry: packDate(pack.PLExpiry),
     employeeCount: packEmployeeBand(pack.EmployeeCount),
-    // Charity number (form question added July 2026) — fills the field that
-    // appears if/when the requester selects the Charity type card
     charityNumber: String(pack.CharityNumber || '').replace(/\s+/g, ''),
+    overseasSupplier: packYesNo(pack.OverseasSupplier),
+    // Bank details (email-only transit; typed values verified by AP against
+    // the letterhead exactly as before)
+    nameOnAccount: pack.NameOnAccount || '',
+    sortCode: pack.SortCode || '',
+    accountNumber: String(pack.AccountNumber || '').replace(/\s+/g, ''),
+    iban: String(pack.IBAN || '').replace(/\s+/g, ''),
+    swiftCode: String(pack.SWIFTCode || '').replace(/\s+/g, ''),
     ...(pack.DUNSNumber
       ? { ghxDunsKnown: 'yes', ghxDunsNumber: pack.DUNSNumber }
       : {}),
@@ -96,6 +114,36 @@ const mapPackToFields = (pack) => {
   return Object.fromEntries(
     Object.entries(fields).filter(([, v]) => v !== '' && v != null)
   );
+};
+
+// Keys of the machine-readable block at the end of the F8 "Supplier pack
+// received" email → pack-row field names. The requester pastes that block
+// into Section 3 and everything fills. Keep in sync with the F8 flow body.
+const PACK_BLOCK_KEYS = {
+  COMPANY: 'CompanyName', TRADING: 'TradingName',
+  ORG_TYPE: 'OrganisationType', CH_REGISTERED: 'CompaniesHouseRegistered',
+  CRN: 'CRN', CHARITY_NO: 'CharityNumber',
+  VAT_REGISTERED: 'VATRegistered', VAT_NO: 'VATNumber',
+  ADDRESS: 'RegisteredAddress', CITY: 'City', POSTCODE: 'Postcode',
+  CONTACT_NAME: 'ContactName', CONTACT_EMAIL: 'ContactEmail',
+  CONTACT_PHONE: 'ContactPhone', WEBSITE: 'Website',
+  EMPLOYEES: 'EmployeeCount', CIS: 'CISRegistered', UTR: 'UTRNumber',
+  PL_INSURANCE: 'PublicLiability', PL_COVER: 'PLCoverage', PL_EXPIRY: 'PLExpiry',
+  INSURANCE_NOTES: 'InsuranceDetails', DUNS: 'DUNSNumber',
+  OVERSEAS: 'OverseasSupplier', ACCOUNT_NAME: 'NameOnAccount',
+  SORT_CODE: 'SortCode', ACCOUNT_NO: 'AccountNumber',
+  IBAN: 'IBAN', SWIFT: 'SWIFTCode',
+};
+
+const parsePackBlock = (text) => {
+  const pack = {};
+  for (const line of String(text || '').split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Z_]+)\s*:\s*(.*)\s*$/);
+    if (m && PACK_BLOCK_KEYS[m[1]]) {
+      pack[PACK_BLOCK_KEYS[m[1]]] = m[2].trim();
+    }
+  }
+  return pack;
 };
 
 const Section3Classification = () => {
@@ -110,6 +158,8 @@ const Section3Classification = () => {
   const [packFetchStatus, setPackFetchStatus] = useState('idle'); // idle | fetching | done | notfound | error
   const [packFilledCount, setPackFilledCount] = useState(0);
   const [packInsuranceNote, setPackInsuranceNote] = useState('');
+  const [packPasteOpen, setPackPasteOpen] = useState(false);
+  const [packPasteText, setPackPasteText] = useState('');
   // The supplier's own description of their organisation type — shown as a
   // HINT only; the supplier-type card stays a requester decision because it
   // drives validation, document requirements and OPW routing
@@ -170,27 +220,43 @@ Thank you`;
         return;
       }
 
-      const filled = mapPackToFields(pack);
-      updateMultipleFields(filled);
-
-      // Fields rendered on THIS section need explicit sync (react-hook-form
-      // has already mounted them); Sections 4–6 initialise from the store
-      // when opened
-      if (filled.companiesHouseRegistered) {
-        setValue('companiesHouseRegistered', filled.companiesHouseRegistered);
-        setCompaniesHouseValue(filled.companiesHouseRegistered);
-      }
-      if (filled.crn) setValue('crn', filled.crn);
-      if (filled.employeeCount) setValue('employeeCount', filled.employeeCount);
-
-      setPackInsuranceNote(pack.InsuranceDetails || '');
-      setPackTypeHint(pack.OrganisationType || '');
-      setPackFilledCount(Object.keys(filled).length);
-      setPackFetchStatus('done');
+      applyPackData(pack);
     } catch (err) {
       console.error('Supplier pack fetch failed:', err);
       setPackFetchStatus('error');
     }
+  };
+
+  // Shared by the lookup fetch and the paste-from-email path
+  const applyPackData = (pack) => {
+    const filled = mapPackToFields(pack);
+    if (Object.keys(filled).length === 0) {
+      setPackFetchStatus('notfound');
+      return;
+    }
+    updateMultipleFields(filled);
+
+    // Fields rendered on THIS section need explicit sync (react-hook-form
+    // has already mounted them); Sections 4–6 initialise from the store
+    // when opened
+    if (filled.companiesHouseRegistered) {
+      setValue('companiesHouseRegistered', filled.companiesHouseRegistered);
+      setCompaniesHouseValue(filled.companiesHouseRegistered);
+    }
+    if (filled.crn) setValue('crn', filled.crn);
+    if (filled.charityNumber) setValue('charityNumber', filled.charityNumber);
+    if (filled.employeeCount) setValue('employeeCount', filled.employeeCount);
+
+    setPackInsuranceNote(pack.InsuranceDetails || '');
+    setPackTypeHint(pack.OrganisationType || '');
+    setPackFilledCount(Object.keys(filled).length);
+    setPackFetchStatus('done');
+    setPackPasteOpen(false);
+    setPackPasteText('');
+  };
+
+  const handleApplyPastedPack = () => {
+    applyPackData(parsePackBlock(packPasteText));
   };
 
   // Dynamically create validation schema based on supplier type
@@ -421,7 +487,42 @@ Thank you`;
                 {packFetchStatus === 'fetching' ? 'Checking…' : "Fetch my supplier's answers"}
               </Button>
             )}
+            <Button variant="outline" type="button" onClick={() => setPackPasteOpen(!packPasteOpen)}>
+              {packPasteOpen ? 'Cancel paste' : "Paste supplier's answers"}
+            </Button>
           </div>
+          {packPasteOpen && (
+            <div style={{ marginTop: 'var(--space-12)' }}>
+              <p style={{ margin: '0 0 var(--space-8) 0', fontSize: 'var(--font-size-sm)' }}>
+                Open the <strong>&quot;Supplier pack received&quot;</strong> email in your
+                inbox, copy everything from <strong>=== SSF AUTOFILL ===</strong> to{' '}
+                <strong>=== END ===</strong>, paste it below, then click Fill.
+              </p>
+              <textarea
+                value={packPasteText}
+                onChange={(e) => setPackPasteText(e.target.value)}
+                rows={6}
+                placeholder={'=== SSF AUTOFILL ===\nCOMPANY: …\nCRN: …\n=== END ==='}
+                style={{
+                  width: '100%',
+                  padding: 'var(--space-8)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-sm)',
+                  fontFamily: 'monospace',
+                  fontSize: 'var(--font-size-sm)',
+                }}
+              />
+              <Button
+                variant="primary"
+                type="button"
+                onClick={handleApplyPastedPack}
+                disabled={!packPasteText.trim()}
+                style={{ marginTop: 'var(--space-8)' }}
+              >
+                Fill the form from these answers
+              </Button>
+            </div>
+          )}
           {packFetchStatus === 'done' && (
             <p style={{ margin: 'var(--space-8) 0 0 0', color: '#166534', fontWeight: 'var(--font-weight-medium)' }}>
               ✓ {packFilledCount} answers filled in from the supplier&apos;s pack. Review
@@ -440,9 +541,11 @@ Thank you`;
           )}
           {packFetchStatus === 'notfound' && (
             <p style={{ margin: 'var(--space-8) 0 0 0', color: '#92400e' }}>
-              No pack found yet for reference <strong>{formData.supplierPackReference}</strong>.
-              The supplier may not have submitted it yet, or used a different
-              reference — check the confirmation email in your inbox.
+              No answers found. If you pasted from the email, make sure you copied the
+              whole block from <strong>=== SSF AUTOFILL ===</strong> to{' '}
+              <strong>=== END ===</strong>. If you used fetch, the supplier may not
+              have submitted the pack for reference{' '}
+              <strong>{formData.supplierPackReference}</strong> yet.
             </p>
           )}
           {packFetchStatus === 'error' && (
