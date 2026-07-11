@@ -147,6 +147,78 @@ const Section6FinancialInfo = () => {
     }
   };
 
+  // ===== Stale-conditional-field clearing =====
+  // When a controlling answer changes so its dependent fields are hidden,
+  // the previously typed values must be CLEARED (form state + store) — not
+  // just hidden — or they leak into Section 7, the PDF, review pages and
+  // the submission (bug found 11 Jul 2026: Q6.15 'no' still submitted the
+  // Q6.16 VAT number).
+  const clearFields = React.useCallback((fields) => {
+    fields.forEach((f) => {
+      setValue(f, '');
+      updateFormData(f, '');
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setValue]);
+
+  useEffect(() => {
+    if (watchVat === 'no') {
+      if (formData.vatNumber || formData.vatVerification) {
+        clearFields(['vatNumber']);
+        updateFormData('vatVerification', null);
+        setVatStatus('idle');
+        setVatResult(null);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchVat]);
+
+  useEffect(() => {
+    if (watchPublicLiability === 'no' && (formData.plCoverage || formData.plExpiry)) {
+      clearFields(['plCoverage', 'plExpiry']);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchPublicLiability]);
+
+  useEffect(() => {
+    if (watchGhxDuns === 'no' && formData.ghxDunsNumber) {
+      clearFields(['ghxDunsNumber']);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchGhxDuns]);
+
+  useEffect(() => {
+    if (watchCis === 'no' && formData.utrNumber) {
+      clearFields(['utrNumber']);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchCis]);
+
+  useEffect(() => {
+    if (watchAccountsAddressSame === 'yes' &&
+        (formData.accountsAddress || formData.accountsCity || formData.accountsPostcode || formData.accountsEmail || formData.accountsPhone)) {
+      clearFields(['accountsAddress', 'accountsCity', 'accountsPostcode', 'accountsEmail', 'accountsPhone']);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchAccountsAddressSame]);
+
+  useEffect(() => {
+    // Overseas 'yes' hides the UK bank fields; 'no' hides the international
+    // ones — clear whichever branch just became hidden
+    if (watchOverseas === 'yes' &&
+        (formData.nameOnAccount || formData.sortCode || formData.accountNumber ||
+         formData.accountsAddressSame || formData.accountsAddress)) {
+      // The accounts-address question also lives in the UK-only branch
+      clearFields(['nameOnAccount', 'sortCode', 'accountNumber',
+        'accountsAddressSame', 'accountsAddress', 'accountsCity',
+        'accountsPostcode', 'accountsEmail', 'accountsPhone']);
+    }
+    if (watchOverseas === 'no' && (formData.iban || formData.swiftCode || formData.bankRouting)) {
+      clearFields(['iban', 'swiftCode', 'bankRouting']);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchOverseas]);
+
   return (
     <section className="form-section active" id="section-6">
       <h3>Financial & Accounts Information</h3>

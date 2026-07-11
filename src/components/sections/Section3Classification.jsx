@@ -387,6 +387,42 @@ Thank you`;
     }
   }, [selectedSupplierType, validationSchema, clearErrors]);
 
+  // ===== Stale-conditional-field clearing =====
+  // Values typed under a previous answer must be CLEARED when the section
+  // that held them is hidden — otherwise they leak into Section 7, the PDF
+  // and the submission (same bug class as Q6.15/Q6.16, fixed 11 Jul 2026).
+  const clearStaleFields = React.useCallback((fields) => {
+    fields.forEach((f) => {
+      setValue(f, '');
+      updateFormData(f, '');
+    });
+  }, [setValue, updateFormData]);
+
+  // Companies House flipped to "no" → the CRN (and its verification) no
+  // longer applies
+  useEffect(() => {
+    if (companiesHouseValue === 'no' && (formData.crn || formData.crnVerification)) {
+      clearStaleFields(['crn']);
+      updateFormData('crnVerification', null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companiesHouseValue]);
+
+  // Supplier type switched → clear identifiers exclusive to the OTHER types
+  useEffect(() => {
+    if (!selectedSupplierType) return;
+    const staleByType = [];
+    if (selectedSupplierType !== 'limited_company') staleByType.push('limitedCompanyInterest');
+    if (selectedSupplierType !== 'partnership') staleByType.push('partnershipInterest');
+    if (selectedSupplierType !== 'limited_company' && selectedSupplierType !== 'partnership') staleByType.push('crn');
+    if (selectedSupplierType !== 'charity') staleByType.push('charityNumber', 'crnCharity');
+    if (selectedSupplierType !== 'public_sector') staleByType.push('organisationType');
+    if (selectedSupplierType !== 'sole_trader') staleByType.push('idType');
+    const dirty = staleByType.filter((f) => formData[f]);
+    if (dirty.length > 0) clearStaleFields(dirty);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSupplierType]);
+
   // Verify CRN when it changes (for limited company and partnership)
   useEffect(() => {
     if ((watchSupplierType === 'limited_company' || watchSupplierType === 'partnership') && watchCRN && watchCRN.length >= 7) {

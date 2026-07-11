@@ -354,6 +354,14 @@ const WorkflowStatus = ({ submission }) => {
         } else if (currentStage === 'pbp' || status === 'pending_review' || status === 'info_required') {
           stageStatus = 'active';
           statusText = status === 'info_required' ? 'Information Requested' : 'Under Review';
+        } else {
+          // Pipeline moved past PBP without a pbpReview record — e.g. the
+          // requester supplied prior procurement-engagement evidence at
+          // Q2.8 (email approval path), or older/preview submissions
+          // created before the Section 2 gate stamped a clearance marker.
+          // Show it done, not pending.
+          stageStatus = 'completed';
+          statusText = 'Cleared at pre-screening';
         }
       } else if (stage.id === 'procurement') {
         if (procurementStatus === 'approved' || procurementStatus === 'classified') {

@@ -824,17 +824,20 @@ const Section7ReviewSubmit = () => {
       {/* Section 6: Financial Information */}
       <ReviewCard title="Financial & Accounts" sectionNumber={6}>
         <ReviewItem label="Overseas Supplier" value={formData.overseasSupplier} />
-        {formData.iban && <ReviewItem label="IBAN" value={formData.iban} />}
-        {formData.nameOnAccount && <ReviewItem label="Name on Account" value={formData.nameOnAccount} />}
-        {formData.sortCode && <ReviewItem label="Sort Code" value={formData.sortCode} />}
-        {formData.accountNumber && <ReviewItem label="Account Number" value={formData.accountNumber} />}
-        <ReviewItem label="Accounts Address Same" value={formData.accountsAddressSame} />
+        {/* Dependent answers only display when their controlling answer still
+            allows them — stale values are cleared at source in Section 6, but
+            these gates make the review immune to legacy drafts */}
+        {formData.overseasSupplier === 'yes' && formData.iban && <ReviewItem label="IBAN" value={formData.iban} />}
+        {formData.overseasSupplier !== 'yes' && formData.nameOnAccount && <ReviewItem label="Name on Account" value={formData.nameOnAccount} />}
+        {formData.overseasSupplier !== 'yes' && formData.sortCode && <ReviewItem label="Sort Code" value={formData.sortCode} />}
+        {formData.overseasSupplier !== 'yes' && formData.accountNumber && <ReviewItem label="Account Number" value={formData.accountNumber} />}
+        {formData.overseasSupplier !== 'yes' && <ReviewItem label="Accounts Address Same" value={formData.accountsAddressSame} />}
         <ReviewItem label="GHX/DUNS Known" value={formData.ghxDunsKnown} />
-        {formData.ghxDunsNumber && <ReviewItem label="GHX/DUNS Number" value={formData.ghxDunsNumber} />}
+        {formData.ghxDunsKnown === 'yes' && formData.ghxDunsNumber && <ReviewItem label="GHX/DUNS Number" value={formData.ghxDunsNumber} />}
         <ReviewItem label="CIS Registered" value={formData.cisRegistered} />
-        {formData.utrNumber && <ReviewItem label="UTR Number" value={formData.utrNumber} />}
+        {formData.cisRegistered === 'yes' && formData.utrNumber && <ReviewItem label="UTR Number" value={formData.utrNumber} />}
         <ReviewItem label="VAT Registered" value={formData.vatRegistered} />
-        {formData.vatNumber && (
+        {formData.vatRegistered === 'yes' && formData.vatNumber && (
           <ReviewItem
             label="VAT Number"
             value={formData.vatNumber}
@@ -842,7 +845,7 @@ const Section7ReviewSubmit = () => {
           />
         )}
         <ReviewItem label="Public Liability Insurance" value={formData.publicLiability} />
-        {formData.plCoverage && <ReviewItem label="Coverage" value={formatCurrency(formData.plCoverage)} />}
+        {formData.publicLiability === 'yes' && formData.plCoverage && <ReviewItem label="Coverage" value={formatCurrency(formData.plCoverage)} />}
       </ReviewCard>
 
       {/* Uploaded Documents */}

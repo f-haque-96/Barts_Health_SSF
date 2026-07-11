@@ -39,6 +39,7 @@ const Section2PreScreening = () => {
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm({
     mode: 'onBlur',
@@ -66,6 +67,18 @@ const Section2PreScreening = () => {
   const usageFrequency = watch('usageFrequency');
   const soleTraderStatus = watch('soleTraderStatus');
   const supplierConnection = watch('supplierConnection');
+
+  // Stale-conditional-field clearing: connection flipped back to "no" must
+  // clear the typed relationship details, or they leak into review pages /
+  // PDF / submission and wrongly raise the conflict-of-interest alert
+  // (same bug class as Q6.15/Q6.16, fixed 11 Jul 2026)
+  useEffect(() => {
+    if (supplierConnection === 'no' && formData.connectionDetails) {
+      setValue('connectionDetails', '');
+      updateFormData('connectionDetails', '');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supplierConnection]);
 
   // Update prescreening progress when serviceCategory is answered
   useEffect(() => {
