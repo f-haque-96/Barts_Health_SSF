@@ -25,6 +25,13 @@ const HelpPage = () => {
       ),
       answer: (
         <div>
+          <p style={{ padding: '10px', backgroundColor: '#eff6ff', border: '1px solid #005EB8', borderRadius: '6px' }}>
+            <strong>Easiest route:</strong> the form can collect all of this for you.
+            At Section 3, use the <strong>Supplier Information Pack</strong> — send the
+            supplier one link, and their answers come back ready to paste straight into
+            the form (see the Supplier Information Pack FAQ below). The list below is
+            for gathering the details manually instead.
+          </p>
           <p><strong>You'll need the following information from your supplier to complete the form:</strong></p>
 
           <h4 style={{ marginTop: '15px', color: '#005EB8' }}>Section 2: Pre-screening Information</h4>
@@ -185,7 +192,7 @@ const HelpPage = () => {
     {
       question: 'Who do I contact for help?',
       answer:
-        'For technical issues, contact the IT helpdesk. For procurement-related queries, contact the Procurement team via Alemba or email procurement@bartshealth.nhs.uk',
+        'For technical issues, contact the IT helpdesk. For procurement-related queries, contact the Procurement team via Alemba or email barts.procurement@nhs.net',
     },
     {
       question: 'What is the workflow for supplier setup?',
@@ -195,7 +202,7 @@ const HelpPage = () => {
     {
       question: 'The supplier knows most of these answers — can they fill them in?',
       answer:
-        'Yes. From Section 3 onwards most questions are about the supplier\'s own details. Use the "Supplier Information Pack" notice at the top of Section 3: it gives you a ready-made email containing a short online form for the supplier (no sign-in needed) and a reference code. Their answers arrive in your inbox and you copy them into the form. Bank details are deliberately excluded — the supplier must send those on company letterhead directly to you.',
+        'Yes. From Section 3 onwards most questions are about the supplier\'s own details. Use the "Supplier Information Pack" notice at the top of Section 3: it gives you a ready-made email containing a short online form for the supplier (no sign-in needed) and a reference code. Their answers arrive in your inbox ending with an autofill block — click "Paste supplier\'s answers" in Section 3, paste the block, and the form fills itself (including pre-selecting the supplier type and verifying the CRN) for you to review and confirm. The pack includes bank details, but the supplier must ALSO send their bank letterhead directly to you — AP Control verifies the typed details against it before any payment can be set up.',
     },
     {
       question: 'What is the "Which area does this request fall under?" question in the questionnaire?',

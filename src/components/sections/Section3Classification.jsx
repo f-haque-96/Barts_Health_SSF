@@ -200,7 +200,7 @@ ${SUPPLIER_PACK_FORM_URL}
 In the first question, quote this reference code: ${formData.supplierPackReference}
 When asked for the requester's NHS email, enter: ${requesterEmail}
 
-IMPORTANT: do NOT enter bank details on the form. Please send your bank details on company letterhead (plus your insurance certificate, if applicable) directly to me at ${requesterEmail}.
+IMPORTANT: after completing the form, you must ALSO email your bank details on company letterhead (plus your insurance certificate, if applicable) directly to me at ${requesterEmail}. The letterhead is required to verify your bank details — payment cannot be set up without it.
 
 Thank you`;
     try {
@@ -531,11 +531,12 @@ Thank you`;
           <strong>Need these details from the supplier?</strong>
           <p style={{ margin: 'var(--space-8) 0' }}>
             Most questions from here to Section 6 are about the supplier&apos;s own
-            details (registration numbers, address, contacts, insurance). Instead of
-            going back and forth by email, send them our Supplier Information Pack —
-            a 5-minute online form. Their answers come straight back to your inbox,
-            and you copy them in here. Your reference code for this request:{' '}
-            <strong>{formData.supplierPackReference}</strong>
+            details (registration numbers, address, contacts, insurance, bank
+            details). Instead of going back and forth by email, send them our
+            Supplier Information Pack — a 5-minute online form. Their answers come
+            straight back to your inbox with an autofill block: paste it below and
+            the form fills itself for you to review. Your reference code for this
+            request: <strong>{formData.supplierPackReference}</strong>
           </p>
           <div style={{ display: 'flex', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
             <Button variant="outline" type="button" onClick={handleCopyPackEmail}>
@@ -624,8 +625,10 @@ Thank you`;
             </p>
           )}
           <p style={{ margin: 'var(--space-8) 0 0 0', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-            Bank details are deliberately excluded from the pack — the supplier must
-            send those on company letterhead directly to you.
+            The pack includes the supplier&apos;s bank details, but they must{' '}
+            <strong>also</strong> send their bank letterhead directly to you — AP
+            Control verifies the typed details against it, and the supplier cannot
+            be paid without that check.
           </p>
         </NoticeBox>
       )}
