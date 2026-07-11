@@ -146,6 +146,19 @@ const parsePackBlock = (text) => {
   return pack;
 };
 
+// Supplier's self-described organisation type → supplier-type card value.
+// Only exact, unambiguous descriptions pre-select a card ("Other"/blank do
+// not); the requester sees a confirm notice and can change the selection.
+const packSupplierType = (v) => {
+  const s = String(v || '').toLowerCase();
+  if (s.includes('limited')) return 'limited_company';
+  if (s.includes('sole trader')) return 'sole_trader';
+  if (s.includes('partnership')) return 'partnership';
+  if (s.includes('charity')) return 'charity';
+  if (s.includes('public sector')) return 'public_sector';
+  return '';
+};
+
 const Section3Classification = () => {
   const { formData, updateFormData, updateMultipleFields, uploadedFiles, setUploadedFile, removeUploadedFile } = useFormStore();
   const { handleNext, handlePrev } = useFormNavigation();
@@ -160,10 +173,10 @@ const Section3Classification = () => {
   const [packInsuranceNote, setPackInsuranceNote] = useState('');
   const [packPasteOpen, setPackPasteOpen] = useState(false);
   const [packPasteText, setPackPasteText] = useState('');
-  // The supplier's own description of their organisation type — shown as a
-  // HINT only; the supplier-type card stays a requester decision because it
-  // drives validation, document requirements and OPW routing
+  // The supplier's own description of their organisation type; when it maps
+  // unambiguously the type card is PRE-SELECTED (requester confirms/changes)
   const [packTypeHint, setPackTypeHint] = useState('');
+  const [packTypePreselected, setPackTypePreselected] = useState(false);
 
   // Assign this draft a supplier-pack reference once (persists with the draft)
   useEffect(() => {
@@ -246,6 +259,21 @@ Thank you`;
     if (filled.crn) setValue('crn', filled.crn);
     if (filled.charityNumber) setValue('charityNumber', filled.charityNumber);
     if (filled.employeeCount) setValue('employeeCount', filled.employeeCount);
+
+    // Pre-select the supplier-type card when the supplier's self-description
+    // maps unambiguously — flagged in the summary; the requester confirms or
+    // changes it. Then auto-verify the CRN against Companies House so the
+    // card arrives selected AND checked.
+    const mappedType = packSupplierType(pack.OrganisationType);
+    setPackTypePreselected(!!mappedType);
+    if (mappedType) {
+      setValue('supplierType', mappedType);
+      setSelectedSupplierType(mappedType);
+      updateFormData('supplierType', mappedType);
+    }
+    if (filled.crn && filled.companiesHouseRegistered === 'yes') {
+      verify(filled.crn);
+    }
 
     setPackInsuranceNote(pack.InsuranceDetails || '');
     setPackTypeHint(pack.OrganisationType || '');
@@ -526,12 +554,17 @@ Thank you`;
           {packFetchStatus === 'done' && (
             <p style={{ margin: 'var(--space-8) 0 0 0', color: '#166534', fontWeight: 'var(--font-weight-medium)' }}>
               ✓ {packFilledCount} answers filled in from the supplier&apos;s pack. Review
-              each value as you continue through Sections 3–6 — supplier type, ID
-              documents and bank details are never auto-filled.
-              {packTypeHint && (
+              each value as you continue through Sections 3–6 — ID documents and the
+              letterhead upload still need you.
+              {packTypeHint && packTypePreselected && (
+                <> The supplier type below has been <strong>pre-selected</strong> from
+                the supplier&apos;s own answer (&quot;{packTypeHint}&quot;) — please
+                confirm it is right, or change it.</>
+              )}
+              {packTypeHint && !packTypePreselected && (
                 <> The supplier describes themselves as:{' '}
-                <strong>{packTypeHint}</strong> — confirm this matches the supplier
-                type you select below.</>
+                <strong>{packTypeHint}</strong> — choose the matching supplier type
+                below.</>
               )}
               {packInsuranceNote && (
                 <> Insurance details from the supplier (enter manually in Section 6):{' '}
