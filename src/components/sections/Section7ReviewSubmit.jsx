@@ -62,6 +62,38 @@ const CRNStatusBadge = ({ crn, verificationData }) => {
   );
 };
 
+// HMRC verification badge for the VAT number — parity with the CRN badge.
+// formData.vatVerification is set by Section 6 when the HMRC check succeeds
+// and cleared when it fails, so presence + matching number = verified.
+const VATBadge = ({ vatNumber, vatVerification }) => {
+  const cleaned = String(vatNumber || '').replace(/\s+/g, '').replace(/^GB/i, '');
+  const isVerified = !!vatVerification?.vatNumber &&
+    String(vatVerification.vatNumber).replace(/\s+/g, '') === cleaned;
+
+  return (
+    <span
+      title={isVerified
+        ? `Verified with HMRC: ${vatVerification.name || 'registered company'}`
+        : 'Not verified against HMRC — check the number in Section 6'}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '4px',
+        marginLeft: '8px',
+        padding: '2px 10px',
+        borderRadius: '999px',
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        backgroundColor: isVerified ? '#dcfce7' : '#fef3c7',
+        color: isVerified ? '#166534' : '#92400e',
+        border: `1px solid ${isVerified ? '#22c55e' : '#f59e0b'}`,
+      }}
+    >
+      {isVerified ? <><CheckIcon size={12} color="#166534" /> HMRC Verified</> : <><WarningIcon size={12} color="#92400e" /> Not Verified</>}
+    </span>
+  );
+};
+
 const ReviewCard = ({ title, children, sectionNumber }) => {
   const { goToSection, getMissingFields } = useFormStore();
   const missingFields = getMissingFields(sectionNumber);
@@ -802,7 +834,13 @@ const Section7ReviewSubmit = () => {
         <ReviewItem label="CIS Registered" value={formData.cisRegistered} />
         {formData.utrNumber && <ReviewItem label="UTR Number" value={formData.utrNumber} />}
         <ReviewItem label="VAT Registered" value={formData.vatRegistered} />
-        {formData.vatNumber && <ReviewItem label="VAT Number" value={formData.vatNumber} />}
+        {formData.vatNumber && (
+          <ReviewItem
+            label="VAT Number"
+            value={formData.vatNumber}
+            badge={<VATBadge vatNumber={formData.vatNumber} vatVerification={formData.vatVerification} />}
+          />
+        )}
         <ReviewItem label="Public Liability Insurance" value={formData.publicLiability} />
         {formData.plCoverage && <ReviewItem label="Coverage" value={formatCurrency(formData.plCoverage)} />}
       </ReviewCard>

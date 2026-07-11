@@ -52,7 +52,7 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
 
         if (!found) {
           alert('Submission not found');
-          navigate('/submissions');
+          navigate('/');
           return;
         }
 
@@ -86,16 +86,37 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
       // In production, call POST /api/contracts/${submissionId}/send-to-supplier
       // with {templateName, instructions}
 
+      const sentAtIso = new Date().toISOString();
+      // Record the send as an exchange so the requester/supplier portal
+      // (/respond/) shows WHAT was sent — template + instructions — and its
+      // reply form activates. Production negotiation still happens over
+      // email; this is the in-app record of it.
+      const sendExchange = {
+        id: `EXC-${Date.now()}`,
+        type: 'agreement_sent',
+        from: 'contract_drafter',
+        fromName: user?.displayName || user?.name || user?.email || 'Contract Drafter',
+        fromEmail: user?.email || '',
+        message: instructions.trim(),
+        attachments: [{
+          name: selectedTemplate.filename,
+          url: selectedTemplate.path,
+          type: 'agreement_template',
+        }],
+        timestamp: sentAtIso,
+      };
+
       const updatedSubmission = {
         ...submission,
         status: STATUS.PENDING_CONTRACT,
         currentStage: STAGE.CONTRACT,
         contractDrafter: {
           ...submission.contractDrafter,
-          sentAt: new Date().toISOString(),
+          sentAt: sentAtIso,
           templateUsed: selectedTemplate.filename,
           instructions: instructions.trim(),
-          sentBy: user.displayName || user.email,
+          sentBy: user?.displayName || user?.name || user?.email || 'Contract Drafter',
+          exchanges: [...(submission.contractDrafter?.exchanges || []), sendExchange],
         },
       };
 
@@ -220,10 +241,11 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
       }
 
       // Send notifications
-      notifyContractApproved(updatedSubmission, user.displayName || user.email);
+      notifyContractApproved(updatedSubmission, user?.displayName || user?.name || user?.email || 'Contract Drafter');
 
+      // Stay on the page: state flips to the approved (read-only) view
+      setSubmission(updatedSubmission);
       alert('Contract approved successfully. Submission forwarded to AP Control.');
-      navigate('/submissions');
     } catch (error) {
       console.error('Failed to approve contract:', error);
       alert('Failed to approve contract. Please try again.');
@@ -599,6 +621,68 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
           }}>
             <strong>Template Used:</strong> {templateUsed || 'N/A'}
           </div>
+
+          {/* Negotiation record — sent agreement + any portal replies from the
+              requester/supplier (production negotiation is email-based; replies
+              made through the portal land here) */}
+          {(submission.contractDrafter?.exchanges || []).length > 0 && (
+            <div style={{ marginBottom: 'var(--space-16)' }}>
+              <h4 style={{ margin: '0 0 var(--space-8) 0', color: 'var(--nhs-blue)', fontSize: 'var(--font-size-base)' }}>
+                Negotiation record
+              </h4>
+              {(submission.contractDrafter.exchanges || []).map((exchange) => (
+                <div
+                  key={exchange.id || exchange.timestamp}
+                  style={{
+                    padding: 'var(--space-12)',
+                    marginBottom: 'var(--space-8)',
+                    backgroundColor: exchange.from === 'contract_drafter' ? '#eff6ff' : '#fefce8',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-sm)',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)' }}>
+                    <strong>
+                      {exchange.from === 'contract_drafter'
+                        ? `You (${exchange.fromName || 'Contract Drafter'})`
+                        : `${exchange.fromName || 'Respondent'} (${exchange.from === 'supplier' ? 'supplier' : 'requester'})`}
+                    </strong>
+                    <span>{exchange.timestamp ? formatDate(exchange.timestamp) : ''}</span>
+                  </div>
+                  {exchange.message && (
+                    <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{exchange.message}</p>
+                  )}
+                  {exchange.attachments && Object.keys(exchange.attachments).length > 0 && (
+                    <div style={{ marginTop: 'var(--space-8)', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {Object.entries(exchange.attachments).map(([key, file]) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => {
+                            if (file.url) {
+                              window.open(file.url, '_blank');
+                            } else if (file.base64 || file.data) {
+                              const w = window.open('', '_blank');
+                              if (w) w.document.write(`<iframe src="${file.base64 || file.data}" style="width:100%;height:100vh;border:none;"></iframe>`);
+                            } else {
+                              alert('Attachment content not available.');
+                            }
+                          }}
+                          style={{
+                            padding: '4px 12px', backgroundColor: 'white',
+                            border: '1px solid #005EB8', borderRadius: '4px',
+                            fontSize: '0.85rem', color: '#005EB8', cursor: 'pointer',
+                          }}
+                        >
+                          📎 {file.name || key}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Upload Finalised Agreement */}
           <div style={{ marginBottom: 'var(--space-16)' }}>

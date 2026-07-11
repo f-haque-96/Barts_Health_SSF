@@ -55,6 +55,11 @@ Dynamic recipients (`RequesterEmail`, `ClaimedBy`) never change.
       CQC registration, Trust VAT number from finance)
 - [ ] Regenerate the HMRC client secret (sandbox secret has been shared around)
 - [ ] Change BOTH URIs in the flow: `test-api.service.hmrc.gov.uk` → `api.service.hmrc.gov.uk`
+- [ ] ⚠️ **The sandbox does NOT work in production**: it only knows fake test
+      VRNs, so real VAT numbers would come back "Not found" — actively
+      misleading. If production HMRC credentials are not ready by go-live,
+      **leave `VITE_VAT_FLOW_URL` unset** — the app then degrades to manual
+      VAT verification, which is honest. Never ship the sandbox URL.
 
 ### 1.4 Flow ownership
 

@@ -784,6 +784,13 @@ const RequesterResponsePage = ({
       return;
     }
 
+    // URL-based attachments (e.g. agreement templates served from the app)
+    // open/download directly
+    if (!file.base64 && !file.data && !file.content && file.url) {
+      window.open(file.url, '_blank');
+      return;
+    }
+
     const base64Data = file.base64 || file.data || file.content;
     if (!base64Data) {
       alert('Document data not available for preview.');
