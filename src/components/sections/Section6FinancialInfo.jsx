@@ -77,6 +77,10 @@ const Section6FinancialInfo = () => {
   // ===== VAT number verification (HMRC via flow proxy) =====
   // status: 'idle' | 'checking' | 'verified' | 'not_found' | 'unavailable'
   const [vatStatus, setVatStatus] = useState(formData.vatVerification ? 'verified' : 'idle');
+  // While the flow uses HMRC's SANDBOX, real VAT numbers always come back
+  // not-found — show an honest "test mode" notice instead of a misleading
+  // rejection. Unset this flag when the production HMRC connection is live.
+  const VAT_SANDBOX_MODE = import.meta.env.VITE_VAT_SANDBOX === 'true';
   const [vatResult, setVatResult] = useState(formData.vatVerification || null);
   const [vatMessage, setVatMessage] = useState('');
 
@@ -622,7 +626,22 @@ const Section6FinancialInfo = () => {
                 )}
               </NoticeBox>
             )}
-            {vatStatus === 'not_found' && (
+            {vatStatus === 'not_found' && VAT_SANDBOX_MODE && (
+              <NoticeBox type="info" style={{ marginTop: 'var(--space-8)' }}>
+                <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <InfoIcon size={14} color="#3b82f6" /> Test mode:
+                </strong>{' '}
+                VAT verification is currently connected to the HMRC <em>test</em> service,
+                which cannot verify real VAT numbers — a valid number will show as not
+                found here until the production connection goes live. Please verify the
+                number manually at{' '}
+                <a href="https://www.gov.uk/check-uk-vat-number" target="_blank" rel="noopener noreferrer">
+                  gov.uk/check-uk-vat-number
+                </a>{' '}
+                and continue.
+              </NoticeBox>
+            )}
+            {vatStatus === 'not_found' && !VAT_SANDBOX_MODE && (
               <NoticeBox type="warning" style={{ marginTop: 'var(--space-8)' }}>
                 <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                   <WarningIcon size={14} color="#f59e0b" /> Not found:

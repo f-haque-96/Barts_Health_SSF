@@ -60,6 +60,9 @@ Dynamic recipients (`RequesterEmail`, `ClaimedBy`) never change.
       misleading. If production HMRC credentials are not ready by go-live,
       **leave `VITE_VAT_FLOW_URL` unset** — the app then degrades to manual
       VAT verification, which is honest. Never ship the sandbox URL.
+- [ ] Remove `VITE_VAT_SANDBOX=true` from config when production credentials
+      go live (it softens "not found" into a test-mode notice; in production
+      a real not-found must be shown as a warning again)
 
 ### 1.4 Flow ownership
 
