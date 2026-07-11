@@ -73,6 +73,7 @@ Dynamic recipients (`RequesterEmail`, `ClaimedBy`) never change.
 | `VITE_AZURE_REDIRECT_URI` | the deployed app URL | must also be added to the App Registration by IT |
 | `VITE_ALEMBA_CALL_URL` | `https://servicedeskbartshealth.alembacloud.com/production/Core.aspx?MMA&CORE_ENTITY=1&ENTITY_REF={ref}` | confirmed July 2026 |
 | `VITE_SUPPLIER_PACK_FORM_URL` | MS Forms share URL of the Supplier Information Pack | in `.env.local` (not committed); Section 3 helper hides if unset |
+| `VITE_PACK_FETCH_FLOW_URL` | HTTP GET URL of the "SSF PACK - supplier pack lookup" flow | prefill button hides if unset |
 
 ## 3. Code (Phase 4 — must exist before go-live)
 

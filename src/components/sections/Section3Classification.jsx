@@ -35,11 +35,65 @@ import clsx from 'clsx';
 // back-and-forth. Configured (not hardcoded) so the public repo doesn't
 // advertise the form; unset = the helper notice simply doesn't render.
 const SUPPLIER_PACK_FORM_URL = import.meta.env.VITE_SUPPLIER_PACK_FORM_URL;
+// HTTP-trigger flow that looks a pack up in SSF-SupplierPacks by
+// reference + requester email (same proxy pattern as the CRN/VAT checks)
+const PACK_FETCH_FLOW_URL = import.meta.env.VITE_PACK_FETCH_FLOW_URL;
 
 const generatePackReference = () =>
   'PACK-' + Array.from({ length: 6 }, () =>
     'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]
   ).join('');
+
+const packYesNo = (v) => {
+  const s = String(v || '').trim().toLowerCase();
+  if (s.startsWith('y')) return 'yes';
+  if (s.startsWith('n')) return 'no'; // covers "No" and "Not applicable"
+  return '';
+};
+
+// Pack bands ("1-9", "10-49", "50-249", "250+") → EMPLOYEE_COUNTS values.
+// Order matters: check the most specific number first.
+const packEmployeeBand = (v) => {
+  const s = String(v || '');
+  if (s.includes('250')) return 'large';
+  if (s.includes('50')) return 'medium';
+  if (s.includes('10')) return 'small';
+  if (s.includes('1')) return 'micro';
+  return '';
+};
+
+// Map an SSF-SupplierPacks row to form fields across Sections 3–6.
+// Deliberately NEVER mapped: supplier type (drives validation/OPW routing —
+// human choice), ID documents, bank details (letterhead only), insurance
+// details text (free-form — surfaced to the requester instead).
+const mapPackToFields = (pack) => {
+  const postcodeMatch = String(pack.RegisteredAddress || '')
+    .match(/[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}/i);
+  const fields = {
+    companyName: pack.CompanyName || '',
+    tradingName: pack.TradingName || '',
+    registeredAddress: pack.RegisteredAddress || '',
+    postcode: postcodeMatch ? postcodeMatch[0].toUpperCase() : '',
+    contactName: pack.ContactName || '',
+    contactEmail: pack.ContactEmail || '',
+    contactPhone: pack.ContactPhone || '',
+    website: pack.Website || '',
+    companiesHouseRegistered: packYesNo(pack.CompaniesHouseRegistered),
+    crn: String(pack.CRN || '').replace(/\s+/g, ''),
+    vatRegistered: packYesNo(pack.VATRegistered),
+    vatNumber: String(pack.VATNumber || '').replace(/\s+/g, ''),
+    cisRegistered: packYesNo(pack.CISRegistered),
+    publicLiability: packYesNo(pack.PublicLiability),
+    employeeCount: packEmployeeBand(pack.EmployeeCount),
+    ...(pack.DUNSNumber
+      ? { ghxDunsKnown: 'yes', ghxDunsNumber: pack.DUNSNumber }
+      : {}),
+  };
+  // Never blank out something the requester already typed
+  return Object.fromEntries(
+    Object.entries(fields).filter(([, v]) => v !== '' && v != null)
+  );
+};
 
 const Section3Classification = () => {
   const { formData, updateFormData, updateMultipleFields, uploadedFiles, setUploadedFile, removeUploadedFile } = useFormStore();
@@ -50,6 +104,9 @@ const Section3Classification = () => {
   const [companiesHouseValue, setCompaniesHouseValue] = useState(formData.companiesHouseRegistered || '');
   const [idConsentGiven, setIdConsentGiven] = useState(formData.idConsentGiven || false);
   const [packCopied, setPackCopied] = useState(false);
+  const [packFetchStatus, setPackFetchStatus] = useState('idle'); // idle | fetching | done | notfound | error
+  const [packFilledCount, setPackFilledCount] = useState(0);
+  const [packInsuranceNote, setPackInsuranceNote] = useState('');
 
   // Assign this draft a supplier-pack reference once (persists with the draft)
   useEffect(() => {
@@ -82,6 +139,49 @@ Thank you`;
       setTimeout(() => setPackCopied(false), 3000);
     } catch {
       window.prompt('Copy the supplier email below:', template);
+    }
+  };
+
+  // Pull the supplier's submitted pack from SSF-SupplierPacks (via the
+  // lookup flow) and prefill Sections 3–6. The requester reviews every
+  // value as they continue — prefill never bypasses validation or the
+  // CRN/VAT verification checks, which run on the filled values as normal.
+  const handleFetchPack = async () => {
+    setPackFetchStatus('fetching');
+    try {
+      const sep = PACK_FETCH_FLOW_URL.includes('?') ? '&' : '?';
+      const url = `${PACK_FETCH_FLOW_URL}${sep}ref=${encodeURIComponent(formData.supplierPackReference)}&email=${encodeURIComponent(formData.nhsEmail || '')}`;
+      const res = await fetch(url);
+      if (res.status === 404) {
+        setPackFetchStatus('notfound');
+        return;
+      }
+      if (!res.ok) throw new Error(`Lookup failed (HTTP ${res.status})`);
+      const pack = await res.json();
+      if (!pack || (!pack.CompanyName && !pack.Title)) {
+        setPackFetchStatus('notfound');
+        return;
+      }
+
+      const filled = mapPackToFields(pack);
+      updateMultipleFields(filled);
+
+      // Fields rendered on THIS section need explicit sync (react-hook-form
+      // has already mounted them); Sections 4–6 initialise from the store
+      // when opened
+      if (filled.companiesHouseRegistered) {
+        setValue('companiesHouseRegistered', filled.companiesHouseRegistered);
+        setCompaniesHouseValue(filled.companiesHouseRegistered);
+      }
+      if (filled.crn) setValue('crn', filled.crn);
+      if (filled.employeeCount) setValue('employeeCount', filled.employeeCount);
+
+      setPackInsuranceNote(pack.InsuranceDetails || '');
+      setPackFilledCount(Object.keys(filled).length);
+      setPackFetchStatus('done');
+    } catch (err) {
+      console.error('Supplier pack fetch failed:', err);
+      setPackFetchStatus('error');
     }
   };
 
@@ -299,9 +399,45 @@ Thank you`;
             and you copy them in here. Your reference code for this request:{' '}
             <strong>{formData.supplierPackReference}</strong>
           </p>
-          <Button variant="outline" type="button" onClick={handleCopyPackEmail}>
-            {packCopied ? 'Copied — paste into an email to the supplier' : 'Copy ready-made email for your supplier'}
-          </Button>
+          <div style={{ display: 'flex', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
+            <Button variant="outline" type="button" onClick={handleCopyPackEmail}>
+              {packCopied ? 'Copied — paste into an email to the supplier' : 'Copy ready-made email for your supplier'}
+            </Button>
+            {PACK_FETCH_FLOW_URL && (
+              <Button
+                variant="outline"
+                type="button"
+                onClick={handleFetchPack}
+                disabled={packFetchStatus === 'fetching'}
+              >
+                {packFetchStatus === 'fetching' ? 'Checking…' : "Fetch my supplier's answers"}
+              </Button>
+            )}
+          </div>
+          {packFetchStatus === 'done' && (
+            <p style={{ margin: 'var(--space-8) 0 0 0', color: '#166534', fontWeight: 'var(--font-weight-medium)' }}>
+              ✓ {packFilledCount} answers filled in from the supplier&apos;s pack. Review
+              each value as you continue through Sections 3–6 — supplier type, ID
+              documents and bank details are never auto-filled.
+              {packInsuranceNote && (
+                <> Insurance details from the supplier (enter manually in Section 6):{' '}
+                <strong>{packInsuranceNote}</strong></>
+              )}
+            </p>
+          )}
+          {packFetchStatus === 'notfound' && (
+            <p style={{ margin: 'var(--space-8) 0 0 0', color: '#92400e' }}>
+              No pack found yet for reference <strong>{formData.supplierPackReference}</strong>.
+              The supplier may not have submitted it yet, or used a different
+              reference — check the confirmation email in your inbox.
+            </p>
+          )}
+          {packFetchStatus === 'error' && (
+            <p style={{ margin: 'var(--space-8) 0 0 0', color: '#92400e' }}>
+              Could not reach the lookup service. You can still copy the answers from
+              the &quot;Supplier pack received&quot; email in your inbox.
+            </p>
+          )}
           <p style={{ margin: 'var(--space-8) 0 0 0', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
             Bank details are deliberately excluded from the pack — the supplier must
             send those on company letterhead directly to you.

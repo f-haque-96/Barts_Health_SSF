@@ -344,8 +344,19 @@ Status:
 > side DONE: Section 3 shows a helper notice with a persistent per-draft
 > `PACK-XXXXXX` reference and a one-click copy of the supplier email
 > (renders only when `VITE_SUPPLIER_PACK_FORM_URL` is configured — the URL
-> is deliberately NOT committed to this public repo). Remaining: flow F8 +
-> SSF-SupplierPacks list (playbook prompt provided 11 Jul).
+> is deliberately NOT committed to this public repo). **F8 + the
+> SSF-SupplierPacks list are BUILT and ON (11 Jul).**
+>
+> **Prefill (same day):** a "Fetch my supplier's answers" button calls a
+> lookup flow (`VITE_PACK_FETCH_FLOW_URL`, HTTP trigger — same proxy
+> pattern as CRN/VAT) that returns the SSF-SupplierPacks row matching
+> `?ref=<PACK-…>&email=<requester>`; the app prefills ~15 fields across
+> Sections 3–6 (yes/no radios, employee band mapping, postcode extracted
+> from the address). Never auto-filled by design: supplier type, ID
+> documents, bank details, insurance free-text (surfaced as a note).
+> Prefill never bypasses validation or the CRN/VAT verification.
+> The dual key (reference + requester email) means a leaked flow URL alone
+> returns nothing useful.
 
 **Problem:** from Section 3 onwards (company details, registration numbers,
 insurance, bank details) the answers really come from the supplier. In the
