@@ -85,6 +85,9 @@ const mapPackToFields = (pack) => {
     cisRegistered: packYesNo(pack.CISRegistered),
     publicLiability: packYesNo(pack.PublicLiability),
     employeeCount: packEmployeeBand(pack.EmployeeCount),
+    // Charity number (form question added July 2026) — fills the field that
+    // appears if/when the requester selects the Charity type card
+    charityNumber: String(pack.CharityNumber || '').replace(/\s+/g, ''),
     ...(pack.DUNSNumber
       ? { ghxDunsKnown: 'yes', ghxDunsNumber: pack.DUNSNumber }
       : {}),
@@ -107,6 +110,10 @@ const Section3Classification = () => {
   const [packFetchStatus, setPackFetchStatus] = useState('idle'); // idle | fetching | done | notfound | error
   const [packFilledCount, setPackFilledCount] = useState(0);
   const [packInsuranceNote, setPackInsuranceNote] = useState('');
+  // The supplier's own description of their organisation type — shown as a
+  // HINT only; the supplier-type card stays a requester decision because it
+  // drives validation, document requirements and OPW routing
+  const [packTypeHint, setPackTypeHint] = useState('');
 
   // Assign this draft a supplier-pack reference once (persists with the draft)
   useEffect(() => {
@@ -177,6 +184,7 @@ Thank you`;
       if (filled.employeeCount) setValue('employeeCount', filled.employeeCount);
 
       setPackInsuranceNote(pack.InsuranceDetails || '');
+      setPackTypeHint(pack.OrganisationType || '');
       setPackFilledCount(Object.keys(filled).length);
       setPackFetchStatus('done');
     } catch (err) {
@@ -419,6 +427,11 @@ Thank you`;
               ✓ {packFilledCount} answers filled in from the supplier&apos;s pack. Review
               each value as you continue through Sections 3–6 — supplier type, ID
               documents and bank details are never auto-filled.
+              {packTypeHint && (
+                <> The supplier describes themselves as:{' '}
+                <strong>{packTypeHint}</strong> — confirm this matches the supplier
+                type you select below.</>
+              )}
               {packInsuranceNote && (
                 <> Insurance details from the supplier (enter manually in Section 6):{' '}
                 <strong>{packInsuranceNote}</strong></>
