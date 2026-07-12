@@ -202,7 +202,7 @@ const HelpPage = () => {
     {
       question: 'The supplier knows most of these answers — can they fill them in?',
       answer:
-        'Yes. From Section 3 onwards most questions are about the supplier\'s own details. Use the "Supplier Information Pack" notice at the top of Section 3: it gives you a ready-made email containing a short online form for the supplier (no sign-in needed) and a reference code. Their answers arrive in your inbox ending with an autofill block — click "Paste supplier\'s answers" in Section 3, paste the block, and the form fills itself (including pre-selecting the supplier type and verifying the CRN) for you to review and confirm. The pack includes bank details, but the supplier must ALSO send their bank letterhead directly to you — AP Control verifies the typed details against it before any payment can be set up.',
+        'Yes. From Section 3 onwards most questions are about the supplier\'s own details. Use the "Supplier Information Pack" notice at the top of Section 3: it gives you a ready-made email containing a short online form for the supplier (no sign-in needed) and a reference code. Their answers arrive in your inbox ending with an autofill block — click "Paste supplier\'s answers" in Section 3, paste the block, and the form fills itself (including pre-selecting the supplier type and verifying the CRN) for you to review and confirm. The pack includes bank details; AP Control verifies them against the supplier\'s bank letterhead you uploaded at Section 2 before any payment can be set up.',
     },
     {
       question: 'Can the supplier see the progress page or talk to the contract drafter directly?',

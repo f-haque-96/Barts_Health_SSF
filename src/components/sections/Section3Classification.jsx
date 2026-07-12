@@ -106,8 +106,28 @@ const mapPackToFields = (pack) => {
     accountNumber: String(pack.AccountNumber || '').replace(/\s+/g, ''),
     iban: String(pack.IBAN || '').replace(/\s+/g, ''),
     swiftCode: String(pack.SWIFTCode || '').replace(/\s+/g, ''),
+    // DUNS: a present-but-empty answer means the supplier doesn't know it —
+    // register the "No" so the radio doesn't sit unanswered (12 Jul test)
     ...(pack.DUNSNumber
       ? { ghxDunsKnown: 'yes', ghxDunsNumber: pack.DUNSNumber }
+      : (pack.DUNSNumber === '' ? { ghxDunsKnown: 'no' } : {})),
+    // Q3.6 annual turnover / net assets (numeric)
+    annualValue: (() => {
+      const n = Number(String(pack.Turnover || '').replace(/[^0-9.]/g, ''));
+      return Number.isFinite(n) && n > 0 ? n : '';
+    })(),
+    // Q3.8 material interest (5% rule) — 'Not applicable' maps to 'no'
+    limitedCompanyInterest: packYesNo(pack.LtdCompanyInterest),
+    // Q5.2 detailed service description
+    serviceDescription: pack.ServiceDescription || '',
+    // Q6.6 accounts address — explicit answer from the pack; when 'no',
+    // fill the separate accounts address (+ postcode extracted from it)
+    accountsAddressSame: packYesNo(pack.AccountsSame),
+    ...(packYesNo(pack.AccountsSame) === 'no' && pack.AccountsAddress
+      ? {
+          accountsAddress: pack.AccountsAddress,
+          accountsPostcode: (String(pack.AccountsAddress).match(/[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}/i)?.[0] || '').toUpperCase(),
+        }
       : {}),
   };
   // Never blank out something the requester already typed
@@ -133,6 +153,10 @@ const PACK_BLOCK_KEYS = {
   OVERSEAS: 'OverseasSupplier', ACCOUNT_NAME: 'NameOnAccount',
   SORT_CODE: 'SortCode', ACCOUNT_NO: 'AccountNumber',
   IBAN: 'IBAN', SWIFT: 'SWIFTCode',
+  // Added 12 Jul 2026 after live pack test — questions the pack now asks
+  TURNOVER: 'Turnover', LTD_INTEREST: 'LtdCompanyInterest',
+  SERVICE_DESC: 'ServiceDescription',
+  ACCOUNTS_SAME: 'AccountsSame', ACCOUNTS_ADDRESS: 'AccountsAddress',
 };
 
 const parsePackBlock = (text) => {
@@ -200,8 +224,6 @@ ${SUPPLIER_PACK_FORM_URL}
 In the first question, quote this reference code: ${formData.supplierPackReference}
 When asked for the requester's NHS email, enter: ${requesterEmail}
 
-IMPORTANT: after completing the form, you must ALSO email your bank details on company letterhead (plus your insurance certificate, if applicable) directly to me at ${requesterEmail}. The letterhead is required to verify your bank details — payment cannot be set up without it.
-
 Thank you`;
     try {
       await navigator.clipboard.writeText(template);
@@ -259,6 +281,8 @@ Thank you`;
     if (filled.crn) setValue('crn', filled.crn);
     if (filled.charityNumber) setValue('charityNumber', filled.charityNumber);
     if (filled.employeeCount) setValue('employeeCount', filled.employeeCount);
+    if (filled.annualValue) setValue('annualValue', filled.annualValue);
+    if (filled.limitedCompanyInterest) setValue('limitedCompanyInterest', filled.limitedCompanyInterest);
 
     // Pre-select the supplier-type card when the supplier's self-description
     // maps unambiguously — flagged in the summary; the requester confirms or
@@ -624,12 +648,6 @@ Thank you`;
               the &quot;Supplier pack received&quot; email in your inbox.
             </p>
           )}
-          <p style={{ margin: 'var(--space-8) 0 0 0', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-            The pack includes the supplier&apos;s bank details, but they must{' '}
-            <strong>also</strong> send their bank letterhead directly to you — AP
-            Control verifies the typed details against it, and the supplier cannot
-            be paid without that check.
-          </p>
         </NoticeBox>
       )}
 
