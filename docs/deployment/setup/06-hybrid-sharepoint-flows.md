@@ -347,6 +347,13 @@ Status:
 > is deliberately NOT committed to this public repo). **F8 + the
 > SSF-SupplierPacks list are BUILT and ON (11 Jul).**
 >
+> **BUILD COMPLETE (12 Jul 2026):** form v2 (org type, charity no, city/
+> postcode, UTR, overseas, insurance split, Payment details section with
+> UK-optional bank fields), SSF-SupplierPacks +8 non-bank columns, and F8 v2
+> (30-key AUTOFILL block appended to the email; bank answers in the email
+> ONLY — verified not mapped to any list column). Remaining: one live
+> end-to-end test (PACK-TEST02).
+>
 > **Prefill (11 Jul, revised same day):** the original lookup-flow design
 > (HTTP trigger reading SSF-SupplierPacks) is **blocked by tenant DLP**
 > (business connector `sharepointonline` may not combine with non-business
