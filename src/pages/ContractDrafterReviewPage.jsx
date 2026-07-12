@@ -13,6 +13,7 @@ import {
   Textarea,
   FileUpload,
   Input,
+  SignatureSection,
   CheckIcon,
   ClockIcon,
   DocumentIcon,
@@ -42,6 +43,9 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
   const [approvalComments, setApprovalComments] = useState('');
   const [finalizedAgreement, setFinalisedAgreement] = useState(null);
   const [digitalSignature, setDigitalSignature] = useState('');
+  const [signatureDate, setSignatureDate] = useState(new Date().toISOString().split('T')[0]);
+  const [replyMessage, setReplyMessage] = useState('');
+  const [replySending, setReplySending] = useState(false);
 
   // Load submission data
   useEffect(() => {
@@ -152,6 +156,39 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
     }
   };
 
+  // Reply within the negotiation thread (keeps the back-and-forth going —
+  // each drafter message re-activates the reply form on the /respond/ portal)
+  const handleSendReply = async () => {
+    if (!replyMessage.trim()) return;
+    setReplySending(true);
+    try {
+      const exchange = {
+        id: `EXC-${Date.now()}`,
+        type: 'message',
+        from: 'contract_drafter',
+        fromName: user?.displayName || user?.name || user?.email || 'Contract Drafter',
+        fromEmail: user?.email || '',
+        message: replyMessage.trim(),
+        timestamp: new Date().toISOString(),
+      };
+      const updatedSubmission = {
+        ...submission,
+        contractDrafter: {
+          ...submission.contractDrafter,
+          exchanges: [...(submission.contractDrafter?.exchanges || []), exchange],
+        },
+      };
+      await storage.updateSubmission(submissionId, updatedSubmission);
+      setSubmission(updatedSubmission);
+      setReplyMessage('');
+    } catch (error) {
+      console.error('Failed to send reply:', error);
+      alert('Failed to send reply. Please try again.');
+    } finally {
+      setReplySending(false);
+    }
+  };
+
   // Handle finalized agreement upload
   const handleFinalisedAgreementUpload = (fileData) => {
     if (!fileData) return;
@@ -194,11 +231,6 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
       return;
     }
 
-    if (!approvalComments.trim()) {
-      alert('Please provide approval comments');
-      return;
-    }
-
     setActionInProgress(true);
 
     try {
@@ -216,6 +248,7 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
           decidedBy: user.displayName || user.email,
           decidedAt: new Date().toISOString(),
           digitalSignature: digitalSignature.trim(),
+          signatureDate,
           signedAt: new Date().toISOString(),
           approvalComments: approvalComments.trim(),
           finalizedAgreement: finalizedAgreement,
@@ -681,6 +714,27 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
                   )}
                 </div>
               ))}
+
+              {/* Reply within the thread — visible to the requester/supplier
+                  on their portal, where their reply form re-activates */}
+              <div style={{ marginTop: 'var(--space-8)' }}>
+                <Textarea
+                  label="Reply in this thread"
+                  value={replyMessage}
+                  onChange={(e) => setReplyMessage(e.target.value)}
+                  placeholder="Respond to the requester/supplier — e.g. answer a query about a clause, confirm a change, or chase the signed agreement..."
+                  rows={3}
+                />
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={handleSendReply}
+                  disabled={replySending || !replyMessage.trim()}
+                  style={{ marginTop: 'var(--space-8)' }}
+                >
+                  {replySending ? 'Sending…' : 'Send reply'}
+                </Button>
+              </div>
             </div>
           )}
 
@@ -741,59 +795,30 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
                 </ul>
               </NoticeBox>
 
-              <div style={{ position: 'relative' }}>
-                <Input
-                  label="Your Full Name (Digital Signature)"
-                  type="text"
-                  value={digitalSignature}
-                  onChange={(e) => setDigitalSignature(e.target.value)}
-                  placeholder="Type your full name"
-                  required
-                  style={{
-                    fontFamily: 'cursive',
-                    fontSize: '1.125rem',
-                    letterSpacing: '0.5px',
-                  }}
-                />
-                {digitalSignature && (
-                  <div style={{
-                    marginTop: 'var(--space-8)',
-                    padding: 'var(--space-12)',
-                    backgroundColor: '#f0f9ff',
-                    border: '1px solid #bae6fd',
-                    borderRadius: 'var(--radius-sm)',
-                    fontSize: '0.875rem',
-                    color: '#0369a1',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--space-8)',
-                  }}>
-                    <CheckIcon size={16} color="#0369a1" />
-                    <div>
-                      <strong>Signature Preview:</strong>
-                      <div style={{ fontFamily: 'cursive', fontSize: '1.25rem', marginTop: '4px', color: '#0c4a6e' }}>
-                        {digitalSignature}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Same signature component as the other review pages */}
+              <SignatureSection
+                signatureName={digitalSignature}
+                signatureDate={signatureDate}
+                onSignatureChange={({ signatureName: name, signatureDate: date }) => {
+                  setDigitalSignature(name);
+                  setSignatureDate(date);
+                }}
+              />
             </div>
           )}
 
-          {/* Approval Comments */}
+          {/* Approval Comments (optional) */}
           <Textarea
-            label="Step 3: Approval Comments"
+            label="Step 3: Approval Comments (optional)"
             value={approvalComments}
             onChange={(e) => setApprovalComments(e.target.value)}
             placeholder="Enter any final comments or notes about the contract approval..."
             rows={4}
-            required
           />
 
           <Button
             onClick={handleApproveContract}
-            disabled={actionInProgress || !approvalComments.trim() || !finalizedAgreement || !digitalSignature.trim()}
+            disabled={actionInProgress || !finalizedAgreement || !digitalSignature.trim()}
             style={{ marginTop: 'var(--space-16)', backgroundColor: '#059669' }}
           >
             <CheckIcon size={18} /> Submit to AP Control

@@ -384,9 +384,11 @@ const OPWReviewPage = ({
           };
 
           successMessage = 'OPW Determination Complete: EMPLOYED\n\n' +
-            'This worker is employed and must be paid via NHS payroll (ESR).\n\n' +
+            'This worker is employed for tax purposes and cannot be engaged as a supplier.\n\n' +
             '⚠️ DO NOT create an Oracle supplier record.\n' +
-            'The worker should be set up on ESR by HR/Payroll.\n\n' +
+            'Per the Trust OPW process, the hiring manager must engage the worker through ' +
+            'standard recruitment routes: a fixed-term contract (first preference), or ' +
+            'bank/agency under the Temporary Workers Policy.\n\n' +
             'This supplier request is now complete.';
 
         } else if (employmentStatus === 'self_employed') {
@@ -467,11 +469,15 @@ const OPWReviewPage = ({
           };
 
           successMessage = 'IR35 Determination: INSIDE IR35\n\n' +
-            'This engagement falls inside IR35. The worker must be paid via NHS payroll (ESR).\n\n' +
+            'This engagement is in scope of the off-payroll working rules.\n\n' +
             '⚠️ DO NOT create an Oracle supplier record.\n' +
-            'The worker should be set up on ESR by HR/Payroll.\n\n' +
-            (sdsIssued ? 'SDS has been issued and tracked.\n\n' : '') +
-            'This supplier request is now complete.';
+            'Next steps per the Trust OPW process:\n' +
+            '1. Send the SDS letter to the intermediary (with the ESR new starter form enclosed) — they have 14 days to respond or appeal.\n' +
+            '2. If they agree, email the IR35 new starter form to the ESR team, who set the worker up as an IR35 Contractor.\n' +
+            '3. Payments continue to the intermediary but NET of tax/NIC (deemed payment), via the weekly payroll run after the hiring manager validates invoices.\n' +
+            '4. If they disagree, the Panel has 45 days to respond with a final decision.\n\n' +
+            (sdsIssued ? 'SDS has been recorded as issued and is being tracked below.\n\n' : 'Remember to record the SDS issue date once the letter is sent.\n\n') +
+            'This supplier request is complete in this system.';
 
         } else if (ir35Determination === 'outside') {
           // OUTSIDE IR35 → CONTRACT (IF REQUIRED) OR AP CONTROL

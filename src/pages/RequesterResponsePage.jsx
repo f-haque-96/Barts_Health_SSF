@@ -1166,12 +1166,14 @@ const RequesterResponsePage = ({
 
       {isPayrollOutcome && (
         <NoticeBox type="info" style={{ marginBottom: 'var(--space-24)' }}>
-          <h3 style={{ marginTop: 0 }}>Outcome: Payroll / ESR Route</h3>
+          <h3 style={{ marginTop: 0 }}>Outcome: Employed for Tax Purposes</h3>
           <p>
             The OPW Panel determined this worker is <strong>employed</strong> for tax
-            purposes. They must be paid through NHS payroll (ESR) — <strong>no Oracle
-            supplier record will be created</strong>. Please contact HR/Payroll to set
-            the worker up on ESR. This request is now closed.
+            purposes, so they cannot be engaged as a supplier — <strong>no Oracle
+            supplier record will be created</strong>. Per the Trust OPW process, please
+            engage the worker through standard recruitment routes instead: a
+            fixed-term contract (first preference), or bank/agency under the
+            Temporary Workers Policy. This supplier request is now closed.
           </p>
         </NoticeBox>
       )}
@@ -1180,10 +1182,23 @@ const RequesterResponsePage = ({
         <NoticeBox type="info" style={{ marginBottom: 'var(--space-24)' }}>
           <h3 style={{ marginTop: 0 }}>Outcome: Inside IR35 — SDS Issued</h3>
           <p>
-            The OPW Panel determined this engagement is <strong>inside IR35</strong> and a
-            Status Determination Statement (SDS) has been issued. The worker must be
-            engaged via payroll (ESR) or a compliant agency arrangement — <strong>no
-            Oracle supplier record will be created</strong>. This request is now closed.
+            The OPW Panel determined this engagement is <strong>inside IR35</strong> (in
+            scope of the off-payroll working rules). What happens next:
+          </p>
+          <ul style={{ margin: 'var(--space-8) 0', paddingLeft: '20px' }}>
+            <li>The Panel sends the supplier a <strong>Status Determination Statement
+            (SDS)</strong> letter with an ESR new starter form — they have <strong>14
+            days</strong> to respond or appeal (appeals get a Panel decision within 45 days).</li>
+            <li>If they accept, the ESR team sets the worker up as an <strong>IR35
+            Contractor</strong> — <strong>no Oracle supplier record is created</strong>.</li>
+            <li>The supplier still invoices, but payments are made <strong>net of tax and
+            National Insurance</strong> through the weekly payroll run — and{' '}
+            <strong>you validate their invoices</strong> and email them to Payroll for
+            each payment.</li>
+          </ul>
+          <p style={{ marginBottom: 0 }}>
+            This supplier request is complete in this system; the engagement continues
+            via the ESR route above.
           </p>
         </NoticeBox>
       )}

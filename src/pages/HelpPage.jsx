@@ -220,6 +220,11 @@ const HelpPage = () => {
         'The typed details are checked against the letterhead by AP Control — differences between the two have caught real errors and fraud attempts in the past. Always type the details exactly as they appear on the supplier\'s letterhead.',
     },
     {
+      question: 'What is OPW / IR35, and what is an SDS?',
+      answer:
+        'When a supplier is an individual providing a personal service (directly, or through their own limited company or partnership), tax law requires the Trust to assess whether they are really employed for tax purposes. You will be asked to complete the HMRC CEST tool, and the OPW Panel (Finance, Procurement and HR) makes the determination. Sole traders assessed as employed must be engaged via standard recruitment (fixed-term, bank or agency) instead of as a supplier. For companies/partnerships assessed as INSIDE IR35, the Panel issues a Status Determination Statement (SDS) — a formal letter telling the supplier the decision and their right to appeal (14 days to respond; appeals answered within 45 days). If accepted, the worker is set up on ESR as an IR35 Contractor: they still invoice, but are paid net of tax and NI via payroll, with you validating their invoices. OUTSIDE IR35 or genuinely self-employed suppliers proceed to a normal Oracle supplier setup (with a consultancy or sole trader agreement where required). Contact: bartshealth.opwpanelbarts@nhs.net',
+    },
+    {
       question: 'What happens if my submission is rejected?',
       answer:
         'If your submission is rejected, you will receive comments explaining the reason. You can review the feedback, make necessary changes, and resubmit the form.',
