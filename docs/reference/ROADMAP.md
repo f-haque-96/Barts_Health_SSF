@@ -65,6 +65,7 @@ verification when the flow is unreachable** (`companiesHouse.js` /
 | **VAT number validation** | ✅ **App side implemented July 2026** (`src/utils/vatCheck.js`, Section 6 verified/not-found/unavailable states; HMRC sandbox contract verified). Remaining: build the flow (playbook Task 10) and, for go-live, HMRC production credentials + regenerated secret | HMRC production credential approval |
 | **Confirmation of Payee (CoP)** | ⚠️ **Not a public/government API.** CoP is operated via Pay.UK and only accessible through banks or commercial providers — this is a *procurement/contract* dependency (Trust bank or a commercial verification service), not a code task. AP Control's manual letterhead verification remains the control until then | Early conversation with the Trust's bank / a commercial provider |
 | Other checks (CIS, charity register, etc.) | Charity Commission has a public API (flow proxy pattern); CIS verification is HMRC-gated similar to VAT | Per-API registration |
+| **Supplier portal access** (progress page + contract-stage replies) | The /respond/ page already has a supplier role (email-matched, contract-stage scoped) — the blocker is sign-in: external suppliers need **Azure AD B2B guest invitations**, an IT/tenant capability. Until then suppliers participate via the Information Pack form + the drafter's email (FAQ documents this) | IT conversation about guest-account policy |
 
 Rules for adding any future feature: new fields go through the storage provider
 (never direct storage calls); no new workflow Status values without updating the
