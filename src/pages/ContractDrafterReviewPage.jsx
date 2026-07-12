@@ -854,10 +854,11 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
             </div>
 
             <div style={{ marginBottom: 'var(--space-12)' }}>
-              <strong>Digital Signature:</strong>
-              <div style={{ fontFamily: 'cursive', fontSize: '1.25rem', marginTop: '4px', color: '#0c4a6e' }}>
-                {submission.contractDrafter?.digitalSignature || 'N/A'}
-              </div>
+              <strong>Digital Signature:</strong>{' '}
+              {submission.contractDrafter?.digitalSignature || 'N/A'}
+              {submission.contractDrafter?.signatureDate && (
+                <> &middot; {formatDate(submission.contractDrafter.signatureDate)}</>
+              )}
             </div>
 
             <div style={{ marginBottom: 'var(--space-12)' }}>
