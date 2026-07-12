@@ -84,8 +84,6 @@ const OPWReviewPage = ({
   const [contractRequired, setContractRequired] = useState(''); // 'yes' | 'no'
   const [sdsIssued, setSdsIssued] = useState(false); // For Inside IR35 tracking
   const [sdsIssuedDate, setSdsIssuedDate] = useState('');
-  const [sdsResponseReceived, setSdsResponseReceived] = useState(false);
-  const [sdsResponseDate, setSdsResponseDate] = useState('');
 
   // Handle document preview
   const handlePreviewDocument = (file) => {
@@ -451,8 +449,6 @@ const OPWReviewPage = ({
           opwReviewData.sdsTracking = {
             sdsIssued: true,
             sdsIssuedDate,
-            sdsResponseReceived,
-            sdsResponseDate: sdsResponseDate || null,
             daysSinceIssued: sdsIssuedDate ? Math.floor((new Date() - new Date(sdsIssuedDate)) / (1000 * 60 * 60 * 24)) : 0,
           };
         }
@@ -753,11 +749,7 @@ const OPWReviewPage = ({
         <ReviewCard title="SDS Status Tracking" highlight>
           <p style={{ margin: '0 0 var(--space-8) 0' }}><strong>Status:</strong> SDS Issued &mdash; Awaiting Intermediary Response</p>
           <p style={{ margin: '0 0 var(--space-8) 0' }}><strong>SDS Issued:</strong> {formatDate(opwReview.sdsTracking.sdsIssuedDate)}</p>
-          {opwReview.sdsTracking.sdsResponseReceived ? (
-            <p style={{ margin: '0 0 var(--space-8) 0' }}><strong>Response Received:</strong> {formatDate(opwReview.sdsTracking.sdsResponseDate)}</p>
-          ) : (
-            <p style={{ margin: '0 0 var(--space-8) 0' }}><strong>Response Deadline:</strong> {opwReview.sdsTracking.sdsIssuedDate ? formatDate(new Date(new Date(opwReview.sdsTracking.sdsIssuedDate).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString()) : 'N/A'}</p>
-          )}
+          <p style={{ margin: '0 0 var(--space-8) 0' }}><strong>Response Deadline:</strong> {opwReview.sdsTracking.sdsIssuedDate ? formatDate(new Date(new Date(opwReview.sdsTracking.sdsIssuedDate).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString()) : 'N/A'}</p>
           <p style={{ margin: '0 0 var(--space-16) 0' }}><strong>Sent To:</strong> {formData.contactEmail || formData.email || 'Supplier contact email'}</p>
 
           <NoticeBox type="info">
@@ -1342,38 +1334,10 @@ const OPWReviewPage = ({
                           />
                         </div>
 
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                          <input
-                            type="checkbox"
-                            checked={sdsResponseReceived}
-                            onChange={(e) => setSdsResponseReceived(e.target.checked)}
-                          />
-                          <span>Worker response received (within 14 days)</span>
-                        </label>
-
-                        {sdsResponseReceived && (
-                          <div style={{ marginBottom: '12px' }}>
-                            <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9em', fontWeight: 'bold' }}>
-                              Response Received Date
-                            </label>
-                            <input
-                              type="date"
-                              value={sdsResponseDate}
-                              onChange={(e) => setSdsResponseDate(e.target.value)}
-                              style={{
-                                padding: '8px 12px',
-                                borderRadius: '4px',
-                                border: '1px solid #d1d5db',
-                                fontSize: '0.95em'
-                              }}
-                            />
-                          </div>
-                        )}
-
                         {sdsIssuedDate && (
                           <p style={{ fontSize: '0.85em', color: '#7f1d1d', margin: '8px 0 0 0' }}>
                             <strong>Days since SDS issued:</strong> {Math.floor((new Date() - new Date(sdsIssuedDate)) / (1000 * 60 * 60 * 24))} days
-                            {(Math.floor((new Date() - new Date(sdsIssuedDate)) / (1000 * 60 * 60 * 24)) > 14) && !sdsResponseReceived && (
+                            {(Math.floor((new Date() - new Date(sdsIssuedDate)) / (1000 * 60 * 60 * 24)) > 14) && (
                               <span> <strong style={{ color: '#991b1b' }}><WarningIcon size={12} style={{ verticalAlign: 'middle' }} /> 14-day response window expired</strong></span>
                             )}
                           </p>
