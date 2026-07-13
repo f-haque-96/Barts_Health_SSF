@@ -68,6 +68,45 @@ fahimul.haque1@nhs.net
 
 ---
 
+# Technical annex — step-by-step for the engineer (≈20 minutes total)
+
+**Action 1 — App Registration** *(any Entra admin, ~5 min)*
+Entra admin centre → Identity → Applications → App registrations → New registration:
+- Name `NHS-SSF-SupplierSetupForm`; single tenant.
+- Redirect URI: platform **Single-page application (SPA)** (not "Web"),
+  value `http://localhost:5173`.
+- No client secret / certificate — SPA is a public client, nothing to store.
+
+**Action 2 — Permissions + consent** *(Global Admin for the consent click, ~3 min)*
+On the registration → API permissions: keep the default `User.Read`
+(Delegated); Add a permission → Microsoft Graph → **Delegated** →
+**`Sites.Selected`**; then click **Grant admin consent**.
+`Sites.Selected` grants access to NO sites until Action 3 names one —
+least privilege by design. (Fallback only if Action 3 is impossible:
+Delegated `Sites.ReadWrite.All`.)
+
+**Action 3 — Per-site grant** *(SharePoint Administrator, ~5 min — often missed)*
+
+```powershell
+Connect-PnPOnline -Url "https://nhs.sharepoint.com/sites/R1H_SupplierSetupForm-CW-PROC-GSS" -Interactive
+Grant-PnPAzureADAppSitePermission `
+  -AppId "<Application (client) ID from Action 1>" `
+  -DisplayName "NHS-SSF-SupplierSetupForm" `
+  -Permissions Write
+```
+
+(Graph equivalent: `POST /sites/{site-id}/permissions` with
+`roles: ["write"]` and the app identity.) Effective access = intersection
+of this grant and the signed-in user's own SharePoint permissions.
+
+**Return to requester:** Application (client) ID, Directory (tenant) ID,
+confirmation Actions 2 and 3 are done.
+
+**Later (1 min):** add the production URL as a second SPA redirect URI
+once the app is deployed.
+
+---
+
 # Separate, routine request (can go to the service desk instead)
 
 **Subject:** Shared mailbox creation — Supplier Setup Form notifications
