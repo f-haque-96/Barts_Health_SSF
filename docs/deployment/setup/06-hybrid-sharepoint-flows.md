@@ -244,7 +244,10 @@ dev localStorage provider. Each traces to a verified behaviour of the current ap
    would require Azure AD guest accounts — out of scope for v1.
 6. **Questionnaire approval certificate is automated (decided July 2026):** when PBP
    approve a questionnaire, the provider uploads the generated approval PDF
-   (PBPApprovalPDF) to `SupplierDocuments/<QUEST-id>/`; F2's questionnaire branch
+   (PBPApprovalPDF) to `SupplierDocuments/<QUEST-id>/` **with the exact file name
+   `Certificate.pdf`** — F2's questionnaire branch fetches
+   `/SupplierDocuments/{Title}/Certificate.pdf` by hardcoded path (confirmed in the
+   flow 14 Jul 2026; any other name = "file not found" and a failed run) and
    emails it to the requester automatically. The PBP review page keeps its stamped
    decision + certificate download button as the fallback copy if the requester
    loses the email. A **rejected** questionnaire locks that supplier setup (the app
