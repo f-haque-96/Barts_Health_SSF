@@ -11,6 +11,15 @@ flow links use the `https://APP-URL-TBC/...` placeholder — both get swapped he
 
 ## 1. Power Automate flows
 
+**HOW (applies to all of §1.1 and §1.2):** make.powerautomate.com → My flows →
+click the flow name → **Edit** → open the named case/branch → click its
+**"Send an email (V2)"** action. Links live in the **Body** field (replace only
+the `https://APP-URL-TBC` host, never the path after it); recipients live in
+the **To** field. Save after each flow and confirm it stays **On**. The Claude
+browser extension can do this section from this table — one flow per prompt.
+After swapping, send one test item through (create + walk a status) and click
+every link in the resulting emails.
+
 ### 1.1 Replace `APP-URL-TBC` links (once the Static Web App URL exists)
 
 | Flow | Where the link appears | Link path (must match React routes exactly) |
@@ -39,8 +48,10 @@ flow links use the `https://APP-URL-TBC/...` placeholder — both get swapped he
 | F4 | weekly digest | `barts.procurement@nhs.net`, CC SSF admins — ⚠️ decide first whether the Alemba-linked helpdesk raising a weekly ticket is signal or noise; if noise, request a plain mailbox |
 | F6 | If yes / If no | same PBP clinical / non-clinical mailboxes as F1 |
 | F7 | — | no change (dynamic ClaimedBy) |
+| F8 — Supplier pack received | — | no change (dynamic requester answer) |
+| F2 | completed, completed_payroll, inside_ir35_sds_issued, rejected, info_required | no change (dynamic RequesterEmail) |
 
-Dynamic recipients (`RequesterEmail`, `ClaimedBy`) never change.
+Dynamic recipients (`RequesterEmail`, `ClaimedBy`, F8's requester answer) never change.
 
 > **Pending (may change this table):** PBP are producing a category delegation
 > matrix (Soft FM / Hard FM / Corporate / clinical specialties). Subject-line
@@ -49,6 +60,11 @@ Dynamic recipients (`RequesterEmail`, `ClaimedBy`) never change.
 > mailboxes.
 
 ### 1.3 VAT flow (Task 10) production variant
+
+**HOW:** open **SSF VAT - HMRC check proxy** → Edit. The URIs are in the two
+HTTP actions' **URI** fields; the credentials are in the FIRST HTTP action's
+**Body** (`client_id=...&client_secret=...`). Type the new secret yourself —
+never give it to a browser agent or paste it in chat.
 
 - [ ] HMRC production credentials approved (application was **declined 07/07/2026**
       — resubmit with: statutory body / no Companies House number, ODS code R1H,
@@ -72,6 +88,12 @@ Dynamic recipients (`RequesterEmail`, `ClaimedBy`) never change.
 
 ## 2. App configuration (Azure Static Web Apps → Configuration, not committed files)
 
+**HOW:** portal.azure.com → the Static Web App resource → **Settings →
+Configuration → Application settings → + Add** → enter Name/Value exactly as
+below → **Save** (the app rebuilds/redeploys automatically; allow a few
+minutes, then hard-refresh the site). These are the production equivalents of
+`.env.local` — the file itself stays on the dev machine and is never deployed.
+
 | Variable | Value | Source |
 |---|---|---|
 | `VITE_CRN_FLOW_URL` | HTTP GET URL of the CRN proxy flow | already built (Task 8) — copy from the flow trigger |
@@ -82,6 +104,7 @@ Dynamic recipients (`RequesterEmail`, `ClaimedBy`) never change.
 | `VITE_ALEMBA_CALL_URL` | `https://servicedeskbartshealth.alembacloud.com/production/Core.aspx?MMA&CORE_ENTITY=1&ENTITY_REF={ref}` | confirmed July 2026 |
 | `VITE_SUPPLIER_PACK_FORM_URL` | MS Forms share URL of the Supplier Information Pack | in `.env.local` (not committed); Section 3 helper hides if unset |
 | `VITE_PACK_FETCH_FLOW_URL` | LEAVE UNSET — lookup flow blocked by tenant DLP; paste-to-fill is the live mechanism. Revisit with the Graph provider | button hides when unset |
+| `VITE_VAT_SANDBOX` | **DO NOT SET in production** (dev-only flag that softens "not found" into a test-mode notice) | must be absent |
 
 ## 3. Code (Phase 4 — must exist before go-live)
 
