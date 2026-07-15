@@ -43,3 +43,10 @@ SESSION_SUMMARY.md
 nul
 
 # Updated: Mar 2026 - CI compliance
+
+# Local working documents that must NEVER be committed (public repo):
+# HMRC onboarding checklist (contact details) and the PBP delegation matrix
+# (named individuals) - keep these in a personal folder, not the repo
+New-VAT-Checker-Checklist*.docx
+Authorised PBP matrix.xlsx
+~$*.xlsx
