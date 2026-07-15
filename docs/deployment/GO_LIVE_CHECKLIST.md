@@ -104,9 +104,8 @@ Dynamic recipients (`RequesterEmail`, `ClaimedBy`) never change.
 
 ## 4. Pre-go-live verifications
 
-- [ ] Hand-run flow test matrix (§6 of `setup/06-hybrid-sharepoint-flows.md`):
-      every F2 branch, F3 deletion on completed AND rejected, F6 round-trip,
-      F7 claim email
+- [x] Hand-run flow test matrix — ✅ passed 12/12, 13–15 Jul 2026 (32-email
+      evidence inventory; three defects found and fixed — see design doc §6)
 - [ ] End-to-end UAT with real identities (each SSF-* group, not just admins)
 - [ ] DPIA sign-off (`../governance/DPIA_IG_CHECKLIST.md`) — including the
       §5 disclosed limitation being CLOSED by the provider's base64 rule
