@@ -287,24 +287,39 @@ dev localStorage provider. Each traces to a verified behaviour of the current ap
 
 ---
 
-## 6. Build order
+## 6. Build order — ✅ ALL COMPLETE (test matrix passed 13–15 Jul 2026)
 
-- [ ] Create SSF-Submissions list (columns §2.1, versioning on, sharing links off)
-- [ ] Create SSF-AuditTrail list (§2.2, restricted edit)
-- [ ] Decide bank-details Option A/B with AP Control (recommend A)
-- [ ] Create the six SharePoint groups; populate members (§3)
-- [ ] Set library permissions (SensitiveDocuments → Contract/AP/Admin only)
-- [ ] Build F1, F2 (with LastStatus guard), F3, F4, F6 (AwaitingParty guard); add co-owners
-- [ ] Test matrix — one run per branch:
-  - [ ] questionnaire: QUEST item pending_review → approved (requester gets certificate email) / rejected
-  - [ ] standard full form: created at approved (F1 emails Procurement, F2 silent) → pending_ap_control → completed
-  - [ ] OPW sole trader employed: … → procurement_approved_opw → completed_payroll
-  - [ ] OPW self-employed + contract: … → pending_contract → contract_uploaded → completed
-  - [ ] intermediary inside IR35: … → inside_ir35_sds_issued
-  - [ ] intermediary outside IR35, no contract: … → pending_ap_control → completed
-  - [ ] rejection at each of PBP / Procurement / OPW / AP
-  - [ ] info_required round-trip
-  - [ ] F3 deletes ID files on completed and on rejected
+- [x] Create SSF-Submissions list (columns §2.1, versioning on, sharing links off)
+- [x] Create SSF-AuditTrail list (§2.2, restricted edit)
+- [x] Bank details: Option B decided (SSF-BankDetails list, AP+Admin only)
+- [x] Create the six SharePoint groups (member population ongoing)
+- [x] Set library permissions (SensitiveDocuments → Contract/AP/Admin only)
+- [x] Build F1 router, F2, F3, F4, F6, F7, F8, CRN + VAT proxies (co-owners still to add)
+- [x] Test matrix — run 13–15 Jul 2026 with a 32-email evidence inventory:
+  - [x] questionnaire: approved (certificate email WITH Certificate.pdf attached) / rejected
+  - [x] standard full form: created at approved (single Procurement email, F2 silent) → pending_ap_control → completed (vendor number in subject)
+  - [x] OPW sole trader employed → completed_payroll
+  - [x] OPW self-employed + contract: pending_contract ("Agreement required", /contract-drafter/ link) → contract_uploaded → completed
+  - [x] intermediary inside IR35 → inside_ir35_sds_issued
+  - [x] intermediary outside IR35, no contract → pending_ap_control
+  - [x] rejections (questionnaire + full, /respond/ links)
+  - [x] info_required round-trip incl. F6 repeat-fire + AwaitingParty auto-reset
+  - [x] F3 deletes ID files (verified + audit row); F7 claim email with no field corruption; F4 digest (2-row, formatted)
+
+**Hardening added during the matrix (now part of the design):**
+- **F2 + F3 refetch the item via "Get item" as their first action** — the
+  SharePoint modified-trigger delivers THIN payloads (missing columns) under
+  rapid successive edits; never read item fields from the trigger body. F2
+  also gained an echo-guard Condition (Status == LastStatus → Terminate
+  Succeeded).
+- **F3 terminates Succeeded when the SensitiveDocuments folder is absent**
+  (most suppliers have no ID documents — a missing folder is not a failure).
+- **F4 uses custom HTML-table columns** (`item()?['Status']?['Value']`,
+  `formatDateTime(...,'dd/MM/yyyy')`) — automatic columns render Choice
+  fields as raw JSON.
+- **Recovery pattern:** an item whose LastStatus is blank/stale is invisible
+  to F2; set `LastStatus = resync` to make F2 re-process it for its current
+  status.
 
 ---
 

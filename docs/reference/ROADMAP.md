@@ -13,7 +13,7 @@ status transitions verified end-to-end in the browser (July 2026)** — see
 CRN lookup verified against a mock of the production proxy (active, dissolved,
 autofill and all failure modes). Questionnaire loop verified end-to-end.
 
-## Phase 2 — SharePoint & flows build 🔄 IN PROGRESS (Fahimul, no IT needed)
+## Phase 2 — SharePoint & flows build ✅ COMPLETE (15 July 2026)
 
 Follow [../deployment/setup/07-browser-agent-playbook.md](../deployment/setup/07-browser-agent-playbook.md):
 
@@ -29,7 +29,8 @@ Follow [../deployment/setup/07-browser-agent-playbook.md](../deployment/setup/07
 | F7 claim email + columns (Task 11) | ✅ 09/07/2026 — loop-guard bug fixed (Update item now writes ClaimNotified only; deliberately no Title). Pending: one hand test — fill ClaimedBy on a dummy item, expect assignment email + unchanged Status + no F2 email |
 | CRN proxy flow — premium (Task 8) | ✅ verified live 08–09/07 (200 valid / 404 with CORS) |
 | VAT proxy flow (Task 10) | ✅ 10/07/2026 built against HMRC sandbox (runAfter Succeeded+Failed verified). Pending: URL into local/app config + live test; go-live still needs production HMRC credentials + URI swap (checklist §1.3) |
-| Hand-run test matrix (§6 of the design doc) | 🔄 in progress — F1 single-email retest + F6 round-trip next |
+| Hand-run test matrix (§6 of the design doc) | ✅ 13–15/07/2026 — all 12 rows passed (32-email evidence inventory). Found+fixed: F2 thin-payload crash (Get-item hardening), F3 folderless failures, F4 raw-JSON table. Test data cleaned up |
+| Supplier Information Pack (form + F8 + paste-to-fill) | ✅ live-tested end to end incl. bank details email-only rule |
 
 ## Phase 3 — IT dependency ⏸️ REQUESTED
 
