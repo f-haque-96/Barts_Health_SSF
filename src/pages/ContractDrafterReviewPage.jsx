@@ -150,7 +150,7 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
       alert('Agreement sent successfully to supplier and requester');
     } catch (error) {
       console.error('Failed to send agreement:', error);
-      alert('Failed to send agreement. Please try again.');
+      alert(error?.code === 'CONFLICT' ? error.message : 'Failed to send agreement. Please try again.');
     } finally {
       setActionInProgress(false);
     }
@@ -183,7 +183,7 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
       setReplyMessage('');
     } catch (error) {
       console.error('Failed to send reply:', error);
-      alert('Failed to send reply. Please try again.');
+      alert(error?.code === 'CONFLICT' ? error.message : 'Failed to send reply. Please try again.');
     } finally {
       setReplySending(false);
     }
@@ -281,7 +281,7 @@ const ContractDrafterReviewPage = ({ user, readOnly: _readOnly = false }) => {
       alert('Contract approved successfully. Submission forwarded to AP Control.');
     } catch (error) {
       console.error('Failed to approve contract:', error);
-      alert('Failed to approve contract. Please try again.');
+      alert(error?.code === 'CONFLICT' ? error.message : 'Failed to approve contract. Please try again.');
     } finally {
       setActionInProgress(false);
     }

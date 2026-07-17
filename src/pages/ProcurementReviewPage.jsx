@@ -344,7 +344,7 @@ const ProcurementReviewPage = ({
       alert(`Submission ${actionText} successfully!${action === 'rejected' ? '\n\nThe requester has been notified of the rejection.' : ''}`);
     } catch (error) {
       console.error('Error updating submission:', error);
-      alert('Failed to update submission. Please try again.');
+      alert(error?.code === 'CONFLICT' ? error.message : 'Failed to update submission. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

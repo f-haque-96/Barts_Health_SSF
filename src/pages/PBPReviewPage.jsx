@@ -785,7 +785,7 @@ const PBPReviewPage = ({
       }
     } catch (error) {
       console.error('Error updating submission:', error);
-      alert('Failed to update submission. Please try again.');
+      alert(error?.code === 'CONFLICT' ? error.message : 'Failed to update submission. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

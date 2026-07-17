@@ -255,6 +255,20 @@ dev localStorage provider. Each traces to a verified behaviour of the current ap
    fuzzy-flagged (70% threshold) in Section 4 and at PBP approval time — rejected
    QUEST items must therefore keep CompanyName populated (from the questionnaire's
    supplierName) so the flagging net can match them.
+6b. **Role resolution via the SSF-RoleMap list (decided 16 July 2026, at
+   provider build time):** SharePoint *group* membership is not visible to a
+   delegated `Sites.Selected` app — no Graph endpoint exposes "which site
+   groups is this user in" without admin-level permissions. The provider
+   therefore reads a small **SSF-RoleMap** list (columns: Title = name,
+   **UserEmail**, **Roles** — comma-separated from: `pbp, procurement, opw,
+   contract, ap_control, admin`) and maps rows to the SSF-* group names the
+   app expects. The list must be maintained ALONGSIDE the SharePoint groups
+   (same joiner/mover/leaver edit, two places). A user with no row is a
+   requester. NOTE: this is the app's *display/routing* role only — the
+   SharePoint groups remain the actual security boundary on the lists.
+   Alternative rejected for v1: asking IT for the extra `AllSites.Read`
+   SharePoint delegated permission just to enumerate groups.
+
 7. **Concurrency guard for multi-person teams (added July 2026 — PBP has 4–5
    members):** two protections against duplicate assessment of the same item:
    (a) **Claim banner** — implemented in the app July 2026 (PBPReviewPage): the

@@ -12,6 +12,7 @@
     "docs:check-links": "node scripts/check-doc-links.mjs"
   },
   "dependencies": {
+    "@azure/msal-browser": "^5.17.1",
     "@hookform/resolvers": "^5.2.2",
     "@react-pdf/renderer": "^4.3.2",
     "clsx": "^2.1.1",

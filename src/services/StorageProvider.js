@@ -7,8 +7,9 @@
  */
 
 import { STAGE_QUEUE_STATUSES } from '../utils/workflowStatus';
+import GraphStorageProvider from './GraphStorageProvider';
 
-// Development-only LocalStorageProvider
+// Development / hosted-demo LocalStorageProvider
 class LocalStorageProvider {
   async getSession() {
     // In dev, simulate a logged-in user based on devAuth.js configuration
@@ -17,7 +18,17 @@ class LocalStorageProvider {
       const { getDevUser } = await import('../config/devAuth');
       return { user: getDevUser() };
     }
-    // Should never reach here in production, but return error if it does
+    // Hosted demo build (VITE_DEMO_MODE): fixed admin persona, no devAuth in
+    // the bundle
+    if (import.meta.env.VITE_DEMO_MODE === 'true') {
+      return {
+        user: {
+          email: 'demo.user@nhs.net',
+          name: 'Demo User (all roles)',
+          groups: ['SSF-Admin'],
+        },
+      };
+    }
     throw new Error('LocalStorageProvider should not be used in production');
   }
 
@@ -345,16 +356,49 @@ class ApiStorageProvider {
   }
 }
 
-// Determine which provider to use based on environment
+// Boot-time guard for a production build with no storage configured — fail
+// loudly at sign-in rather than silently targeting a dead backend
+class UnconfiguredProvider {
+  async getSession() {
+    throw new Error(
+      'Application is not configured: set VITE_AZURE_CLIENT_ID (production) ' +
+      'or VITE_DEMO_MODE=true (hosted demo) in the build configuration.'
+    );
+  }
+}
+
+/**
+ * Provider selection (first match wins):
+ * 1. VITE_DEMO_MODE=true            → localStorage demo, even in a built bundle
+ *                                     (hosted stakeholder demos — finding B8)
+ * 2. VITE_AZURE_CLIENT_ID set,      → GraphStorageProvider + MSAL sign-in
+ *    or VITE_GRAPH_FAKE=true          (fake = mock Graph server for testing:
+ *                                     VITE_GRAPH_BASE points at the mock and
+ *                                     the token is a stub)
+ * 3. VITE_USE_API=true (dev only)   → legacy Express provider (frozen)
+ * 4. dev                            → localStorage demo
+ * 5. production, nothing configured → explicit configuration error
+ */
 const isProduction = import.meta.env.PROD;
+const demoMode = import.meta.env.VITE_DEMO_MODE === 'true';
+const graphConfigured = !!import.meta.env.VITE_AZURE_CLIENT_ID;
+const graphFake = import.meta.env.VITE_GRAPH_FAKE === 'true';
 const useApi = import.meta.env.VITE_USE_API === 'true';
 
 let storage;
 
-if (isProduction || useApi) {
+if (demoMode || (!isProduction && !graphConfigured && !graphFake && !useApi)) {
+  storage = new LocalStorageProvider();
+} else if (graphConfigured || graphFake) {
+  const getToken = graphFake
+    ? async () => 'fake-token-for-mock-graph'
+    // Dynamic import keeps MSAL out of demo/dev bundles entirely
+    : async () => (await import('./msalAuth')).getGraphToken();
+  storage = new GraphStorageProvider({ getToken });
+} else if (useApi) {
   storage = new ApiStorageProvider(import.meta.env.VITE_API_URL);
 } else {
-  storage = new LocalStorageProvider();
+  storage = new UnconfiguredProvider();
 }
 
 export { storage, LocalStorageProvider, ApiStorageProvider };

@@ -414,7 +414,7 @@ const APControlReviewPage = ({
       alert('AP Verification Complete! The complete PDF has been downloaded. In production, this will also be emailed to the requester.');
     } catch (error) {
       console.error('Error updating submission:', error);
-      alert('Failed to update submission. Please try again.');
+      alert(error?.code === 'CONFLICT' ? error.message : 'Failed to update submission. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -514,7 +514,7 @@ const APControlReviewPage = ({
       alert('Supplier request has been rejected. The requester has been notified.');
     } catch (error) {
       console.error('Error rejecting submission:', error);
-      alert('Failed to reject submission. Please try again.');
+      alert(error?.code === 'CONFLICT' ? error.message : 'Failed to reject submission. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

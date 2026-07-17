@@ -991,7 +991,7 @@ const RequesterResponsePage = ({
       alert(notificationMessage);
     } catch (error) {
       console.error('Error submitting response:', error);
-      alert('Failed to submit response. Please try again.');
+      alert(error?.code === 'CONFLICT' ? error.message : 'Failed to submit response. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

@@ -18,7 +18,10 @@ export const DOCUMENT_TYPES = {
     name: 'Letterhead with Bank Details',
     description: 'Company letterhead containing bank account details',
     allowAlembaSync: true,
-    isSensitive: false,
+    // Contains bank details → restricted SensitiveDocuments library (design
+    // doc 06 §2 "IDs / bank docs"). Unlike ID documents it is NOT auto-deleted
+    // by flow F3 — AP need it for verification.
+    isSensitive: true,
     required: true,
     section: 2,
     acceptedFormats: ['.pdf', '.png', '.jpg', '.jpeg'],
