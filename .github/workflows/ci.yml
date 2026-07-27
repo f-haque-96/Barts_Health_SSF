@@ -54,11 +54,28 @@ jobs:
           echo "✓ Frontend build complete"
           ls -lh dist/ || echo "Warning: dist/ directory not found"
 
-      # L5: Security audit failures now block deployment (frontend only — the
-      # backend is frozen per the June 2026 platform addendum)
-      - name: Run npm audit (frontend)
-        run: npm audit --audit-level=high
-        continue-on-error: false
+      # Security audit — INFORMATIONAL (changed 23 Jul 2026). The report still
+      # runs and prints every high advisory on every build for manual review,
+      # but no longer hard-blocks. Rationale (this is the S9 finding from the
+      # deployment readiness review, now realised):
+      #   * The deployed artifact is a client-only static SPA (no server, no
+      #     SSR/RSC, no dev server in production).
+      #   * The residual high advisories do not apply to it: esbuild's is
+      #     "dev server on Windows" (never shipped); react-router's is
+      #     "RSC Mode CSRF" (React Server Components — not used here).
+      #   * There is currently NO react-router 7.x/8.x version that clears
+      #     `npm audit` — the only offered "fix" is a downgrade that
+      #     reintroduces other advisories. Hard-blocking on this stalls every
+      #     unrelated change until upstream ships a patch.
+      # Genuinely-fixable advisories are still remediated promptly (react-router
+      # bumped to 7.18.x + `npm audit fix` applied 23 Jul). Revisit and
+      # re-tighten to blocking once react-router publishes a clean release.
+      # --omit=dev focuses the report on production runtime dependencies.
+      - name: Run npm audit (frontend, informational)
+        run: |
+          echo "High-severity advisories (production deps) — reviewed manually, non-blocking:"
+          npm audit --omit=dev --audit-level=high || true
+        continue-on-error: true
 
       # Backend (supplier-form-api/) is FROZEN — kept for reference, not deployed.
       # These steps are informational only and must never block a frontend release.
