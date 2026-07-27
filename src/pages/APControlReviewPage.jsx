@@ -7,7 +7,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PDFDownloadLink } from '@react-pdf/renderer';
-import { Button, NoticeBox, ApprovalStamp, Checkbox, Textarea, SignatureSection, Input, CheckIcon, XIcon, WarningIcon, ClockIcon, DocumentIcon, DownloadIcon, LockIcon, CircleXIcon, VerificationBadge, AlembaCallLink } from '../components/common';
+import { Button, NoticeBox, ApprovalStamp, Checkbox, Textarea, SignatureSection, Input, Select, CheckIcon, XIcon, WarningIcon, ClockIcon, DocumentIcon, DownloadIcon, LockIcon, CircleXIcon, VerificationBadge, AlembaCallLink } from '../components/common';
+import { VAT_STATUS_OPTIONS, COS_CATEGORIES, suggestCosCategory } from '../constants/vatDetermination';
 import { formatDate, formatCurrency } from '../utils/helpers';
 import { formatFieldValue, formatSupplierType, formatServiceTypes, formatEmployeeCount } from '../utils/formatters';
 import SupplierFormPDF from '../components/pdf/SupplierFormPDF';
@@ -114,6 +115,13 @@ const APControlReviewPage = ({
   const [signatureDate, setSignatureDate] = useState(new Date().toISOString().split('T')[0]);
   const [supplierName, setSupplierName] = useState('');
   const [supplierNumber, setSupplierNumber] = useState('');
+  // VAT determination (Finance request, July 2026) — the Trust's recovery
+  // position for THIS engagement, recorded before Oracle setup. Not a
+  // supplier fact and not API-derivable; COS suggestion comes from the
+  // Section 5 service type, confirmation is Finance's sign-off.
+  const [vatDetStatus, setVatDetStatus] = useState('');
+  const [vatDetCos, setVatDetCos] = useState('');
+  const [vatDetBy, setVatDetBy] = useState('');
   const [_additionalInfo, setAdditionalInfo] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [_showRejectionSection, _setShowRejectionSection] = useState(false);
@@ -268,6 +276,20 @@ const APControlReviewPage = ({
     newWindow.document.close();
   };
 
+  // VAT determination defaults: non-registered suppliers auto-resolve to
+  // "no VAT" (green); registered ones get a COS suggestion from the Section 5
+  // service type (amber, Finance to confirm)
+  useEffect(() => {
+    if (!submission?.formData) return;
+    if (submission.formData.vatRegistered !== 'yes') {
+      setVatDetStatus((prev) => prev || 'no_vat');
+      setVatDetCos((prev) => prev || 'not_applicable');
+    } else {
+      setVatDetCos((prev) => prev || suggestCosCategory(submission.formData.serviceType));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submission?.submissionId]);
+
   useEffect(() => {
     // Skip localStorage loading if submission provided via props
     if (propSubmission) {
@@ -363,6 +385,16 @@ const APControlReviewPage = ({
           vatVerified,
           cisVerified,
           insuranceVerified,
+          // Finance VAT determination (never assumed — gated at the button)
+          vatDetermination: {
+            status: vatDetStatus,
+            cosCategory: vatDetCos,
+            determinedBy: submission?.formData?.vatRegistered === 'yes'
+              ? vatDetBy.trim()
+              : 'Auto — supplier not VAT-registered',
+            determinedAt: completedTimestamp,
+            suggestedFromServiceType: suggestCosCategory(submission?.formData?.serviceType) === vatDetCos,
+          },
           notes,
           supplierName,
           supplierNumber,
@@ -1701,6 +1733,65 @@ const APControlReviewPage = ({
             )}
           </div>
 
+          {/* VAT Determination (Finance requirement, July 2026) — the Trust's
+              recovery position for this engagement, recorded before Oracle
+              setup. Never assumed/left blank; Finance confirmation IS the
+              sign-off. */}
+          <div style={{
+            padding: 'var(--space-16)',
+            backgroundColor: submission?.formData?.vatRegistered !== 'yes' ? '#f0fdf4' : '#fffbeb',
+            borderRadius: 'var(--radius-base)',
+            border: `1px solid ${submission?.formData?.vatRegistered !== 'yes' ? '#22c55e' : '#f59e0b'}`,
+            marginBottom: 'var(--space-24)',
+          }}>
+            <h4 style={{ margin: '0 0 var(--space-12) 0', fontSize: 'var(--font-size-base)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--nhs-blue)' }}>
+              VAT Determination (Finance)
+            </h4>
+
+            {submission?.formData?.vatRegistered !== 'yes' ? (
+              <p style={{ margin: 0, color: '#166534' }}>
+                <strong>✓ Auto-determined: No VAT.</strong> This supplier is not
+                VAT-registered, so there is no VAT to recover and no COS category
+                applies. Nothing to complete here.
+              </p>
+            ) : (
+              <>
+                <p style={{ margin: '0 0 var(--space-12) 0', fontSize: 'var(--font-size-sm)', color: '#92400e' }}>
+                  <strong>⚠ Requires Finance confirmation.</strong> The COS category
+                  below is <strong>suggested from the service type</strong> — confirm
+                  the determination with the VAT Accountant / Financial Controller and
+                  record their name. Supplier setup cannot complete without this.
+                </p>
+                <Select
+                  label="VAT Status"
+                  value={vatDetStatus}
+                  onChange={(e) => setVatDetStatus(e.target.value)}
+                  options={VAT_STATUS_OPTIONS.filter((o) => o.value !== 'no_vat')}
+                  placeholder="Select VAT status"
+                  required
+                  style={{ marginBottom: 'var(--space-12)' }}
+                />
+                <Select
+                  label="VAT / COS Category"
+                  value={vatDetCos}
+                  onChange={(e) => setVatDetCos(e.target.value)}
+                  options={COS_CATEGORIES}
+                  placeholder="Select COS category"
+                  required
+                  style={{ marginBottom: 'var(--space-12)' }}
+                />
+                <Input
+                  label="Determined / confirmed by (VAT Accountant or Financial Controller)"
+                  type="text"
+                  value={vatDetBy}
+                  onChange={(e) => setVatDetBy(e.target.value)}
+                  placeholder="Name of the Finance officer who confirmed this determination"
+                  required
+                />
+              </>
+            )}
+          </div>
+
           <Textarea
             label="Additional Notes (Optional)"
             value={notes}
@@ -1718,7 +1809,11 @@ const APControlReviewPage = ({
               <Button
                 variant="primary"
                 onClick={() => setActionType('complete')}
-                disabled={!bankDetailsVerified || !companyDetailsVerified}
+                disabled={
+                  !bankDetailsVerified || !companyDetailsVerified ||
+                  (submission?.formData?.vatRegistered === 'yes' &&
+                    (!vatDetStatus || !vatDetCos || !vatDetBy.trim()))
+                }
                 style={{ backgroundColor: 'var(--color-success)' }}
               >
                 Complete AP Verification

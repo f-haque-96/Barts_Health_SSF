@@ -369,6 +369,35 @@ Status:
 4. Do NOT encode reviewer names/emails in flows — people change; the list
    changes with them (joiner/mover/leaver = row edits only).
 
+### 7.3 VAT Determination at AP Control (Finance/NELPP request, July 2026)
+
+Finance (Kelda Alleyne, BHRUT — via Sammy Ogunji) asked for **VAT Status**
+and **VAT/COS Category** on the form so values stop being "assumed" at
+invoice time. Key design fact: these are NOT supplier facts and NOT
+API-derivable — they are the **Trust's recovery position for the specific
+engagement** (depends on what is being bought, per HMRC's Contracted-Out
+Services rules), which is why Finance wants VAT Accountant / Financial
+Controller sign-off. Only the VAT number's *validity* is API-checkable
+(already done — HMRC badge).
+
+**Implemented 27 Jul 2026 (scaffold, app-side):** mandatory "VAT
+Determination (Finance)" panel on the AP Control page —
+- supplier NOT VAT-registered → auto **"No VAT"** (green), nothing to fill;
+- VAT-registered → VAT Status + COS Category selects with the COS value
+  **pre-suggested from the Section 5 service type** (amber "Finance to
+  confirm") + a required "Determined/confirmed by" name = the recorded
+  Finance sign-off. Completion is BLOCKED until filled — blank/assumed
+  values are structurally impossible.
+- Stored in `apControlReview.vatDetermination`; the Graph provider lifts it
+  into **VATStatus / VATCategory** columns (add via extension when the
+  Finance lists arrive) for reporting.
+
+**PLACEHLDERS pending from Finance:** the authoritative VAT Status options,
+the COS headings list, and the serviceType→COS mapping live in
+`src/constants/vatDetermination.js` and are clearly marked — swap when
+Kelda's team provides them (data change, no redesign). The mapping can
+later move to a Finance-owned SharePoint list (PBP-matrix pattern).
+
 ### 7.2 Supplier information pack — triage for supplier-known answers
 
 > **Status (11 Jul 2026):** MS Form created ("Barts Health — Supplier

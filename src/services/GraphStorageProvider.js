@@ -483,6 +483,12 @@ class GraphStorageProvider {
           fields.ClaimedByName = externalised.claim.name || '';
           if (externalised.claim.at) fields.ClaimedAt = externalised.claim.at;
         }
+        // Finance VAT determination → reportable columns (Finance request
+        // July 2026; columns added alongside the Finance value lists)
+        if ((appKey === 'apControlReview' || appKey === 'apReview') && externalised?.vatDetermination) {
+          if (externalised.vatDetermination.status) fields.VATStatus = externalised.vatDetermination.status;
+          if (externalised.vatDetermination.cosCategory) fields.VATCategory = externalised.vatDetermination.cosCategory;
+        }
       }
     }
 
