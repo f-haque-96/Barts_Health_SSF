@@ -124,6 +124,12 @@ minutes, then hard-refresh the site). These are the production equivalents of
       sent automatically") once flows send the real emails
 - [ ] `src/config/devAuth.js` must not load in production (guard exists — verify
       the built bundle doesn't include it)
+- [ ] **VAT Determination lists** (`src/constants/vatDetermination.js`): replace
+      the PLACEHOLDER `COS_CATEGORIES`, `VAT_STATUS_OPTIONS` and
+      `SERVICE_TYPE_TO_COS` mapping with Finance's authoritative lists once the
+      AP Control + Kelda session agrees them; add matching **VATStatus /
+      VATCategory** choice columns to SSF-Submissions (provider already maps
+      them). See design doc §7.3.
 
 ## 4. Pre-go-live verifications
 
