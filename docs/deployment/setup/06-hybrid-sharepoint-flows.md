@@ -111,9 +111,25 @@ SharePoint groups replace the previously requested AD security groups:
 | SSF-Admin | 1–2 | Full control |
 | All staff (requesters) | Trust-wide | **No direct list access** — the SPA writes on their behalf and shows them only their own items (Graph filter on RequesterEmail = signed-in UPN) |
 
-Notes: at ~300 items/year the 5,000-unique-permissions threshold is irrelevant, but do
-not assign per-item permissions anyway — group + library level only. Disable
+Notes: do not assign per-item permissions anyway — group + library level only. Disable
 "Anyone/Company-wide" sharing links on both libraries.
+
+**Volume (measured Aug 2026):** 241 requests in Jan–Apr 2026 → ~**700 genuine
+requests/year** (revised up from the original ~300 estimate). Capacity impact:
+- **App hot path is unaffected at any volume** — reviewers open a submission by
+  Title (filtered/indexed Graph query); no page enumerates the whole list
+  (`getWorkQueue` is unused in the UI).
+- **Flows/APIs**: ~700/yr × ~10–15 runs each is trivial vs Power Automate and
+  Companies House/HMRC limits.
+- **The one watch-item — SharePoint's 5,000-item list-view threshold**: at
+  ~700/yr a single trust crosses 5,000 items in ~7 years. Any *reporting/browse*
+  query over SSF-Submissions must filter server-side on the indexed **Status**
+  column (not enumerate). Plan an **annual archive** of terminal items
+  (completed/rejected) to a `SSF-Submissions-Archive` list from year ~5.
+- **NELPP multi-trust caveat**: if this becomes the shared form for all five
+  trusts (~5×), ~3,500/yr crosses 5,000 items in ~1.5 years — the indexed-query
+  + annual-archive discipline becomes a **year-1 requirement**, not a
+  future nicety. Design the archive step in before multi-trust rollout.
 
 ---
 
