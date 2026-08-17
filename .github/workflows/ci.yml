@@ -47,6 +47,14 @@ jobs:
         run: npm run lint --if-present
         continue-on-error: false
 
+      # Unit tests (Vitest) — workflow state machine, transition legality,
+      # VAT COS mapping. Fast, browser-free; blocks the build on failure.
+      # (The end-to-end Playwright suite lives in e2e/ and runs locally /
+      # nightly — it needs a dev server + mock services, see e2e/README.md.)
+      - name: Run unit tests
+        run: npm test
+        continue-on-error: false
+
       - name: Build frontend
         run: |
           echo "Building frontend application..."

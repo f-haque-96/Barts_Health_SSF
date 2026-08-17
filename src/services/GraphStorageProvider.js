@@ -23,7 +23,7 @@
  * without MSAL or a real tenant.
  */
 
-import { STAGE_QUEUE_STATUSES } from '../utils/workflowStatus';
+import { STAGE_QUEUE_STATUSES, isLegalTransition } from '../utils/workflowStatus';
 import { getSharePointLibrary } from '../constants/documentTypes';
 
 // Section 6 typed bank fields — SSF-BankDetails columns, never FormDataJSON
@@ -253,7 +253,11 @@ class GraphStorageProvider {
     // the other reviewer's etag and overwrite them. A successful write clears
     // the entry, so the next page load re-baselines.
     if (!this.itemIds[id]) {
-      this.itemIds[id] = { itemId: item.id, etag: item.eTag || item['@odata.etag'] || null };
+      this.itemIds[id] = {
+        itemId: item.id,
+        etag: item.eTag || item['@odata.etag'] || null,
+        currentStatus: (item.fields?.Status || '').toLowerCase(),
+      };
     }
     const f = item.fields || {};
 
@@ -529,6 +533,21 @@ class GraphStorageProvider {
       if (!existing) throw new Error(`Submission not found: ${id}`);
     }
     const { itemId, etag } = this.itemIds[id];
+
+    // Client-side transition-legality pre-check (defence in depth — the
+    // authoritative gate is F2's transition Condition, since a hand-crafted
+    // Graph call bypasses this code entirely). Blocks the honest app from
+    // ever writing an illegal Status jump.
+    if (patch.status !== undefined) {
+      const current = this.itemIds[id]?.currentStatus;
+      if (current && !isLegalTransition(current, patch.status)) {
+        const err = new Error(
+          `Illegal workflow transition: ${current} → ${patch.status}. This change was not applied.`
+        );
+        err.code = 'ILLEGAL_TRANSITION';
+        throw err;
+      }
+    }
 
     const fields = {};
     for (const [appKey, column] of Object.entries(COLUMN_MAP)) {

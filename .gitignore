@@ -50,3 +50,12 @@ nul
 New-VAT-Checker-Checklist*.docx
 Authorised PBP matrix.xlsx
 ~$*.xlsx
+
+# e2e harness runtime artifacts (generated, machine-specific)
+e2e/node_modules
+e2e/baseid.txt
+e2e/questid.txt
+e2e/state.json
+e2e/results.jsonl
+e2e/shots
+e2e/*.log

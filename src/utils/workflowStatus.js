@@ -82,3 +82,58 @@ export const TERMINAL_STATUSES = [
 ];
 
 export const isTerminalStatus = (status) => TERMINAL_STATUSES.includes(status);
+
+/**
+ * Authoritative legal state-machine edges: for each Status, the set of
+ * Statuses it may transition TO. This is the single source of truth for
+ * workflow integrity (Aug 2026 security audit — finding: a reviewer's
+ * delegated Contribute token can PATCH Status directly, bypassing the UI's
+ * transition guards, and the notification flows would treat a forged jump as
+ * legitimate). Mirror this map into flow F2's transition-legality Condition
+ * (see docs/governance/SECURITY_AUTHORIZATION_MODEL.md §5): a change whose
+ * (LastStatus → Status) pair is NOT listed here must NOT route downstream —
+ * it should alert SSF-Admin instead.
+ *
+ * Terminal statuses have no outgoing edges. Every non-terminal status may go
+ * to 'rejected' (any stage can reject).
+ */
+export const ALLOWED_TRANSITIONS = {
+  [STATUS.PENDING_REVIEW]: [STATUS.PBP_APPROVED, STATUS.INFO_REQUIRED, STATUS.REJECTED],
+  // info_required is the PBP↔requester conversation state; it returns to
+  // pending_review or resolves to approved/rejected
+  [STATUS.INFO_REQUIRED]: [STATUS.PBP_APPROVED, STATUS.PENDING_REVIEW, STATUS.REJECTED],
+  // 'approved' = PBP-cleared, awaiting Procurement classification
+  [STATUS.PBP_APPROVED]: [
+    STATUS.PENDING_AP_CONTROL,
+    STATUS.PROCUREMENT_APPROVED_OPW,
+    STATUS.REJECTED,
+  ],
+  // OPW panel outcomes
+  [STATUS.PROCUREMENT_APPROVED_OPW]: [
+    STATUS.PENDING_CONTRACT,
+    STATUS.PENDING_AP_CONTROL,
+    STATUS.COMPLETED_PAYROLL,
+    STATUS.INSIDE_IR35_SDS_ISSUED,
+    STATUS.REJECTED,
+  ],
+  [STATUS.PENDING_CONTRACT]: [STATUS.CONTRACT_UPLOADED, STATUS.REJECTED],
+  [STATUS.CONTRACT_UPLOADED]: [STATUS.COMPLETED, STATUS.REJECTED],
+  [STATUS.PENDING_AP_CONTROL]: [STATUS.COMPLETED, STATUS.REJECTED],
+  // terminal — no outgoing edges
+  [STATUS.COMPLETED]: [],
+  [STATUS.COMPLETED_PAYROLL]: [],
+  [STATUS.INSIDE_IR35_SDS_ISSUED]: [],
+  [STATUS.REJECTED]: [],
+};
+
+/**
+ * Is (from → to) a legal workflow transition? A missing `from` (brand-new
+ * item, or the F1 creation event) is treated as legal — creation is handled
+ * separately. Same status (no-op / echo) is legal.
+ */
+export const isLegalTransition = (from, to) => {
+  if (!from || from === to) return true;
+  const allowed = ALLOWED_TRANSITIONS[from];
+  if (!allowed) return false; // unknown source status → reject as illegal
+  return allowed.includes(to);
+};

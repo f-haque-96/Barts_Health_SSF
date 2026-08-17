@@ -80,6 +80,46 @@ not the level's name:
 | 8 | GET SensitiveDocuments file of B | ❌ denied |
 | 9 | Complete every requester-facing app operation (submit incl. bank row create, upload letterhead/ID, view own /respond page, reply to info request) | ✅ all work |
 
+### 4a. SSF-BankDetails — requester needs Add-WITHOUT-Read (found Aug 2026)
+
+Same contradiction as §4, on the restricted bank list. `saveSubmission()` has
+the **requester's own delegated token** POST a row into `SSF-BankDetails`
+*before* creating the main item — but that list is restricted to AP + Admin,
+so a plain restriction makes **production submission fail at that line**. The
+requester needs Add-only there too, and it must be Graph-tested:
+
+| # | Operation (requester delegated token) | Required |
+|---|---|---|
+| 1 | POST own SSF-BankDetails row | ✅ succeeds |
+| 2 | GET SSF-BankDetails collection (enumerate) | ❌ denied |
+| 3 | GET own bank row after creation | ❌ denied |
+| 4 | GET another submission's bank row | ❌ denied |
+| 5 | PATCH / DELETE any bank row | ❌ denied |
+| 6 | AP Control token: GET the row | ✅ succeeds |
+
+Add-only + no item-level "read own" is the intended shape — the requester
+writes their bank details in once and can never read them back. Verify the
+POST actually succeeds under that level (SharePoint "Add Items" without "View
+Items" is the mechanism; prove it with Graph, don't trust the label).
+
+### 4b. SensitiveDocuments — requester needs upload-WITHOUT-browse (found Aug 2026)
+
+The requester's token uploads passport/licence images into
+`SensitiveDocuments`, which is restricted to Contract/AP/Admin. Same problem:
+the upload would fail. Define the minimum requester **upload-only** grant:
+
+| # | Operation (requester delegated token) | Required |
+|---|---|---|
+| 1 | PUT own ID document into SensitiveDocuments/<id>/ | ✅ succeeds |
+| 2 | GET/list SensitiveDocuments (browse) | ❌ denied |
+| 3 | GET another submission's restricted file | ❌ denied |
+| 4 | Ideally: GET own file back after upload | ❌ denied (unless the process needs it) |
+| 5 | Contract/AP token: GET where required | ✅ succeeds |
+
+Preferred mechanism: per-submission upload folders with Add/Contribute-upload
+but no browse at library root, OR a scoped "drop" folder. Test the actual
+Graph PUT + subsequent GET behaviour with a real requester account.
+
 **Known tension to resolve during the matrix:** rows 4 and 9 conflict —
 the info-required round-trip has the requester's token PATCHing their own
 item (response + AwaitingParty). Either the level must permit *edit of
@@ -114,15 +154,45 @@ today a reviewer technically CAN:
 *legality*; a direct PATCH to `completed` would email the requester
 "vendor created". The flows automate; they do not authorize.
 
-**Recommended hardenings (proposed, not yet applied):**
-1. Replace reviewer Contribute with a custom **"Contribute minus Delete"**
-   level on SSF-Submissions (removes silent deletion; cheap).
-2. Add a transition-legality Condition to F2 (allowed Prev→Next map from
-   `workflowStatus.js`); illegal transition → alert SSF-Admin instead of
-   routing the case onward. Buildable by the browser agent; modest effort.
-3. Keep relying on append-only audit + versioning for attributability —
-   with vetted named staff, detection-plus-attribution is a defensible
-   posture *if IG agrees* (§6).
+**Hardenings:**
+1. **[PRE-GO-LIVE CONTROL]** Add a transition-legality Condition to F2, driven
+   by `ALLOWED_TRANSITIONS` in `src/utils/workflowStatus.js` (now defined and
+   unit-tested; `isLegalTransition(from,to)`). A change whose
+   (LastStatus → Status) pair is not a legal edge must **not** route
+   downstream — alert SSF-Admin instead. **Elevated from "recommended" to a
+   blocker (Aug 2026):** detection-only is insufficient because the flows
+   *act* on a forged transition before it's detected — a direct PATCH to
+   `completed` emails the requester "vendor created", drops the item out of
+   every queue, and marks the supplier live. The audit row the next day
+   cannot un-send that. For a state machine the transition IS the
+   security-sensitive action and must be gated where the user cannot bypass
+   it. A client-side pre-check now exists in `GraphStorageProvider`
+   (`ILLEGAL_TRANSITION`), but that only stops the honest app — F2 is the
+   authoritative gate against a hand-crafted Graph PATCH.
+   *Build spec for the browser agent:* in F2, after the Get-item refetch, add
+   a Condition comparing (LastStatus, Status) against the allowed-edge list
+   below; on no-match, Terminate + email SSF-Admin, do not run the Switch.
+2. **[PRE-GO-LIVE CONTROL]** Replace reviewer Contribute with a custom
+   **"Contribute minus Delete"** level on SSF-Submissions (stops silent
+   deletion). Separate control from #1.
+3. Append-only audit + versioning remain for attributability of anything the
+   above don't prevent (e.g. a reviewer editing a same-stage field) — with
+   vetted named staff that is a defensible residual posture *if IG agrees*
+   (§6).
+
+**Legal transition edges (mirror into F2 — authoritative source is
+`ALLOWED_TRANSITIONS`):**
+```
+pending_review            → approved | info_required | rejected
+info_required             → approved | pending_review | rejected
+approved                  → pending_ap_control | procurement_approved_opw | rejected
+procurement_approved_opw  → pending_contract | pending_ap_control |
+                            completed_payroll | inside_ir35_sds_issued | rejected
+pending_contract          → contract_uploaded | rejected
+contract_uploaded         → completed | rejected
+pending_ap_control        → completed | rejected
+(completed | completed_payroll | inside_ir35_sds_issued | rejected = terminal)
+```
 
 ## 6. OPEN DECISION for IG / security / data owner — not a developer call
 
@@ -153,10 +223,27 @@ today a reviewer technically CAN:
 | "zero server infrastructure" | "no dedicated application server or database to provision and maintain" |
 | "recorded forever" | "recorded with versioning; retention per Trust policy (to be set with IG)" |
 
-## 8. Pre-UAT blockers arising from this audit
+## 8. Pre-UAT security checklist (five mandatory controls + one IG decision)
 
-- [ ] Execute the §4 requester permission test matrix with a real test
-      account (after App Registration exists)
-- [ ] §6 decision recorded by IG/data owner
-- [ ] §5 hardening 1 (Contribute-minus-Delete) applied or explicitly declined
-- [ ] Re-verify §2 controls with real (non-admin) accounts during UAT
+Nothing goes to UAT with real Trust data until all five are proven with a real
+delegated Graph account (needs the App Registration first), and the IG
+decision is recorded.
+
+1. [ ] **Requester permission model proven** — creates own submission; edits
+       own item where the info-required round-trip requires; CANNOT
+       enumerate / read-other / edit-other / delete (§4 matrix).
+2. [ ] **Bank list Add-only proven** — requester can POST their bank row,
+       cannot subsequently read/browse/edit/delete it; AP can read (§4a).
+3. [ ] **SensitiveDocuments upload-only proven** — requester can upload
+       required ID, cannot browse/retrieve unrelated restricted files;
+       appropriate reviewers can access (§4b).
+4. [ ] **Reviewer Delete removed** — Contribute-minus-Delete on
+       SSF-Submissions (§5.2).
+5. [ ] **F2 transition-legality enforced** — impossible transitions never
+       route (§5.1).
+
+Then, separately:
+- [ ] **IG / data-owner decision on cross-stage reviewer read access** (§6) —
+      a risk-acceptance decision, not a programming bug.
+
+Plus re-verify the §2 good controls with real (non-admin) accounts during UAT.
