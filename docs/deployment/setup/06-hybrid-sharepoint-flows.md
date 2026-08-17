@@ -109,7 +109,7 @@ SharePoint groups replace the previously requested AD security groups:
 | SSF-Contract | 2–3 | Contribute + SensitiveDocuments read/write |
 | SSF-APControl | 3–5 | Contribute + SensitiveDocuments read/write (+ SSF-BankDetails if Option B) |
 | SSF-Admin | 1–2 | Full control |
-| All staff (requesters) | Trust-wide | **No direct list access** — the SPA writes on their behalf and shows them only their own items (Graph filter on RequesterEmail = signed-in UPN) |
+| All staff (requesters) | Trust-wide | ⚠️ CORRECTED Aug 2026: under delegated auth the requester's own token performs the write, so "no direct list access" is impossible — requesters need a custom **Add-Only-style grant** on SSF-Submissions (+ item-level "own items" settings). Proposal + mandatory Graph test matrix: `../../governance/SECURITY_AUTHORIZATION_MODEL.md` §4. App-side, requester sessions are ownership-guarded and filter on RequesterEmail = UPN (defence in depth) |
 
 Notes: do not assign per-item permissions anyway — group + library level only. Disable
 "Anyone/Company-wide" sharing links on both libraries.

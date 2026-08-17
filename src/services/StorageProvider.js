@@ -85,6 +85,25 @@ class LocalStorageProvider {
     return STAGE_QUEUE_STATUSES[stage]?.includes(status) || false;
   }
 
+  /**
+   * Dev parity for GraphStorageProvider.getBankDetails: in dev the typed
+   * bank fields still live inside the submission's formData, so serve them
+   * from there in the same shape the Graph provider returns.
+   */
+  async getBankDetails(id) {
+    const submission = await this.getSubmission(id);
+    const f = submission?.formData || {};
+    if (!f.nameOnAccount && !f.accountNumber && !f.iban) return null;
+    return {
+      nameOnAccount: f.nameOnAccount || '',
+      sortCode: f.sortCode || '',
+      accountNumber: f.accountNumber || '',
+      iban: f.iban || '',
+      swiftCode: f.swiftCode || '',
+      bankRouting: f.bankRouting || '',
+    };
+  }
+
   async uploadDocument(submissionId, file, documentType) {
     // In dev, store as base64
     return new Promise((resolve, reject) => {

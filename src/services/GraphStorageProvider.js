@@ -225,6 +225,28 @@ class GraphStorageProvider {
     const item = (result.value || [])[0];
     if (!item) return null;
 
+    // Requester ownership guard (defence in depth, added Aug 2026 security
+    // audit): a session with NO reviewer roles may only receive their own
+    // submissions (requester email or supplier contact email match). NOTE —
+    // and this is documented honestly in SECURITY_AUTHORIZATION_MODEL.md —
+    // this guard runs client-side after the data reached the browser; the
+    // actual security boundary is the SharePoint permission the user's own
+    // delegated token carries. This narrows what the APPLICATION exposes;
+    // it cannot stop a hand-crafted Graph call.
+    const session = await this.getSession();
+    if ((session.user.groups || []).length === 0) {
+      const email = session.user.email;
+      const f0 = item.fields || {};
+      let contactEmail = '';
+      try { contactEmail = (JSON.parse(f0.FormDataJSON || '{}').contactEmail || '').toLowerCase(); } catch { /* ignore */ }
+      const owner = (f0.RequesterEmail || '').toLowerCase();
+      if (owner !== email && contactEmail !== email) {
+        const err = new Error('ACCESS_DENIED');
+        err.code = 'ACCESS_DENIED';
+        throw err;
+      }
+    }
+
     // Preserve the FIRST etag seen for this id (page-load state). Refreshing
     // it on every read would defeat the optimistic-concurrency guard — a
     // decision handler that re-reads just before writing would silently adopt
@@ -274,6 +296,51 @@ class GraphStorageProvider {
         .filter((item) => statuses.includes((item.fields?.Status || '').toLowerCase()))
         .map((item) => this.getSubmission(item.fields.Title))
     );
+  }
+
+  /**
+   * The signed-in user's own submissions (RequesterEmail = UPN). Least-data
+   * retrieval for requester-facing views — the design-doc §3 filter, now
+   * actually implemented (Aug 2026 audit finding #2).
+   */
+  async getMySubmissions() {
+    const session = await this.getSession();
+    const email = session.user.email.replace(/'/g, '');
+    const result = await this.listItems(
+      'SSF-Submissions',
+      `&$filter=fields/RequesterEmail eq '${encodeURIComponent(email)}'`
+    );
+    return Promise.all(
+      (result.value || []).map((item) => this.getSubmission(item.fields.Title))
+    );
+  }
+
+  /**
+   * Typed bank details from the restricted SSF-BankDetails list (AP Control
+   * + Admin only at the SharePoint layer). Non-AP users' delegated tokens
+   * get 403 from SharePoint itself — HERE the permission model IS the real
+   * boundary, which is why the letterhead cross-check reads from this list
+   * rather than FormDataJSON (Aug 2026 audit finding #3: the AP page was
+   * reading fields the provider deliberately strips — production would have
+   * shown blank bank details).
+   * Returns null when no row exists; throws ACCESS_DENIED on 403.
+   */
+  async getBankDetails(id) {
+    const result = await this.listItems(
+      'SSF-BankDetails',
+      `&$filter=fields/Title eq '${encodeURIComponent(String(id).replace(/'/g, ''))}'`
+    );
+    const item = (result.value || [])[0];
+    if (!item) return null;
+    const f = item.fields || {};
+    return {
+      nameOnAccount: f.NameOnAccount || '',
+      sortCode: f.SortCode || '',
+      accountNumber: f.AccountNumber || '',
+      iban: f.IBAN || '',
+      swiftCode: f.SWIFTCode || '',
+      bankRouting: f.BankRouting || '',
+    };
   }
 
   // ---------- uploads (rule 2) ----------

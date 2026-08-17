@@ -115,6 +115,10 @@ const APControlReviewPage = ({
   const [signatureDate, setSignatureDate] = useState(new Date().toISOString().split('T')[0]);
   const [supplierName, setSupplierName] = useState('');
   const [supplierNumber, setSupplierNumber] = useState('');
+  // Typed bank details from the restricted SSF-BankDetails list (or, in dev,
+  // from the local submission) — see the Bank Details card note
+  const [bankDetails, setBankDetails] = useState(null);
+  const [bankAccess, setBankAccess] = useState('loading'); // loading | ok | missing | denied
   // VAT determination (Finance request, July 2026) — the Trust's recovery
   // position for THIS engagement, recorded before Oracle setup. Not a
   // supplier fact and not API-derivable; COS suggestion comes from the
@@ -275,6 +279,34 @@ const APControlReviewPage = ({
 
     newWindow.document.close();
   };
+
+  // Fetch typed bank details from the restricted list (provider decides the
+  // source: SSF-BankDetails in production, local formData in dev)
+  useEffect(() => {
+    if (!submission?.submissionId && !submissionId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        if (typeof storage.getBankDetails !== 'function') {
+          if (!cancelled) setBankAccess('missing');
+          return;
+        }
+        const details = await storage.getBankDetails(submission?.submissionId || submissionId);
+        if (cancelled) return;
+        if (details) {
+          setBankDetails(details);
+          setBankAccess('ok');
+        } else {
+          setBankAccess('missing');
+        }
+      } catch (err) {
+        if (cancelled) return;
+        setBankAccess(err?.code === 'ACCESS_DENIED' || err?.message === 'ACCESS_DENIED' ? 'denied' : 'missing');
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submission?.submissionId, submissionId]);
 
   // VAT determination defaults: non-registered suppliers auto-resolve to
   // "no VAT" (green); registered ones get a COS suggestion from the Section 5
@@ -613,6 +645,9 @@ const APControlReviewPage = ({
   }
 
   const formData = submission.formData;
+  // Typed bank values: the restricted list is authoritative; formData is the
+  // dev-mode/legacy fallback (production formData never contains them)
+  const bankInfo = bankDetails || formData;
   const isPreview = submission.isPreview === true;
   const apControlReview = submission.apControlReview;
 
@@ -835,21 +870,39 @@ const APControlReviewPage = ({
         {formData.website && <ReviewItem label="Website" value={formData.website} />}
       </ReviewCard>
 
-      {/* Bank Details */}
+      {/* Bank Details — typed values come from the RESTRICTED SSF-BankDetails
+          list (AP Control + Admin only at the SharePoint layer), not from
+          FormDataJSON, which deliberately never contains them. Aug 2026 audit
+          fix: previously this card read formData.* fields the production
+          provider strips — it would have rendered blank in production. */}
       <ReviewCard title="Bank Details & Payment Information" highlight>
         <ReviewItem label="Overseas Supplier" value={formData.overseasSupplier} />
 
+        {bankAccess === 'denied' && (
+          <NoticeBox type="warning" style={{ gridColumn: '1 / -1' }}>
+            Your account does not have access to the restricted bank details
+            list (SSF-BankDetails). Typed bank details are visible to AP
+            Control and Admin members only.
+          </NoticeBox>
+        )}
+        {bankAccess === 'missing' && (
+          <NoticeBox type="info" style={{ gridColumn: '1 / -1' }}>
+            No typed bank details were recorded for this submission — verify
+            solely against the letterhead document below.
+          </NoticeBox>
+        )}
+
         {formData.overseasSupplier === 'yes' ? (
           <>
-            {formData.iban && <ReviewItem label="IBAN" value={formData.iban} highlight />}
-            {formData.swiftCode && <ReviewItem label="SWIFT Code" value={formData.swiftCode} highlight />}
-            {formData.bankRouting && <ReviewItem label="Bank Routing Number" value={formData.bankRouting} />}
+            {bankInfo.iban && <ReviewItem label="IBAN" value={bankInfo.iban} highlight />}
+            {bankInfo.swiftCode && <ReviewItem label="SWIFT Code" value={bankInfo.swiftCode} highlight />}
+            {bankInfo.bankRouting && <ReviewItem label="Bank Routing Number" value={bankInfo.bankRouting} />}
           </>
         ) : (
           <>
-            {formData.nameOnAccount && <ReviewItem label="Name on Account" value={formData.nameOnAccount} highlight />}
-            {formData.sortCode && <ReviewItem label="Sort Code" value={formData.sortCode} highlight />}
-            {formData.accountNumber && <ReviewItem label="Account Number" value={formData.accountNumber} highlight />}
+            {bankInfo.nameOnAccount && <ReviewItem label="Name on Account" value={bankInfo.nameOnAccount} highlight />}
+            {bankInfo.sortCode && <ReviewItem label="Sort Code" value={bankInfo.sortCode} highlight />}
+            {bankInfo.accountNumber && <ReviewItem label="Account Number" value={bankInfo.accountNumber} highlight />}
           </>
         )}
 

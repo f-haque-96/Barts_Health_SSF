@@ -133,6 +133,14 @@ minutes, then hard-refresh the site). These are the production equivalents of
 
 ## 4. Pre-go-live verifications
 
+**Security blockers from the Aug 2026 authorization audit
+(`../governance/SECURITY_AUTHORIZATION_MODEL.md`) — UAT must not start
+until these are closed:**
+- [ ] Requester "Add Only" permission configured and the §4 Graph test
+      matrix executed with a real test account
+- [ ] Cross-stage reviewer access decision recorded by IG/data owner (§6)
+- [ ] Reviewer "Contribute minus Delete" hardening applied or declined (§5)
+
 - [x] Hand-run flow test matrix — ✅ passed 12/12, 13–15 Jul 2026 (32-email
       evidence inventory; three defects found and fixed — see design doc §6)
 - [ ] End-to-end UAT with real identities (each SSF-* group, not just admins)
