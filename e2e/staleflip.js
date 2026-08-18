@@ -4,7 +4,6 @@
 // never had an in-app PBP review (email-approval path).
 const { BASE, launch } = require('./helpers');
 const { run, radio } = require('./fillform');
-const fs = require('fs');
 
 const results = [];
 function record(name, ok, detail) {
@@ -102,7 +101,6 @@ const store = (page) => page.evaluate(() =>
     s7.onS7 && !s7.vatRow && !s7.utrRow && !s7.dunsRow && !s7.coverageRow && !s7.ibanRow, s7);
 
   // 6. Timeline: completed item with NO pbpReview -> PBP step shows cleared
-  const baseId = fs.readFileSync(__dirname + '/baseid.txt', 'utf8').trim();
   await page.evaluate(() => localStorage.clear());
   await page.goto(BASE, { waitUntil: 'networkidle' });
   await page.evaluate(() => {

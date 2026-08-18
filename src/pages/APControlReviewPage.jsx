@@ -305,7 +305,6 @@ const APControlReviewPage = ({
       }
     })();
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submission?.submissionId, submissionId]);
 
   // VAT determination defaults: non-registered suppliers auto-resolve to

@@ -30,6 +30,22 @@ export default defineConfig([
       }],
     },
   },
+  {
+    // e2e/ test harness is Node.js CommonJS (require, __dirname, process),
+    // not browser ES modules
+    files: ['e2e/**/*.js'],
+    languageOptions: {
+      globals: { ...globals.node },
+      sourceType: 'commonjs',
+    },
+  },
+  {
+    // Vitest unit tests use test globals (describe/it/expect) + Node
+    files: ['**/*.test.{js,jsx}'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.vitest },
+    },
+  },
 ])
 
 // Updated: Mar 2026 - CI compliance
